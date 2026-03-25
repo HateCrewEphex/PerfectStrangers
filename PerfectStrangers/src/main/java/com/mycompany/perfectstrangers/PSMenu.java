@@ -30,8 +30,9 @@ public class PSMenu extends javax.swing.JFrame {
 
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
         jPanel1 = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
+        jPPrincipal = new javax.swing.JPanel();
         jMenuInf = new javax.swing.JPanel();
         jLUsuario = new javax.swing.JLabel();
         jUsuario = new javax.swing.JLabel();
@@ -48,24 +49,27 @@ public class PSMenu extends javax.swing.JFrame {
         jMOCobrar = new javax.swing.JMenuItem();
         JInventario = new javax.swing.JMenu();
         jMenu1 = new javax.swing.JMenu();
+        jMenu2 = new javax.swing.JMenu();
 
         jMenuItem1.setText("jMenuItem1");
 
         jMenuItem2.setText("jMenuItem2");
 
+        jMenuItem3.setText("jMenuItem3");
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel2.setBackground(new java.awt.Color(0, 0, 0));
+        jPPrincipal.setBackground(new java.awt.Color(0, 0, 0));
 
         jMenuInf.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED, java.awt.Color.white, java.awt.Color.lightGray, null, null));
 
         jLUsuario.setText("Usuario: ");
 
-        jUsuario.setText("Señora Puff");
+        jUsuario.setText("-");
 
         jLPuesto.setText("Puesto: ");
 
-        jPuesto.setText("Gorda Malvada");
+        jPuesto.setText("-");
 
         jLTiempo.setText("Tiempo: ");
 
@@ -100,15 +104,15 @@ public class PSMenu extends javax.swing.JFrame {
                 .addComponent(jTiempo))
         );
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout jPPrincipalLayout = new javax.swing.GroupLayout(jPPrincipal);
+        jPPrincipal.setLayout(jPPrincipalLayout);
+        jPPrincipalLayout.setHorizontalGroup(
+            jPPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jMenuInf, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+        jPPrincipalLayout.setVerticalGroup(
+            jPPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPPrincipalLayout.createSequentialGroup()
                 .addGap(0, 348, Short.MAX_VALUE)
                 .addComponent(jMenuInf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -117,11 +121,11 @@ public class PSMenu extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPPrincipal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPPrincipal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         JInicio.setText("Inicio");
@@ -148,6 +152,9 @@ public class PSMenu extends javax.swing.JFrame {
 
         jMenu1.setText("Historial");
         jMenuSup.add(jMenu1);
+
+        jMenu2.setText("Salir");
+        jMenuSup.add(jMenu2);
 
         setJMenuBar(jMenuSup);
 
@@ -202,12 +209,14 @@ public class PSMenu extends javax.swing.JFrame {
     private javax.swing.JMenu jMOrdenes;
     private javax.swing.JMenu jMenu;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JPanel jMenuInf;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuBar jMenuSup;
+    private javax.swing.JPanel jPPrincipal;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel jPuesto;
     private javax.swing.JLabel jTiempo;
     private javax.swing.JLabel jUsuario;
