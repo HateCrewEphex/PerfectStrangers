@@ -87,7 +87,7 @@ public class PSTOrden extends javax.swing.JFrame {
 
         jPPrincipal.setBackground(new java.awt.Color(0, 0, 0));
 
-        jPCont.setBorder(javax.swing.BorderFactory.createBevelBorder(null));
+        jPCont.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
         jBAgregar.setBackground(new java.awt.Color(204, 204, 204));
         jBAgregar.setText("AGREGAR");
@@ -116,7 +116,7 @@ public class PSTOrden extends javax.swing.JFrame {
         jBBebidas.setText("Bebidas");
         jBBebidas.addActionListener(this::jBBebidasActionPerformed);
 
-        jPOrden.setBorder(javax.swing.BorderFactory.createBevelBorder(null));
+        jPOrden.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
         jLOrden.setText("-");
 
@@ -360,7 +360,7 @@ public class PSTOrden extends javax.swing.JFrame {
         }
         String mesaStr = jCNoMesa.getSelectedItem().toString();
 
-        String sql = "INSERT INTO ordenes (id_empleado, id_platillo, cant, mesa, fecha, hora, estado) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), 'Pendiente')";
+        String sql = "INSERT INTO ordenes (id_empleado, id_platillo, cant, mesa, fecha, hora, estado) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), 'Levantada')";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
             

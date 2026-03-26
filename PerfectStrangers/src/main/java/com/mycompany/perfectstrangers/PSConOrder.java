@@ -4,6 +4,16 @@
  */
 package com.mycompany.perfectstrangers;
 
+import java.awt.Color;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  *
  * @author Ephex
@@ -21,6 +31,138 @@ public class PSConOrder extends javax.swing.JFrame {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
         });
+        
+        jBEntregarOrden.addActionListener(evt -> entregarOrdenPrimera());
+        cargarOrdenes();
+    }
+
+    private class ItemOrden {
+        String nombre;
+        int cant;
+        public ItemOrden(String n, int c) { nombre = n; cant = c; }
+    }
+    
+    private class OrdenPendiente {
+        String mesa;
+        java.sql.Date fecha;
+        java.sql.Time hora;
+        List<ItemOrden> items = new ArrayList<>();
+    }
+
+    private List<OrdenPendiente> listaOrdenes = new ArrayList<>();
+
+    private void cargarOrdenes() {
+        listaOrdenes.clear();
+        String sql = "SELECT o.mesa, o.fecha, o.hora, p.nombre AS nomP, pq.nombrePaq AS nomPaq, o.cant " +
+                     "FROM ordenes o " +
+                     "LEFT JOIN platillos p ON o.id_platillo = p.id_platillo " +
+                     "LEFT JOIN paquetes pq ON o.id_platillo = pq.id " +
+                     "WHERE o.estado = 'Levantada' " +
+                     "ORDER BY o.fecha ASC, o.hora ASC";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+            
+            Map<String, OrdenPendiente> mapa = new LinkedHashMap<>();
+
+            while (rs.next()) {
+                String mesa = rs.getString("mesa");
+                java.sql.Date fecha = rs.getDate("fecha");
+                java.sql.Time hora = rs.getTime("hora");
+                String nP = rs.getString("nomP");
+                String nPaq = rs.getString("nomPaq");
+                String nombreItem = (nP != null) ? nP : (nPaq != null ? nPaq : "Desconocido");
+                int cant = rs.getInt("cant");
+
+                String key = mesa + "|" + fecha + "|" + hora;
+                OrdenPendiente op = mapa.get(key);
+                if (op == null) {
+                    op = new OrdenPendiente();
+                    op.mesa = mesa;
+                    op.fecha = fecha;
+                    op.hora = hora;
+                    mapa.put(key, op);
+                    listaOrdenes.add(op);
+                }
+                op.items.add(new ItemOrden(nombreItem, cant));
+            }
+
+            mostrarOrdenes();
+
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar ordenes", ex);
+        }
+    }
+
+    private void mostrarOrdenes() {
+        jLOrdenaEntregar.setText("-");
+        jLOrdenaEntregar.setOpaque(true);
+        jLOrdenaEntregar.setBackground(Color.BLACK);
+        jLOrdenaEntregar.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        jBEntregarOrden.setEnabled(false);
+
+        jLSegundaOrden.setText("-");
+        jLSegundaOrden.setOpaque(true);
+        jLSegundaOrden.setBackground(Color.BLACK);
+        jLSegundaOrden.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+
+        jLTercerOrden.setText("-");
+        jLTercerOrden.setOpaque(true);
+        jLTercerOrden.setBackground(Color.BLACK);
+        jLTercerOrden.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+
+        jLCOrdenes.setText("0");
+
+        if (listaOrdenes.size() > 0) {
+            OrdenPendiente o1 = listaOrdenes.get(0);
+            jLOrdenaEntregar.setText(formatHTML(o1));
+            jLOrdenaEntregar.setBackground(new Color(34, 139, 34)); // Verde
+            jBEntregarOrden.setEnabled(true);
+        }
+        if (listaOrdenes.size() > 1) {
+            OrdenPendiente o2 = listaOrdenes.get(1);
+            jLSegundaOrden.setText(formatHTML(o2));
+            jLSegundaOrden.setBackground(new Color(204, 102, 0)); // Naranja
+        }
+        if (listaOrdenes.size() > 2) {
+            OrdenPendiente o3 = listaOrdenes.get(2);
+            jLTercerOrden.setText(formatHTML(o3));
+            jLTercerOrden.setBackground(new Color(204, 102, 0)); // Naranja
+        }
+
+        int faltantes = listaOrdenes.size() > 3 ? listaOrdenes.size() - 3 : 0;
+        jLCOrdenes.setText(String.valueOf(faltantes));
+    }
+
+    private String formatHTML(OrdenPendiente o) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><div style='text-align: center; padding: 10px; width: 140px;'>");
+        sb.append("<h2>").append(o.mesa).append("</h2>");
+        sb.append("<i>").append(o.hora.toString()).append("</i><br><br>");
+        for (ItemOrden item : o.items) {
+            sb.append(item.cant).append("x ").append(item.nombre).append("<br>");
+        }
+        sb.append("</div></html>");
+        return sb.toString();
+    }
+
+    private void entregarOrdenPrimera() {
+        if (listaOrdenes.isEmpty()) return;
+        OrdenPendiente o = listaOrdenes.get(0);
+        
+        String sql = "UPDATE ordenes SET estado = 'Entregada' WHERE mesa = ? AND fecha = ? AND hora = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setString(1, o.mesa);
+            pst.setDate(2, o.fecha);
+            pst.setTime(3, o.hora);
+            pst.executeUpdate();
+            
+            cargarOrdenes(); 
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al entregar orden", ex);
+        }
     }
 
     /**
