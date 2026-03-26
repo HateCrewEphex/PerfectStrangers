@@ -17,6 +17,150 @@ public class PSEmpleados extends javax.swing.JFrame {
      */
     public PSEmpleados() {
         initComponents();
+        
+        // --- ESTILOS GENERALES DE LA VENTANA ---
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH); // Iniciar en pantalla completa
+        setLocationRelativeTo(null); // Centrar en pantalla al abrir
+        
+        java.awt.Font fontLabels = new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14);
+        java.awt.Font fontInputs = new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14);
+        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 24)); // Título principal más grande
+        
+        jLNombre.setFont(fontLabels);
+        jLAPaterno.setFont(fontLabels);
+        jLAMaterno.setFont(fontLabels);
+        jLAMaterno1.setFont(fontLabels); // Etiqueta puesto
+        jLUsuario.setFont(fontLabels);
+        jLContrasena.setFont(fontLabels);
+        jLContrasena1.setFont(fontLabels);
+        
+        jTNombre.setFont(fontInputs);
+        jTAPaterno.setFont(fontInputs);
+        jTAMaterno.setFont(fontInputs);
+        jCBPuesto.setFont(fontInputs);
+        jTUsuario.setFont(fontInputs);
+        jPContrasena.setFont(fontInputs);
+        jPCContrasena.setFont(fontInputs);
+        
+        // Estilización de botones para empatar con el resto de PerfectStrangers
+        jBRegistrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        jBRegistrar.setBackground(new java.awt.Color(40, 167, 69)); // Verde llamativo para la acción principal
+        jBRegistrar.setForeground(java.awt.Color.WHITE);
+        
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        jBRegresar.setBackground(null); // Mantener el gris estándar sin forzar el sistema
+        jBRegresar.setForeground(java.awt.Color.WHITE);
+        // ---------------------------------------
+        
+        jBRegistrar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                registrarEmpleado();
+            }
+        });
+        
+        jBRegresar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                PSMenu menu = new PSMenu();
+                menu.setVisible(true);
+                dispose();
+            }
+        });
+        
+        // Centrar el contenido dinámicamente
+        javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
+        fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
+        fondoCentrado.add(jPanel1);
+        this.setContentPane(fondoCentrado);
+    }
+
+    private void registrarEmpleado() {
+        String nombre = jTNombre.getText().trim();
+        String aPaterno = jTAPaterno.getText().trim();
+        String aMaterno = jTAMaterno.getText().trim();
+        String puesto = jCBPuesto.getSelectedItem().toString();
+        String usuario = jTUsuario.getText().trim();
+        String contrasena = new String(jPContrasena.getPassword());
+        String cContrasena = new String(jPCContrasena.getPassword());
+
+        if (nombre.isEmpty() || aPaterno.isEmpty() || puesto.isEmpty() || usuario.isEmpty() || contrasena.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos obligatorios.");
+            return;
+        }
+
+        if (!contrasena.equals(cContrasena)) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Las contraseñas no coinciden.");
+            return;
+        }
+
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false); // Para iniciar transacción
+            
+            try {
+                int nuevoIdEmpleado = 1;
+                String sqlMaxId = "SELECT MAX(id_empleado) FROM empleados";
+                try (java.sql.PreparedStatement pstMax = con.prepareStatement(sqlMaxId);
+                     java.sql.ResultSet rsMax = pstMax.executeQuery()) {
+                    if (rsMax.next()) {
+                        int maxId = rsMax.getInt(1);
+                        if (maxId > 0) {
+                            nuevoIdEmpleado = maxId + 1;
+                        }
+                    }
+                }
+                
+                String sqlEmpleado = "INSERT INTO empleados (id_empleado, nombre, ap_paterno, ap_materno, puesto) VALUES (?, ?, ?, ?, ?)";
+                try (java.sql.PreparedStatement pst1 = con.prepareStatement(sqlEmpleado)) {
+                    pst1.setInt(1, nuevoIdEmpleado);
+                    pst1.setString(2, nombre);
+                    pst1.setString(3, aPaterno);
+                    pst1.setString(4, aMaterno);
+                    pst1.setString(5, puesto);
+                    pst1.executeUpdate();
+
+                    int nuevoIdUsuario = 1;
+                    String sqlMaxUsuario = "SELECT MAX(id_usuario) FROM usuarios";
+                    try (java.sql.PreparedStatement pstMaxUsr = con.prepareStatement(sqlMaxUsuario);
+                         java.sql.ResultSet rsMaxUsr = pstMaxUsr.executeQuery()) {
+                        if (rsMaxUsr.next()) {
+                            int maxIdUsr = rsMaxUsr.getInt(1);
+                            if (maxIdUsr > 0) {
+                                nuevoIdUsuario = maxIdUsr + 1;
+                            }
+                        }
+                    }
+
+                    String sqlUsuario = "INSERT INTO usuarios (id_usuario, id_empleado, usuario, contrasena) VALUES (?, ?, ?, SHA2(?, 256))";
+                    try (java.sql.PreparedStatement pst2 = con.prepareStatement(sqlUsuario)) {
+                        pst2.setInt(1, nuevoIdUsuario);
+                        pst2.setInt(2, nuevoIdEmpleado);
+                        pst2.setString(3, usuario);
+                        pst2.setString(4, contrasena);
+                        pst2.executeUpdate();
+                    }
+                }
+                
+                con.commit();
+                javax.swing.JOptionPane.showMessageDialog(this, "Empleado y usuario registrados con éxito.");
+                limpiarCampos();
+            } catch (Exception ex) {
+                con.rollback();
+                javax.swing.JOptionPane.showMessageDialog(this, "Error al registrar: " + ex.getMessage());
+                logger.log(java.util.logging.Level.SEVERE, "Error al registrar empleado", ex);
+            }
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error de conexión: " + ex.getMessage());
+            logger.log(java.util.logging.Level.SEVERE, "Error de conexión", ex);
+        }
+    }
+
+    private void limpiarCampos() {
+        jTNombre.setText("");
+        jTAPaterno.setText("");
+        jTAMaterno.setText("");
+        jCBPuesto.setSelectedIndex(0);
+        jTUsuario.setText("");
+        jPContrasena.setText("");
+        jPCContrasena.setText("");
     }
 
     /**
@@ -43,7 +187,7 @@ public class PSEmpleados extends javax.swing.JFrame {
         jLContrasena1 = new javax.swing.JLabel();
         jPCContrasena = new javax.swing.JPasswordField();
         jLAMaterno1 = new javax.swing.JLabel();
-        jTPuesto = new javax.swing.JTextField();
+        jCBPuesto = new javax.swing.JComboBox<>();
         jBRegresar = new javax.swing.JButton();
         jBRegistrar = new javax.swing.JButton();
 
@@ -76,6 +220,8 @@ public class PSEmpleados extends javax.swing.JFrame {
 
         jLAMaterno1.setForeground(new java.awt.Color(255, 255, 255));
         jLAMaterno1.setText("Puesto:");
+
+        jCBPuesto.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Administrativo", "Mesero", "Cocinero" }));
 
         jBRegresar.setText("REGRESAR");
 
@@ -124,7 +270,7 @@ public class PSEmpleados extends javax.swing.JFrame {
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLAMaterno1, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTPuesto, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(jCBPuesto, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 32, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
@@ -151,7 +297,7 @@ public class PSEmpleados extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLAMaterno1)
-                    .addComponent(jTPuesto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jCBPuesto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLUsuario)
@@ -189,22 +335,17 @@ public class PSEmpleados extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+        /* Set FlatMacDarkLaf para mantener consistencia general del programa */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            javax.swing.UIManager.put("Button.arc", 20);
+            javax.swing.UIManager.put("Component.arc", 20);
+            javax.swing.UIManager.put("ProgressBar.arc", 20);
+            javax.swing.UIManager.put("TextComponent.arc", 20);
+            javax.swing.UIManager.put("ScrollBar.arc", 20);
+            com.formdev.flatlaf.themes.FlatMacDarkLaf.setup();
+        } catch (Exception ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new PSEmpleados().setVisible(true));
@@ -213,6 +354,7 @@ public class PSEmpleados extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jBRegistrar;
     private javax.swing.JButton jBRegresar;
+    private javax.swing.JComboBox<String> jCBPuesto;
     private javax.swing.JLabel jLAMaterno;
     private javax.swing.JLabel jLAMaterno1;
     private javax.swing.JLabel jLAPaterno;
@@ -227,7 +369,6 @@ public class PSEmpleados extends javax.swing.JFrame {
     private javax.swing.JTextField jTAMaterno;
     private javax.swing.JTextField jTAPaterno;
     private javax.swing.JTextField jTNombre;
-    private javax.swing.JTextField jTPuesto;
     private javax.swing.JTextField jTUsuario;
     // End of variables declaration//GEN-END:variables
 }

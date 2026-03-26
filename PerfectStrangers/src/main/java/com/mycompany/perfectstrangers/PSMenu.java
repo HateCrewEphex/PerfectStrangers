@@ -106,6 +106,11 @@ public class PSMenu extends javax.swing.JFrame {
             }
         });
 
+        // Configurar menú de Empleados dentro de la pestaña "Menú"
+        javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Alta de Empleados");
+        jItemEmpleados.addActionListener(evt -> abrirVentana(new PSEmpleados()));
+        jMenu.add(jItemEmpleados);
+
         jMOTomar.addActionListener(evt -> abrirVentana(new PSTOrden()));
         jMOConsultar.addActionListener(evt -> abrirVentana(new PSConOrder()));
         jMOCobrar.addActionListener(evt -> abrirVentana(new PSCobOrden()));
