@@ -17,6 +17,10 @@ public class PSInventario extends javax.swing.JFrame {
      */
     public PSInventario() {
         initComponents();
+        jBRegresar.addActionListener(evt -> {
+            java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+            dispose();
+        });
     }
 
     /**

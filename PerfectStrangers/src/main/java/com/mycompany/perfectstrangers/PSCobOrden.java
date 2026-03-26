@@ -17,6 +17,10 @@ public class PSCobOrden extends javax.swing.JFrame {
      */
     public PSCobOrden() {
         initComponents();
+        jBRegresar.addActionListener(evt -> {
+            java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+            dispose();
+        });
     }
 
     /**

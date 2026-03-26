@@ -17,6 +17,10 @@ public class PSTOrden extends javax.swing.JFrame {
      */
     public PSTOrden() {
         initComponents();
+        jBRegresar.addActionListener(evt -> {
+            java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+            dispose();
+        });
     }
 
     /**

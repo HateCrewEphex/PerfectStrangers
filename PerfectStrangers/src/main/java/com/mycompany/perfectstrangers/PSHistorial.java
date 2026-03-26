@@ -17,6 +17,10 @@ public class PSHistorial extends javax.swing.JFrame {
      */
     public PSHistorial() {
         initComponents();
+        jBRegresar.addActionListener(evt -> {
+            java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+            dispose();
+        });
     }
 
     /**

@@ -17,6 +17,10 @@ public class PSConOrder extends javax.swing.JFrame {
      */
     public PSConOrder() {
         initComponents();
+        jBRegresar.addActionListener(evt -> {
+            java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+            dispose();
+        });
     }
 
     /**

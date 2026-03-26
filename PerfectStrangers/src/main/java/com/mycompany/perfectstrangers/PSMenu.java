@@ -24,7 +24,7 @@ public class PSMenu extends javax.swing.JFrame {
         JInicio.addMenuListener(new javax.swing.event.MenuListener() {
             @Override
             public void menuSelected(javax.swing.event.MenuEvent e) {
-                abrirVentana(new PSInicio());
+                // Ya en Inicio/Menú principal, no hacemos nada para evitar ir al login
             }
 
             @Override
