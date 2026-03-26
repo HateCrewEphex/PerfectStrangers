@@ -1,4 +1,5 @@
 com\mycompany\perfectstrangers\PSEmpleados$1.class
+com\mycompany\perfectstrangers\PSCombos$1.class
 com\mycompany\perfectstrangers\PSConOrder.class
 com\mycompany\perfectstrangers\PerfectStrangers.class
 com\mycompany\perfectstrangers\PSCobOrden.class
@@ -11,6 +12,7 @@ com\mycompany\perfectstrangers\PSPlatillos.class
 com\mycompany\perfectstrangers\PSConOrder$OrdenPendiente.class
 com\mycompany\perfectstrangers\PSEmpleados.class
 com\mycompany\perfectstrangers\PSHistorial.class
+com\mycompany\perfectstrangers\PSCombos.class
 com\mycompany\perfectstrangers\PSInicio.class
 com\mycompany\perfectstrangers\DBConnection.class
 com\mycompany\perfectstrangers\PSTOrden$ProductoItem.class

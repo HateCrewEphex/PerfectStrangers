@@ -39,6 +39,10 @@ public class PSInicio extends javax.swing.JFrame {
         jLAccesoIncorrecto.setText("");
         jBAcceder.addActionListener(evt -> autenticarUsuario());
         
+        // Permite presionar 'Enter' en los campos de texto para iniciar sesión
+        jPFContraseña.addActionListener(evt -> autenticarUsuario());
+        jTFUsuario.addActionListener(evt -> autenticarUsuario());
+        
         // Centrar el contenido dinámicamente
         javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
         fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));

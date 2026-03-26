@@ -11,12 +11,91 @@ package com.mycompany.perfectstrangers;
 public class PSCombos extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSCombos.class.getName());
+    private java.sql.Connection conexion;
+    private String modoActual = "NUEVO";  // Puede ser: NUEVO, ACTUALIZAR, ELIMINAR
+    private java.util.ArrayList<Integer> platillosSeleccionados = new java.util.ArrayList<>();
 
     /**
      * Creates new form PSPlatillos
      */
     public PSCombos() {
         initComponents();
+        
+        // Ventana en pantalla completa
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        this.setTitle("PerfectStrangers - COMBOS");
+        
+        try {
+            java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
+            if (iconURL != null) {
+                this.setIconImage(new javax.swing.ImageIcon(iconURL).getImage());
+            }
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar el icono de la ventana.");
+        }
+        
+        // Centrar el contenido dinámicamente
+        javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
+        fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
+        fondoCentrado.add(jPPrincipal);
+        this.setContentPane(fondoCentrado);
+        
+        try { 
+            conexion = DBConnection.getConnection(); 
+        } catch (Exception e) {
+            System.err.println("Error de conexion en Combos: " + e.getMessage());
+        }
+        
+        jCTipoCombo.removeAllItems();
+        jCTipoCombo.addItem("Combo");
+        jCTipoCombo.addItem("Promo");
+        
+        jBAltaCombo.addActionListener(e -> setModo("NUEVO"));
+        jBActCombo.addActionListener(e -> setModo("ACTUALIZAR"));
+        jBEliCombo.addActionListener(e -> setModo("ELIMINAR"));
+        
+        jBGuardar.addActionListener(e -> ejecutarAccionPrincipal());
+        // Quitar la llamada duplicada de eliminar al boton de toggle, 
+        // para que solo cambie el modo y se muestre un botón para confirmar la eliminación si hace falta
+        
+        // Agregar listener para el botón de Regresar
+        jBRegresar.addActionListener(e -> {
+            new PSMenu().setVisible(true);
+            this.dispose();
+        });
+        
+        setModo("NUEVO");
+        cargarIdsPlatillos();
+        cargarIdsCombos();
+    }
+
+    private void cargarIdsPlatillos() {
+        if (conexion == null) return;
+        jCIDPlatillo.removeAllItems();
+        try {
+            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT id_platillo, nombre_alimento FROM platillos");
+            java.sql.ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                jCIDPlatillo.addItem(rs.getInt("id_platillo") + " - " + rs.getString("nombre_alimento"));
+            }
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+    }
+
+    private void cargarIdsCombos() {
+        if (conexion == null) return;
+        jCComboSel.removeAllItems();
+        jCComboSel.addItem("Nuevo");
+        try {
+            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT id_paquete FROM paquetes WHERE id_paquete != 0");
+            java.sql.ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                jCComboSel.addItem(String.valueOf(rs.getInt("id_paquete")));
+            }
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -36,6 +115,8 @@ public class PSCombos extends javax.swing.JFrame {
         jPPlatillos = new javax.swing.JPanel();
         jLIDPlatillo = new javax.swing.JLabel();
         jCIDPlatillo = new javax.swing.JComboBox<>();
+        jLComboSel = new javax.swing.JLabel();
+        jCComboSel = new javax.swing.JComboBox<>();
         jLNomCombo = new javax.swing.JLabel();
         jTNomPlatillo = new javax.swing.JTextField();
         jLTipoPaquete = new javax.swing.JLabel();
@@ -69,6 +150,16 @@ public class PSCombos extends javax.swing.JFrame {
 
         jCIDPlatillo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        jLComboSel.setForeground(new java.awt.Color(255, 255, 255));
+        jLComboSel.setText("ID COMBO:");
+
+        jCComboSel.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Nuevo" }));
+        jCComboSel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCComboSelActionPerformed(evt);
+            }
+        });
+
         jLNomCombo.setForeground(new java.awt.Color(255, 255, 255));
         jLNomCombo.setText("NOMBRE COMBO:");
 
@@ -95,6 +186,10 @@ public class PSCombos extends javax.swing.JFrame {
             .addGroup(jPPlatillosLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPPlatillosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPPlatillosLayout.createSequentialGroup()
+                        .addComponent(jLComboSel, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCComboSel, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPPlatillosLayout.createSequentialGroup()
                         .addComponent(jLNomCombo, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -125,6 +220,10 @@ public class PSCombos extends javax.swing.JFrame {
             .addGroup(jPPlatillosLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPPlatillosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLComboSel)
+                    .addComponent(jCComboSel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPPlatillosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLNomCombo)
                     .addComponent(jTNomPlatillo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
@@ -135,7 +234,7 @@ public class PSCombos extends javax.swing.JFrame {
                 .addGroup(jPPlatillosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLPrecio)
                     .addComponent(jTPrecio, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(9, 9, 9)
+                .addGap(18, 18, 18)
                 .addGroup(jPPlatillosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLIDPlatillo)
                     .addComponent(jCIDPlatillo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -202,36 +301,202 @@ public class PSCombos extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jBAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBAgregarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jBAgregarActionPerformed
+    private void jBAgregarActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        String platilloSel = (String) jCIDPlatillo.getSelectedItem();
+        if (platilloSel != null) {
+            String[] parts = platilloSel.split(" - ");
+            int idPlatillo = Integer.parseInt(parts[0]);
+            String nombrePlatillo = parts[1];
+            
+            platillosSeleccionados.add(idPlatillo);
+            String platillosActuales = jLPlatillosCombo.getText();
+            if (platillosActuales.equals("-") || platillosActuales.isEmpty()) {
+                jLPlatillosCombo.setText(nombrePlatillo);
+            } else {
+                jLPlatillosCombo.setText(platillosActuales + ", " + nombrePlatillo);
+            }
+        }
+    }                                         
+
+        private void ejecutarAccionPrincipal() {
+        if (modoActual.equals("ELIMINAR")) {
+            eliminarPaquete();
+        } else {
+            guardarPaquete();
+        }
+    }
+
+    private int generarNuevoIdCombo() {
+        int nuevoId = 1;
+        try {
+            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT MAX(id_paquete) FROM paquetes");
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int maxId = rs.getInt(1);
+                if (maxId > 0) {
+                    nuevoId = maxId + 1;
+                }
+            }
+        } catch (java.sql.SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        return nuevoId;
+    }
+
+    private void guardarPaquete() {
+        String nombreCombo = jTNomPlatillo.getText();
+        String tipoCombo = (String) jCTipoCombo.getSelectedItem();
+        String precioStr = jTPrecio.getText();
+        
+        if (nombreCombo.isEmpty() || precioStr.isEmpty() || platillosSeleccionados.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Complete todos los campos y agregue al menos un platillo", "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        double precio = Double.parseDouble(precioStr);
+        String idComboStr = (String) jCComboSel.getSelectedItem();
+        
+        try {
+            if (modoActual.equals("NUEVO")) {
+                int idNuevoPaquete = generarNuevoIdCombo();
+                
+                java.sql.PreparedStatement ps = conexion.prepareStatement("INSERT INTO paquetes (id_paquete, nombre_paquete, tipo_paquete, precio_paquete) VALUES (?, ?, ?, ?)");
+                ps.setInt(1, idNuevoPaquete);
+                ps.setString(2, nombreCombo);
+                ps.setString(3, tipoCombo);
+                ps.setDouble(4, precio);
+                ps.executeUpdate();
+                
+                if (idNuevoPaquete != -1) {
+                    guardarPlatillosPaquete(idNuevoPaquete);
+                    javax.swing.JOptionPane.showMessageDialog(this, "Combo creado correctamente con ID: " + idNuevoPaquete);
+                }
+            } else if (modoActual.equals("ACTUALIZAR") && idComboStr != null && !idComboStr.equals("Nuevo")) {
+                int idCombo = Integer.parseInt(idComboStr);
+                
+                if (idCombo == 0) {
+                    javax.swing.JOptionPane.showMessageDialog(this, "El combo 0 no se puede actualizar.", "Acción denegada", javax.swing.JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                java.sql.PreparedStatement ps = conexion.prepareStatement("UPDATE paquetes SET nombre_paquete = ?, tipo_paquete = ?, precio_paquete = ? WHERE id_paquete = ?");
+                ps.setString(1, nombreCombo);
+                ps.setString(2, tipoCombo);
+                ps.setDouble(3, precio);
+                ps.setInt(4, idCombo);
+                ps.executeUpdate();
+                
+                // Borrar los anteriores y guardar los nuevos
+                java.sql.PreparedStatement psDel = conexion.prepareStatement("DELETE FROM detalle_paquetes WHERE id_paquete = ?");
+                psDel.setInt(1, idCombo);
+                psDel.executeUpdate();
+                
+                guardarPlatillosPaquete(idCombo);
+                javax.swing.JOptionPane.showMessageDialog(this, "Combo actualizado correctamente");
+            }
+            limpiarFormulario();
+            cargarIdsCombos();
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error de base de datos: " + ex.getMessage());
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+    }
+
+    private void guardarPlatillosPaquete(int idPaquete) throws java.sql.SQLException {
+        java.sql.PreparedStatement ps = conexion.prepareStatement("INSERT INTO detalle_paquetes (id_paquete, id_platillo, cant) VALUES (?, ?, ?)");
+        
+        // Agrupar platillos duplicados para sumar la cantidad
+        java.util.Map<Integer, Integer> conteoPlatillos = new java.util.HashMap<>();
+        for (int idPlatillo : platillosSeleccionados) {
+            conteoPlatillos.put(idPlatillo, conteoPlatillos.getOrDefault(idPlatillo, 0) + 1);
+        }
+        
+        for (java.util.Map.Entry<Integer, Integer> entry : conteoPlatillos.entrySet()) {
+            ps.setInt(1, idPaquete);
+            ps.setInt(2, entry.getKey());
+            ps.setInt(3, entry.getValue());
+            ps.addBatch();
+        }
+        ps.executeBatch();
+    }
+
+    private void eliminarPaquete() {
+        if (!modoActual.equals("ELIMINAR")) return;
+        
+        String idComboStr = (String) jCComboSel.getSelectedItem();
+        if (idComboStr == null || idComboStr.equals("Nuevo")) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Seleccione un combo para eliminar", "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        try {
+            int idCombo = Integer.parseInt(idComboStr);
+            
+            if (idCombo == 0) {
+                javax.swing.JOptionPane.showMessageDialog(this, "El combo 0 no se puede eliminar.", "Acción denegada", javax.swing.JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Borrar de detalle_paquetes primero por la fk
+            java.sql.PreparedStatement psDelDet = conexion.prepareStatement("DELETE FROM detalle_paquetes WHERE id_paquete = ?");
+            psDelDet.setInt(1, idCombo);
+            psDelDet.executeUpdate();
+            
+            // Lógica de eliminación en tabla maestra
+            java.sql.PreparedStatement ps = conexion.prepareStatement("DELETE FROM paquetes WHERE id_paquete = ?");
+            ps.setInt(1, idCombo);
+            ps.executeUpdate();
+            
+            javax.swing.JOptionPane.showMessageDialog(this, "Combo eliminado correctamente");
+            limpiarFormulario();
+            cargarIdsCombos();
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error eliminando el combo: " + ex.getMessage());
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+    }
+
+    private void limpiarFormulario() {
+        jCComboSel.setSelectedIndex(0);
+        jTNomPlatillo.setText("");
+        jTPrecio.setText("");
+        jCTipoCombo.setSelectedIndex(0);
+        jLPlatillosCombo.setText("-");
+        platillosSeleccionados.clear();
+    }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+        /* Set the look and feel */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            javax.swing.UIManager.put("Button.arc", 20);
+            javax.swing.UIManager.put("Component.arc", 20);
+            javax.swing.UIManager.put("ProgressBar.arc", 20);
+            javax.swing.UIManager.put("TextComponent.arc", 20);
+            javax.swing.UIManager.put("ScrollBar.arc", 20);
+            com.formdev.flatlaf.themes.FlatMacDarkLaf.setup();
+        } catch (Exception ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new PSCombos().setVisible(true));
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private void jCComboSelActionPerformed(java.awt.event.ActionEvent evt) {
+        String idCombo = (String) jCComboSel.getSelectedItem();
+        if (idCombo != null && !idCombo.equals("Nuevo")) {
+            cargarDatosCombo(idCombo);
+        } else if ("Nuevo".equals(idCombo)) {
+            jTNomPlatillo.setText("");
+            jTPrecio.setText("");
+            jCTipoCombo.setSelectedIndex(0);
+            jLPlatillosCombo.setText("-");
+            platillosSeleccionados.clear();
+        }
+    }    // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jBActCombo;
     private javax.swing.JButton jBAgregar;
     private javax.swing.JButton jBAltaCombo;
@@ -242,6 +507,8 @@ public class PSCombos extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> jCTipoCombo;
     private javax.swing.JLabel jLCombos;
     private javax.swing.JLabel jLIDPlatillo;
+    private javax.swing.JComboBox<String> jCComboSel;
+    private javax.swing.JLabel jLComboSel;
     private javax.swing.JLabel jLNomCombo;
     private javax.swing.JLabel jLPlatillosCombo;
     private javax.swing.JLabel jLPrecio;
@@ -251,4 +518,107 @@ public class PSCombos extends javax.swing.JFrame {
     private javax.swing.JTextField jTNomPlatillo;
     private javax.swing.JTextField jTPrecio;
     // End of variables declaration//GEN-END:variables
+
+    private void setModo(String modo) {
+        this.modoActual = modo;
+        if (modo.equals("NUEVO")) {
+            jCComboSel.setSelectedIndex(0);
+            jCComboSel.setEnabled(false);
+            jTNomPlatillo.setText("");
+            jTPrecio.setText("");
+            jCTipoCombo.setSelectedIndex(0);
+            jLPlatillosCombo.setText("-");
+            platillosSeleccionados.clear();
+            
+            jTNomPlatillo.setEnabled(true);
+            jTPrecio.setEnabled(true);
+            jCTipoCombo.setEnabled(true);
+            jBGuardar.setEnabled(true);
+            jBGuardar.setText("GUARDAR COMBO");
+            jBGuardar.setBackground(null);
+            jBAgregar.setEnabled(true);
+            jBEliCombo.setEnabled(true);
+            
+            jBAltaCombo.setBackground(new java.awt.Color(255, 102, 0));
+            jBActCombo.setBackground(new java.awt.Color(255, 255, 255));
+            jBEliCombo.setBackground(new java.awt.Color(255, 255, 255));
+        } else if (modo.equals("ACTUALIZAR")) {
+            jCComboSel.setEnabled(true);
+            jTNomPlatillo.setEnabled(true);
+            jTPrecio.setEnabled(true);
+            jCTipoCombo.setEnabled(true);
+            jBGuardar.setEnabled(true);
+            jBGuardar.setText("ACTUALIZAR COMBO");
+            jBGuardar.setBackground(null);
+            jBAgregar.setEnabled(true);
+            jBEliCombo.setEnabled(true);
+            
+            jBAltaCombo.setBackground(new java.awt.Color(255, 255, 255));
+            jBActCombo.setBackground(new java.awt.Color(255, 102, 0));
+            jBEliCombo.setBackground(new java.awt.Color(255, 255, 255));
+        } else if (modo.equals("ELIMINAR")) {
+            jCComboSel.setEnabled(true);
+            jTNomPlatillo.setEnabled(false);
+            jTPrecio.setEnabled(false);
+            jCTipoCombo.setEnabled(false);
+            jBGuardar.setEnabled(true);
+            jBGuardar.setText("ELIMINAR COMBO");
+            jBGuardar.setBackground(java.awt.Color.RED);
+            jBAgregar.setEnabled(false);
+            jBEliCombo.setEnabled(true);
+            
+            jBAltaCombo.setBackground(new java.awt.Color(255, 255, 255));
+            jBActCombo.setBackground(new java.awt.Color(255, 255, 255));
+            jBEliCombo.setBackground(new java.awt.Color(255, 102, 0));
+        }
+    }
+
+    private void cargarDatosCombo(String idCombo) {
+        try {
+            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT * FROM paquetes WHERE id_paquete = ?");
+            ps.setInt(1, Integer.parseInt(idCombo));
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                jTNomPlatillo.setText(rs.getString("nombre_paquete"));
+                jTPrecio.setText(rs.getString("precio_paquete"));
+                jCTipoCombo.setSelectedItem(rs.getString("tipo_paquete"));
+            }
+            
+            // Cargar los platillos del paquete
+            platillosSeleccionados.clear();
+            java.sql.PreparedStatement psPlat = conexion.prepareStatement(
+                "SELECT dp.id_platillo, dp.cant, p.nombre_alimento " +
+                "FROM detalle_paquetes dp " +
+                "JOIN platillos p ON dp.id_platillo = p.id_platillo " +
+                "WHERE dp.id_paquete = ?");
+            psPlat.setInt(1, Integer.parseInt(idCombo));
+            java.sql.ResultSet rsPlat = psPlat.executeQuery();
+            
+            StringBuilder nombresPlatillos = new StringBuilder();
+            while (rsPlat.next()) {
+                int idPlatillo = rsPlat.getInt("id_platillo");
+                int cant = rsPlat.getInt("cant");
+                String nombrePlatillo = rsPlat.getString("nombre_alimento");
+                
+                for(int i = 0; i < cant; i++) {
+                    platillosSeleccionados.add(idPlatillo);
+                }
+                
+                if (nombresPlatillos.length() > 0) {
+                    nombresPlatillos.append(", ");
+                }
+                nombresPlatillos.append(cant).append("x ").append(nombrePlatillo);
+            }
+            
+            if (nombresPlatillos.length() > 0) {
+                jLPlatillosCombo.setText(nombresPlatillos.toString());
+            } else {
+                jLPlatillosCombo.setText("-");
+            }
+            
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error cargando los datos del combo: " + ex.getMessage());
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+    }
 }

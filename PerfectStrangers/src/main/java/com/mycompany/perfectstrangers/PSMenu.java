@@ -116,6 +116,18 @@ public class PSMenu extends javax.swing.JFrame {
         jItemPlatillos.addActionListener(evt -> abrirVentana(new PSPlatillos()));
         jMenu.add(jItemPlatillos);
 
+        // Configurar menú de Combos dentro de la pestaña "Menú"
+        javax.swing.JMenuItem jItemCombos = new javax.swing.JMenuItem("Control de Combos");
+        jItemCombos.addActionListener(evt -> abrirVentana(new PSCombos()));
+        jMenu.add(jItemCombos);
+
+        // Validar que solo un administrador pueda ver la pestaña "Menú"
+        if (Sesion.puestoEmpleado != null && (Sesion.puestoEmpleado.equalsIgnoreCase("Administrador") || Sesion.puestoEmpleado.equalsIgnoreCase("Administrativo"))) {
+            jMenu.setVisible(true);
+        } else {
+            jMenu.setVisible(false);
+        }
+
         jMOTomar.addActionListener(evt -> abrirVentana(new PSTOrden()));
         jMOConsultar.addActionListener(evt -> abrirVentana(new PSConOrder()));
         jMOCobrar.addActionListener(evt -> abrirVentana(new PSCobOrden()));
