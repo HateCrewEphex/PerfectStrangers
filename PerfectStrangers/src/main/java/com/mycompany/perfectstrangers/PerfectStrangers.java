@@ -11,6 +11,6 @@ package com.mycompany.perfectstrangers;
 public class PerfectStrangers {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        java.awt.EventQueue.invokeLater(() -> new PSInicio().setVisible(true));
     }
 }

@@ -91,7 +91,7 @@ public class PSMenu extends javax.swing.JFrame {
                 .addComponent(jLTiempo)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 73, Short.MAX_VALUE))
+                .addGap(0, 92, Short.MAX_VALUE))
         );
         jMenuInfLayout.setVerticalGroup(
             jMenuInfLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

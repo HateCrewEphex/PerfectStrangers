@@ -81,6 +81,7 @@ public class PSTOrden extends javax.swing.JFrame {
         jBRegistrar.setText("REGISTRAR");
 
         jCNoMesa.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jCNoMesa.addActionListener(this::jCNoMesaActionPerformed);
 
         javax.swing.GroupLayout jPOrdenLayout = new javax.swing.GroupLayout(jPOrden);
         jPOrden.setLayout(jPOrdenLayout);
@@ -175,6 +176,10 @@ public class PSTOrden extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jCNoMesaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCNoMesaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jCNoMesaActionPerformed
 
     /**
      * @param args the command line arguments

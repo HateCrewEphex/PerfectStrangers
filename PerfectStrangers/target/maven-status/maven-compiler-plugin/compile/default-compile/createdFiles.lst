@@ -1,8 +1,6 @@
 com\mycompany\perfectstrangers\PSHistorial.class
 com\mycompany\perfectstrangers\PSConOrder.class
 com\mycompany\perfectstrangers\PSInicio.class
-com\mycompany\perfectstrangers\PSTOrden.class
 com\mycompany\perfectstrangers\PerfectStrangers.class
 com\mycompany\perfectstrangers\PSCobOrden.class
-com\mycompany\perfectstrangers\PSMenu.class
 com\mycompany\perfectstrangers\PSInventario.class
