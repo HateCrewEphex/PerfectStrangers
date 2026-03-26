@@ -7,6 +7,7 @@ com\mycompany\perfectstrangers\PSInventario.class
 com\mycompany\perfectstrangers\Sesion.class
 com\mycompany\perfectstrangers\PSMenu$1.class
 com\mycompany\perfectstrangers\PSMenu$4.class
+com\mycompany\perfectstrangers\PSPlatillos.class
 com\mycompany\perfectstrangers\PSConOrder$OrdenPendiente.class
 com\mycompany\perfectstrangers\PSEmpleados.class
 com\mycompany\perfectstrangers\PSHistorial.class

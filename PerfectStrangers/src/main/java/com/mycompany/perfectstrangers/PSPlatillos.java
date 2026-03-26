@@ -12,11 +12,214 @@ public class PSPlatillos extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSPlatillos.class.getName());
 
+    private String modoActual = "NUEVO"; // NUEVO, ACTUALIZAR, ELIMINAR
+
     /**
      * Creates new form PSPlatillos
      */
     public PSPlatillos() {
         initComponents();
+        
+        // Estilos
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        setLocationRelativeTo(null);
+        
+        java.awt.Font fontLabels = new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14);
+        java.awt.Font fontInputs = new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14);
+        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 24)); // Título principal más grande
+        
+        jLabel2.setFont(fontLabels);
+        jLabel3.setFont(fontLabels);
+        jLabel4.setFont(fontLabels);
+        jLabel5.setFont(fontLabels);
+        
+        jTNomPlatillo.setFont(fontInputs);
+        jTPrecio.setFont(fontInputs);
+        jComboBox1.setFont(fontInputs);
+        jComboBox2.setFont(fontInputs);
+        
+        jBGuardar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        jButton1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        jButton1.setBackground(null);
+        jButton1.setForeground(java.awt.Color.WHITE);
+        
+        jBAltaPlatillo.setFont(fontLabels);
+        jBActPlatillo.setFont(fontLabels);
+        jBEliPlatillo.setFont(fontLabels);
+        
+        // Configurar ComboBox tipo alimento
+        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Alimento", "Bebida" }));
+        
+        // Eventos de botones principales
+        jBAltaPlatillo.addActionListener(e -> setModo("NUEVO"));
+        jBActPlatillo.addActionListener(e -> setModo("ACTUALIZAR"));
+        jBEliPlatillo.addActionListener(e -> setModo("ELIMINAR"));
+        
+        jComboBox1.addActionListener(e -> cargarDatosPlatillo());
+        
+        jBGuardar.addActionListener(e -> ejecutarAccion());
+        jBGuardar.setForeground(java.awt.Color.WHITE);
+        
+        // Boton regresar
+        jButton1.addActionListener(e -> {
+            PSMenu menu = new PSMenu();
+            menu.setVisible(true);
+            dispose();
+        });
+        
+        // Centrar UI
+        javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
+        fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
+        fondoCentrado.add(jPPrincipal);
+        this.setContentPane(fondoCentrado);
+        
+        setModo("NUEVO");
+    }
+
+    private void setModo(String modo) {
+        this.modoActual = modo;
+        jTNomPlatillo.setText("");
+        jTPrecio.setText("");
+        
+        if (modo.equals("NUEVO")) {
+            jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Nuevo" }));
+            jComboBox1.setEnabled(false);
+            jTNomPlatillo.setEnabled(true);
+            jComboBox2.setEnabled(true);
+            jTPrecio.setEnabled(true);
+            jBGuardar.setText("GUARDAR");
+            jBGuardar.setBackground(new java.awt.Color(40, 167, 69)); // Verde
+        } else {
+            jComboBox1.setEnabled(true);
+            cargarIdsPlatillos();
+            
+            if (modo.equals("ACTUALIZAR")) {
+                jTNomPlatillo.setEnabled(true);
+                jComboBox2.setEnabled(true);
+                jTPrecio.setEnabled(true);
+                jBGuardar.setText("ACTUALIZAR");
+                jBGuardar.setBackground(new java.awt.Color(0, 123, 255)); // Azul
+            } else if (modo.equals("ELIMINAR")) {
+                jTNomPlatillo.setEnabled(false);
+                jComboBox2.setEnabled(false);
+                jTPrecio.setEnabled(false);
+                jBGuardar.setText("ELIMINAR");
+                jBGuardar.setBackground(new java.awt.Color(220, 53, 69)); // Rojo
+            }
+        }
+    }
+    
+    private void cargarIdsPlatillos() {
+        jComboBox1.removeAllItems();
+        try (java.sql.Connection con = DBConnection.getConnection();
+             java.sql.PreparedStatement pst = con.prepareStatement("SELECT id_platillo FROM platillos ORDER BY id_platillo ASC");
+             java.sql.ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) {
+                jComboBox1.addItem(String.valueOf(rs.getInt("id_platillo")));
+            }
+        } catch (java.sql.SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar IDs", ex);
+        }
+    }
+    
+    private void cargarDatosPlatillo() {
+        if (jComboBox1.getSelectedItem() == null || jComboBox1.getSelectedItem().equals("Nuevo")) return;
+        
+        String idPlatillo = jComboBox1.getSelectedItem().toString();
+        try (java.sql.Connection con = DBConnection.getConnection();
+             java.sql.PreparedStatement pst = con.prepareStatement("SELECT nombre_alimento, tipo_alimento, costo FROM platillos WHERE id_platillo = ?")) {
+            pst.setInt(1, Integer.parseInt(idPlatillo));
+            try (java.sql.ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    jTNomPlatillo.setText(rs.getString("nombre_alimento"));
+                    jComboBox2.setSelectedItem(rs.getString("tipo_alimento"));
+                    jTPrecio.setText(rs.getString("costo"));
+                }
+            }
+        } catch (java.sql.SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar datos del platillo", ex);
+        }
+    }
+
+    private void ejecutarAccion() {
+        String nombre = jTNomPlatillo.getText().trim();
+        String tipo = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Alimento";
+        String precioStr = jTPrecio.getText().trim();
+        
+        if (modoActual.equals("NUEVO") || modoActual.equals("ACTUALIZAR")) {
+            if (nombre.isEmpty() || precioStr.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos.");
+                return;
+            }
+        }
+        
+        double precio = 0;
+        if (!modoActual.equals("ELIMINAR")) {
+            try {
+                precio = Double.parseDouble(precioStr);
+            } catch (NumberFormatException e) {
+                javax.swing.JOptionPane.showMessageDialog(this, "El precio debe ser un número válido.");
+                return;
+            }
+        }
+
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            if (modoActual.equals("NUEVO")) {
+                int nuevoId = 1;
+                try (java.sql.PreparedStatement pstMax = con.prepareStatement("SELECT MAX(id_platillo) FROM platillos");
+                     java.sql.ResultSet rsMax = pstMax.executeQuery()) {
+                    if (rsMax.next() && rsMax.getInt(1) > 0) {
+                        nuevoId = rsMax.getInt(1) + 1;
+                    }
+                }
+                
+                String sql = "INSERT INTO platillos (id_platillo, nombre_alimento, tipo_alimento, costo, descripcion) VALUES (?, ?, ?, ?, '')";
+                try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                    pst.setInt(1, nuevoId);
+                    pst.setString(2, nombre);
+                    pst.setString(3, tipo);
+                    pst.setDouble(4, precio);
+                    pst.executeUpdate();
+                    javax.swing.JOptionPane.showMessageDialog(this, "Platillo agregado con éxito (ID: " + nuevoId + ").");
+                }
+            } else if (modoActual.equals("ACTUALIZAR")) {
+                if (jComboBox1.getSelectedItem() == null) return;
+                int id = Integer.parseInt(jComboBox1.getSelectedItem().toString());
+                
+                String sql = "UPDATE platillos SET nombre_alimento = ?, tipo_alimento = ?, costo = ? WHERE id_platillo = ?";
+                try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                    pst.setString(1, nombre);
+                    pst.setString(2, tipo);
+                    pst.setDouble(3, precio);
+                    pst.setInt(4, id);
+                    pst.executeUpdate();
+                    javax.swing.JOptionPane.showMessageDialog(this, "Platillo actualizado con éxito.");
+                }
+            } else if (modoActual.equals("ELIMINAR")) {
+                if (jComboBox1.getSelectedItem() == null) return;
+                int id = Integer.parseInt(jComboBox1.getSelectedItem().toString());
+                String nombrePlatillo = jTNomPlatillo.getText().trim();
+                
+                int confirm = javax.swing.JOptionPane.showConfirmDialog(this, "¿Estás seguro que deseas eliminar el platillo: " + nombrePlatillo + "?", "Validar Eliminación", javax.swing.JOptionPane.YES_NO_OPTION, javax.swing.JOptionPane.WARNING_MESSAGE);
+                if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                    String sql = "DELETE FROM platillos WHERE id_platillo = ?";
+                    try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                        pst.setInt(1, id);
+                        pst.executeUpdate();
+                        javax.swing.JOptionPane.showMessageDialog(this, "Platillo eliminado con éxito.");
+                    }
+                } else {
+                    return;
+                }
+            }
+            
+            // Refrescar UI después de la acción
+            setModo(modoActual);
+            
+        } catch (java.sql.SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error en base de datos: " + ex.getMessage());
+            logger.log(java.util.logging.Level.SEVERE, "Error DB", ex);
+        }
     }
 
     /**
@@ -194,22 +397,17 @@ public class PSPlatillos extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+        /* Set FlatMacDarkLaf para mantener consistencia general del programa */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            javax.swing.UIManager.put("Button.arc", 20);
+            javax.swing.UIManager.put("Component.arc", 20);
+            javax.swing.UIManager.put("ProgressBar.arc", 20);
+            javax.swing.UIManager.put("TextComponent.arc", 20);
+            javax.swing.UIManager.put("ScrollBar.arc", 20);
+            com.formdev.flatlaf.themes.FlatMacDarkLaf.setup();
+        } catch (Exception ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new PSPlatillos().setVisible(true));

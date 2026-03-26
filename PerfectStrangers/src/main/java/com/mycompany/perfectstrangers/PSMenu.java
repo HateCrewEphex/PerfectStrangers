@@ -110,6 +110,11 @@ public class PSMenu extends javax.swing.JFrame {
         javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Alta de Empleados");
         jItemEmpleados.addActionListener(evt -> abrirVentana(new PSEmpleados()));
         jMenu.add(jItemEmpleados);
+        
+        // Configurar menú de Platillos dentro de la pestaña "Menú"
+        javax.swing.JMenuItem jItemPlatillos = new javax.swing.JMenuItem("Control de Platillos");
+        jItemPlatillos.addActionListener(evt -> abrirVentana(new PSPlatillos()));
+        jMenu.add(jItemPlatillos);
 
         jMOTomar.addActionListener(evt -> abrirVentana(new PSTOrden()));
         jMOConsultar.addActionListener(evt -> abrirVentana(new PSConOrder()));
