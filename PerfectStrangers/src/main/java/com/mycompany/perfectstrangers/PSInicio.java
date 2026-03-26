@@ -23,8 +23,18 @@ public class PSInicio extends javax.swing.JFrame {
      */
     public PSInicio() {
         initComponents();
-        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-        jPFContraseña.setEchoChar('*');
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);        
+        try {
+            java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
+            if (iconURL != null) {
+                this.setIconImage(new javax.swing.ImageIcon(iconURL).getImage());
+            }
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar el icono de la ventana.");
+        }
+        
+        this.setTitle("PerfectStrangers - VENTA Y ORDENES");
+                jPFContraseña.setEchoChar('*');
         jPFContraseña.setText("");
         jLAccesoIncorrecto.setText("");
         jBAcceder.addActionListener(evt -> autenticarUsuario());
@@ -33,8 +43,16 @@ public class PSInicio extends javax.swing.JFrame {
         javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
         fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
         fondoCentrado.add(jPPrincipal);
-        this.setContentPane(fondoCentrado);
-    }
+        this.setContentPane(fondoCentrado);        
+        try {
+            java.net.URL logoURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
+            if (logoURL != null) {
+                javax.swing.ImageIcon logoOriginal = new javax.swing.ImageIcon(logoURL);
+                java.awt.Image imagenOriginal = logoOriginal.getImage();
+                java.awt.Image redimensionada = imagenOriginal.getScaledInstance(250, 250, java.awt.Image.SCALE_SMOOTH);
+                jLLogo.setIcon(new javax.swing.ImageIcon(redimensionada));
+            }
+        } catch (Exception e) {}    }
 
     /**
      * This method is called from within the constructor to initialize the form.

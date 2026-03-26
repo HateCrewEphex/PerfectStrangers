@@ -25,6 +25,15 @@ public class PSMenu extends javax.swing.JFrame {
     public PSMenu() {
         initComponents();
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        
+        try {
+            java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
+            if (iconURL != null) {
+                this.setIconImage(new javax.swing.ImageIcon(iconURL).getImage());
+            }
+        } catch (Exception e) {}
+        this.setTitle("PerfectStrangers - Menú Principal");
+        
         configurarNavegacionMenu();
         configurarFondo();
         configurarSesionDatos();

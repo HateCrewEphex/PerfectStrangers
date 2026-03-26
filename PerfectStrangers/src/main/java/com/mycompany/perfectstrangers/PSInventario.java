@@ -18,6 +18,14 @@ public class PSInventario extends javax.swing.JFrame {
     public PSInventario() {
         initComponents();
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        try {
+            java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
+            if (iconURL != null) {
+                this.setIconImage(new javax.swing.ImageIcon(iconURL).getImage());
+            }
+        } catch (Exception e) {}
+        this.setTitle("PerfectStrangers - Inventario");
+
         configurarInterfaz();
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));

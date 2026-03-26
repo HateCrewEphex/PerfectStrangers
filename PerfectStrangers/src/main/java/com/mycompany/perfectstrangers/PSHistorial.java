@@ -25,6 +25,14 @@ public class PSHistorial extends javax.swing.JFrame {
     public PSHistorial() {
         initComponents();
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        try {
+            java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
+            if (iconURL != null) {
+                this.setIconImage(new javax.swing.ImageIcon(iconURL).getImage());
+            }
+        } catch (Exception e) {}
+        this.setTitle("PerfectStrangers - Historial");
+
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
