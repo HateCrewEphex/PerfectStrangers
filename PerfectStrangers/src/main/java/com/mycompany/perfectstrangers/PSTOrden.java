@@ -13,11 +13,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
@@ -38,14 +40,34 @@ public class PSTOrden extends javax.swing.JFrame {
         int id;
         String nombre;
         double precio;
+        boolean isPaquete;
         JCheckBox checkBox;
-        public ProductoItem(int id, String nombre, double precio) {
+        JSpinner spinnerCantidad;
+        JPanel panel;
+        
+        public ProductoItem(int id, String nombre, double precio, boolean isPaquete) {
             this.id = id;
             this.nombre = nombre;
             this.precio = precio;
-            this.checkBox = new JCheckBox(nombre + " - $" + precio);
-            this.checkBox.setBackground(new java.awt.Color(0, 0, 0));
-            this.checkBox.setForeground(new java.awt.Color(255, 255, 255));
+            this.isPaquete = isPaquete;
+            
+            panel = new JPanel(new java.awt.BorderLayout(10, 0));
+            panel.setBackground(new java.awt.Color(30, 30, 30));
+            panel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            panel.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, 60)); // Limitar la altura para el BoxLayout
+            
+            checkBox = new JCheckBox(nombre + " - $" + precio);
+            checkBox.setBackground(new java.awt.Color(30, 30, 30));
+            checkBox.setForeground(new java.awt.Color(255, 255, 255));
+            checkBox.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+            
+            // Selector de cantidad
+            spinnerCantidad = new JSpinner(new javax.swing.SpinnerNumberModel(1, 1, 100, 1));
+            spinnerCantidad.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+            spinnerCantidad.setPreferredSize(new java.awt.Dimension(80, 35));
+            
+            panel.add(checkBox, java.awt.BorderLayout.CENTER);
+            panel.add(spinnerCantidad, java.awt.BorderLayout.EAST);
         }
     }
 
@@ -108,6 +130,7 @@ public class PSTOrden extends javax.swing.JFrame {
 
         jBAgregar.setBackground(new java.awt.Color(204, 204, 204));
         jBAgregar.setText("AGREGAR");
+        jBAgregar.addActionListener(this::jBAgregarActionPerformed);
 
         javax.swing.GroupLayout jPContLayout = new javax.swing.GroupLayout(jPCont);
         jPCont.setLayout(jPContLayout);
@@ -240,6 +263,10 @@ public class PSTOrden extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jBBebidasActionPerformed
 
+    private void jBAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBAgregarActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jBAgregarActionPerformed
+
     private void configurarInterfaz() {
         // --- HACER RESPONSIVA LA VENTANA COMPLETA ---
         jPPrincipal.removeAll();
@@ -309,13 +336,29 @@ public class PSTOrden extends javax.swing.JFrame {
         jPOrden.setBackground(new java.awt.Color(0, 0, 0));
         jPOrden.add(jCNoMesa, BorderLayout.NORTH);
         
-        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "Precio", "Cant."}, 0) {
+        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "Precio", "Cant.", "IsPaquete"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return column == 3; // Solo permitir editar cantidad
             }
         };
         tablaOrden = new JTable(modeloOrden);
+        // Ocultar columna 4 (IsPaquete)
+        tablaOrden.getColumnModel().getColumn(4).setMinWidth(0);
+        tablaOrden.getColumnModel().getColumn(4).setMaxWidth(0);
+        tablaOrden.getColumnModel().getColumn(4).setWidth(0);
+        
+        // Alinear celdas al centro y ajustar anchos de columnas
+        javax.swing.table.DefaultTableCellRenderer centerRender = new javax.swing.table.DefaultTableCellRenderer();
+        centerRender.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+        for(int i = 0; i < 4; i++){
+            tablaOrden.getColumnModel().getColumn(i).setCellRenderer(centerRender);
+        }
+        tablaOrden.getColumnModel().getColumn(0).setPreferredWidth(50);
+        tablaOrden.getColumnModel().getColumn(1).setPreferredWidth(250);
+        tablaOrden.getColumnModel().getColumn(2).setPreferredWidth(80);
+        tablaOrden.getColumnModel().getColumn(3).setPreferredWidth(50);
+
         JScrollPane scrollOrden = new JScrollPane(tablaOrden);
         jPOrden.add(scrollOrden, BorderLayout.CENTER);
         
@@ -362,13 +405,16 @@ public class PSTOrden extends javax.swing.JFrame {
         productosActuales = new ArrayList<>();
         
         String query = "";
-        // Nota: Adaptar las sentencias sql exactas a como estén los datos en tu tabla
+        boolean isPaquete = false;
+        // Adaptamos a las columnas de la nueva bd
         if (categoria.equals("Platillos")) {
-            query = "SELECT id_platillo AS id, nombre, costo FROM platillos WHERE tipoAlimento NOT LIKE '%Bebida%' AND tipoAlimento NOT LIKE '%Paquete%'";
+            query = "SELECT id_platillo AS id, nombre_alimento AS nombre, costo FROM platillos WHERE tipo_alimento NOT LIKE '%Bebida%'";
         } else if (categoria.equals("Bebidas")) {
-            query = "SELECT id_platillo AS id, nombre, costo FROM platillos WHERE tipoAlimento LIKE '%Bebida%'";
+            query = "SELECT id_platillo AS id, nombre_alimento AS nombre, costo FROM platillos WHERE tipo_alimento LIKE '%Bebida%'";
         } else if (categoria.equals("Combos")) {
-            query = "SELECT MAX(id) AS id, nombrePaq AS nombre, MAX(precio_paquete) AS costo FROM paquetes GROUP BY nombrePaq";
+            // Suponemos que los nombres han cambiado en bd: id_paquete, nombre_paquete, precio_paquete
+            query = "SELECT MAX(id_paquete) AS id, nombre_paquete AS nombre, MAX(precio_paquete) AS costo FROM paquetes WHERE id_paquete != 0 GROUP BY nombre_paquete";
+            isPaquete = true;
         }
 
         try (Connection con = DBConnection.getConnection();
@@ -380,9 +426,13 @@ public class PSTOrden extends javax.swing.JFrame {
                 String nombre = rs.getString("nombre");
                 double costo = rs.getDouble("costo");
                 
-                ProductoItem item = new ProductoItem(id, nombre, costo);
+                ProductoItem item = new ProductoItem(id, nombre, costo, isPaquete);
                 productosActuales.add(item);
-                panelProductos.add(item.checkBox);
+                
+                // Agregar el panel con checkBox y Spinner
+                panelProductos.add(item.panel);
+                // Espaciador entre elementos
+                panelProductos.add(Box.createRigidArea(new java.awt.Dimension(0, 5)));
             }
         } catch (SQLException ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Error base de datos: " + ex.getMessage());
@@ -396,8 +446,10 @@ public class PSTOrden extends javax.swing.JFrame {
         if (productosActuales == null) return;
         for (ProductoItem item : productosActuales) {
             if (item.checkBox.isSelected()) {
-                modeloOrden.addRow(new Object[]{ item.id, item.nombre, item.precio, 1 });
+                int cantidad = (int) item.spinnerCantidad.getValue();
+                modeloOrden.addRow(new Object[]{ item.id, item.nombre, item.precio, cantidad, item.isPaquete });
                 item.checkBox.setSelected(false);
+                item.spinnerCantidad.setValue(1); // Resetear spinner
             }
         }
     }
@@ -415,35 +467,74 @@ public class PSTOrden extends javax.swing.JFrame {
             return;
         }
         String mesaStr = jCNoMesa.getSelectedItem().toString();
+        int numMesa = 1;
+        try { numMesa = Integer.parseInt(mesaStr.replace("Mesa ", "").trim()); } catch (Exception e){}
 
-        String sql = "INSERT INTO ordenes (id_empleado, id_platillo, cant, mesa, fecha, hora, estado) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), 'Levantada')";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement pst = con.prepareStatement(sql)) {
+        int idEmpleado = 1; 
+        if (Sesion.idEmpleado > 0) idEmpleado = Sesion.idEmpleado;
+
+        try (Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
             
-            int idEmpleado = 1; // ID de empleado temporal
+            int idPaquete = 0;
             for (int i = 0; i < modeloOrden.getRowCount(); i++) {
-                int idItem = (int) modeloOrden.getValueAt(i, 0);
-                
-                // Tratar el String y parsear la cantidad correctamente
-                Object cantObj = modeloOrden.getValueAt(i, 3);
-                int cant = 1;
-                if (cantObj instanceof Integer) {
-                    cant = (Integer) cantObj;
-                } else if (cantObj instanceof String) {
-                    try {
-                        cant = Integer.parseInt((String) cantObj);
-                    } catch (NumberFormatException e) { }
+                boolean isPaq = false;
+                try { isPaq = (boolean) modeloOrden.getValueAt(i, 4); } catch (Exception e){}
+                if (isPaq) {
+                    idPaquete = (int) modeloOrden.getValueAt(i, 0);
+                    break;
                 }
-
-                pst.setInt(1, idEmpleado);
-                pst.setInt(2, idItem);
-                pst.setInt(3, cant);
-                pst.setString(4, mesaStr);
-                pst.addBatch();
             }
-            pst.executeBatch();
-            javax.swing.JOptionPane.showMessageDialog(this, "¡Orden registrada con éxito para la " + mesaStr + "!");
-            modeloOrden.setRowCount(0); // Limpiar la lista de la orden 
+            
+            int idOrden = 1;
+            try(java.sql.Statement st = con.createStatement(); 
+                ResultSet rsId = st.executeQuery("SELECT MAX(id_orden) FROM ordenes")) {
+                if(rsId.next()) {
+                    idOrden = rsId.getInt(1) + 1;
+                }
+            }
+
+            String sqlOrden = "INSERT INTO ordenes (id_orden, id_empleado, id_paquete, mesa, fecha, hora, estado) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), 'Levantada')";
+            try(PreparedStatement pstO = con.prepareStatement(sqlOrden)) {
+                pstO.setInt(1, idOrden);
+                pstO.setInt(2, idEmpleado);
+                pstO.setInt(3, idPaquete);
+                pstO.setInt(4, numMesa);
+                pstO.executeUpdate();
+            }
+
+            String sqlDetalle = "INSERT INTO detalle_orden (id_orden, id_platillo, cant) VALUES (?, ?, ?)";
+            try (PreparedStatement pstD = con.prepareStatement(sqlDetalle)) {
+                boolean tieneDetalles = false;
+                for (int i = 0; i < modeloOrden.getRowCount(); i++) {
+                    boolean isPaq = false;
+                    try { isPaq = (boolean) modeloOrden.getValueAt(i, 4); } catch (Exception e){}
+                    
+                    if (!isPaq) {
+                        int idItem = (int) modeloOrden.getValueAt(i, 0);
+                        Object cantObj = modeloOrden.getValueAt(i, 3);
+                        int cant = 1;
+                        if (cantObj instanceof Integer) {
+                            cant = (Integer) cantObj;
+                        } else if (cantObj instanceof String) {
+                            try { cant = Integer.parseInt((String) cantObj); } catch (Exception e) { }
+                        }
+                        
+                        pstD.setInt(1, idOrden);
+                        pstD.setInt(2, idItem);
+                        pstD.setInt(3, cant);
+                        pstD.addBatch();
+                        tieneDetalles = true;
+                    }
+                }
+                if (tieneDetalles) {
+                    pstD.executeBatch();
+                }
+            }
+            
+            con.commit();
+            javax.swing.JOptionPane.showMessageDialog(this, "¡Orden " + idOrden + " registrada con éxito para la " + mesaStr + "!");
+            modeloOrden.setRowCount(0);
         } catch (SQLException ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Error al guardar en BD: " + ex.getMessage());
         }

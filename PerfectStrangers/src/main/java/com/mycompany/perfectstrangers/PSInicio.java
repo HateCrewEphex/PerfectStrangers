@@ -182,7 +182,7 @@ public class PSInicio extends javax.swing.JFrame {
         String sql = "SELECT u.id_empleado, e.nombre, e.ap_paterno, e.puesto " +
                      "FROM usuarios u " +
                      "JOIN empleados e ON u.id_empleado = e.id_empleado " +
-                     "WHERE u.usuario = ? AND u.contraseña = SHA2(?, 256)";
+                     "WHERE u.usuario = ? AND u.contrasena = SHA2(?, 256)";
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

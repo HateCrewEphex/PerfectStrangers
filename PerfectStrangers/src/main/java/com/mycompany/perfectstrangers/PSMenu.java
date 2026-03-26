@@ -156,7 +156,11 @@ public class PSMenu extends javax.swing.JFrame {
         });
     }
 
+    private boolean isAperturaEnProgreso = false;
+
     private void abrirVentana(javax.swing.JFrame ventana) {
+        if (isAperturaEnProgreso) return;
+        isAperturaEnProgreso = true;
         java.awt.EventQueue.invokeLater(() -> ventana.setVisible(true));
         dispose();
     }

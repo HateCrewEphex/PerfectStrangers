@@ -144,19 +144,28 @@ public class PSCobOrden extends javax.swing.JFrame {
         if (jComboBox1.getSelectedIndex() <= 0) return;
         
         String mesaStr = jComboBox1.getSelectedItem().toString();
+        int numMesa = 1;
+        try { numMesa = Integer.parseInt(mesaStr.replace("Mesa ", "").trim()); } catch (Exception e){}
         
         // Consulta para obtener las ordenes "Entregada"
-        String sql = "SELECT o.mesa, e.nombre AS nomEmp, p.nombre AS nomP, pq.nombrePaq AS nomPaq, p.costo AS costoP, pq.precio_paquete AS costoPaq, o.cant " +
+        String sql = "SELECT o.mesa, e.nombre AS nomEmp, p.nombre_alimento AS nomP, NULL AS nomPaq, p.costo AS costoP, 0.0 AS costoPaq, d.cant " +
                      "FROM ordenes o " +
-                     "LEFT JOIN platillos p ON o.id_platillo = p.id_platillo " +
-                     "LEFT JOIN paquetes pq ON o.id_platillo = pq.id " +
-                     "LEFT JOIN empleados e ON o.id_empleado = e.id_empleado " +
-                     "WHERE o.estado = 'Entregada' AND o.mesa = ?";
+                     "INNER JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                     "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
+                     "INNER JOIN platillos p ON d.id_platillo = p.id_platillo " +
+                     "WHERE o.estado = 'Entregada' AND o.mesa = ? " +
+                     "UNION ALL " +
+                     "SELECT o.mesa, e.nombre AS nomEmp, NULL AS nomP, pq.nombre_paquete AS nomPaq, 0.0 AS costoP, pq.precio_paquete AS costoPaq, 1 AS cant " +
+                     "FROM ordenes o " +
+                     "INNER JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                     "INNER JOIN paquetes pq ON o.id_paquete = pq.id_paquete " +
+                     "WHERE o.estado = 'Entregada' AND o.mesa = ? AND o.id_paquete != 0";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
              
-            pst.setString(1, mesaStr);
+            pst.setInt(1, numMesa);
+            pst.setInt(2, numMesa);
             try (ResultSet rs = pst.executeQuery()) {
 StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-size: 18px;'>");
                 double total = 0.0;
@@ -202,6 +211,8 @@ StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-siz
             return;
         }
         String mesaStr = jComboBox1.getSelectedItem().toString();
+        int numMesa = 1;
+        try { numMesa = Integer.parseInt(mesaStr.replace("Mesa ", "").trim()); } catch (Exception e){}
         
         // Verificar si de verdad hay cuenta que cobrar
         if (jLTotalCobrar.getText().equals("$0.00")) {
@@ -213,7 +224,7 @@ StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-siz
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
              
-            pst.setString(1, mesaStr);
+            pst.setInt(1, numMesa);
             int filasModificadas = pst.executeUpdate();
             
             if (filasModificadas > 0) {

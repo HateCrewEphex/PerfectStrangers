@@ -136,12 +136,17 @@ public class PSConOrder extends javax.swing.JFrame {
 
     private void cargarOrdenes() {
         listaOrdenes.clear();
-        String sql = "SELECT o.mesa, o.fecha, o.hora, p.nombre AS nomP, pq.nombrePaq AS nomPaq, o.cant " +
+        String sql = "SELECT o.mesa, o.fecha, o.hora, p.nombre_alimento AS nomP, NULL AS nomPaq, d.cant " +
                      "FROM ordenes o " +
-                     "LEFT JOIN platillos p ON o.id_platillo = p.id_platillo " +
-                     "LEFT JOIN paquetes pq ON o.id_platillo = pq.id " +
+                     "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
+                     "INNER JOIN platillos p ON d.id_platillo = p.id_platillo " +
                      "WHERE o.estado = 'Levantada' " +
-                     "ORDER BY o.fecha ASC, o.hora ASC";
+                     "UNION ALL " +
+                     "SELECT o.mesa, o.fecha, o.hora, NULL AS nomP, pq.nombre_paquete AS nomPaq, 1 AS cant " +
+                     "FROM ordenes o " +
+                     "INNER JOIN paquetes pq ON o.id_paquete = pq.id_paquete " +
+                     "WHERE o.estado = 'Levantada' AND o.id_paquete != 0 " +
+                     "ORDER BY fecha ASC, hora ASC";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql);
@@ -178,54 +183,95 @@ public class PSConOrder extends javax.swing.JFrame {
         }
     }
 
+    private void aplicarEstiloTarjeta(javax.swing.JLabel label, String html, Color colorFondo) {
+        label.setText(""); // Limpiar texto original
+        label.setOpaque(false);
+        
+        label.removeAll(); // Remover cualquier JLabel interno previo
+        label.setLayout(new java.awt.BorderLayout());
+        
+        javax.swing.JLabel labelInterno = new javax.swing.JLabel(html);
+        labelInterno.setOpaque(false);
+        labelInterno.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        labelInterno.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelInterno.setBorder(javax.swing.BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        label.add(labelInterno, java.awt.BorderLayout.CENTER);
+        
+        label.setBorder(new javax.swing.border.Border() {
+            @Override
+            public void paintBorder(java.awt.Component c, java.awt.Graphics g, int x, int y, int width, int height) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(colorFondo);
+                g2.fillRoundRect(x, y, width - 1, height - 1, 35, 35);
+                g2.dispose();
+            }
+
+            @Override
+            public java.awt.Insets getBorderInsets(java.awt.Component c) {
+                return new java.awt.Insets(0, 0, 0, 0); // El margen lo maneja labelInterno
+            }
+
+            @Override
+            public boolean isBorderOpaque() {
+                return false;
+            }
+        });
+        
+        label.revalidate();
+        label.repaint();
+    }
+
     private void mostrarOrdenes() {
-        jLOrdenaEntregar.setText("-");
-        jLOrdenaEntregar.setOpaque(true);
-        jLOrdenaEntregar.setBackground(Color.BLACK);
-        jLOrdenaEntregar.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        String msgVacio = "<html><div style='text-align:center; padding-top:40px; font-size:24px; color:#555555;'>Sin órdenes pendientes</div></html>";
+        
+        aplicarEstiloTarjeta(jLOrdenaEntregar, msgVacio, new Color(25, 25, 25));
         jBEntregarOrden.setEnabled(false);
 
-        jLSegundaOrden.setText("-");
-        jLSegundaOrden.setOpaque(true);
-        jLSegundaOrden.setBackground(Color.BLACK);
-        jLSegundaOrden.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-
-        jLTercerOrden.setText("-");
-        jLTercerOrden.setOpaque(true);
-        jLTercerOrden.setBackground(Color.BLACK);
-        jLTercerOrden.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        aplicarEstiloTarjeta(jLSegundaOrden, msgVacio, new Color(25, 25, 25));
+        aplicarEstiloTarjeta(jLTercerOrden, msgVacio, new Color(25, 25, 25));
 
         jLCOrdenes.setText("0");
 
         if (listaOrdenes.size() > 0) {
             OrdenPendiente o1 = listaOrdenes.get(0);
-            jLOrdenaEntregar.setText(formatHTML(o1));
-            jLOrdenaEntregar.setBackground(new Color(34, 139, 34)); // Verde
+            aplicarEstiloTarjeta(jLOrdenaEntregar, formatHTML(o1, true), new Color(40, 110, 56)); // Verde estilizado
             jBEntregarOrden.setEnabled(true);
         }
         if (listaOrdenes.size() > 1) {
             OrdenPendiente o2 = listaOrdenes.get(1);
-            jLSegundaOrden.setText(formatHTML(o2));
-            jLSegundaOrden.setBackground(new Color(204, 102, 0)); // Naranja
+            aplicarEstiloTarjeta(jLSegundaOrden, formatHTML(o2, false), new Color(191, 85, 12)); // Naranja estético
         }
         if (listaOrdenes.size() > 2) {
             OrdenPendiente o3 = listaOrdenes.get(2);
-            jLTercerOrden.setText(formatHTML(o3));
-            jLTercerOrden.setBackground(new Color(204, 102, 0)); // Naranja
+            aplicarEstiloTarjeta(jLTercerOrden, formatHTML(o3, false), new Color(191, 85, 12)); // Naranja estético
         }
 
         int faltantes = listaOrdenes.size() > 3 ? listaOrdenes.size() - 3 : 0;
         jLCOrdenes.setText(String.valueOf(faltantes));
     }
 
-    private String formatHTML(OrdenPendiente o) {
+    private String formatHTML(OrdenPendiente o, boolean esPrimera) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<html><div style='text-align: center; padding: 20px; width: 100%; font-size: 16px;'>");
-        sb.append("<h1 style='font-size: 28px; margin: 0;'>").append(o.mesa).append("</h1>");
-        sb.append("<h3 style='color: #DDDDDD; font-size: 20px; margin: 5px 0 20px 0;'>").append(o.hora.toString()).append("</h3>");
+        sb.append("<html><div style='font-family: sans-serif; text-align: center;'>");
+        
+        // Cabecera tipo ticket de cocina
+        sb.append("<div style='border-bottom: 2px dashed ").append(esPrimera ? "#8dfaab" : "#ffd3a1").append("; padding-bottom: 12px; margin-bottom: 15px;'>");
+        sb.append("<h1 style='font-size: 34px; margin: 0; color: #ffffff; letter-spacing: 2px;'>MESA ").append(o.mesa).append("</h1>");
+        sb.append("<div style='color: ").append(esPrimera ? "#d0fce0" : "#ffead4").append("; font-size: 20px; margin-top: 5px; font-weight: bold;'>&#128340; ").append(o.hora.toString()).append("</div>");
+        sb.append("</div>");
+        
+        // Contenido centrado general
+        sb.append("<div style='margin-top: 15px;'>");
         for (ItemOrden item : o.items) {
-            sb.append("<div style='font-size: 22px; padding: 5px;'>").append(item.cant).append(" x ").append(item.nombre).append("</div>");
+            sb.append("<div style='font-size: 24px; color: #ffffff; margin-bottom: 8px;'>");
+            sb.append("<span style='font-weight: bold; color: ").append(esPrimera ? "#8dfaab" : "#ffd3a1").append(";'>").append(item.cant).append(" x </span>");
+            sb.append(item.nombre);
+            sb.append("</div>");
         }
+        sb.append("</div>");
+        
         sb.append("</div></html>");
         return sb.toString();
     }

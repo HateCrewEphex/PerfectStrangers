@@ -134,12 +134,20 @@ public class PSHistorial extends javax.swing.JFrame {
         };
         jTHistorial.setModel(modelo);
 
+        // Alinear texto de las celdas al centro
+        javax.swing.table.DefaultTableCellRenderer centerRender = new javax.swing.table.DefaultTableCellRenderer();
+        centerRender.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+        for(int i = 0; i < jTHistorial.getColumnCount(); i++){
+            jTHistorial.getColumnModel().getColumn(i).setCellRenderer(centerRender);
+        }
+
         String sql = "SELECT o.mesa, e.nombre, o.fecha, o.hora, " +
-                     "SUM(IFNULL(p.costo, 0) * o.cant + IFNULL(pq.precio_paquete, 0) * o.cant) AS total_orden " +
+                     "(MAX(IFNULL(pq.precio_paquete, 0)) + IFNULL(SUM(p.costo * d.cant), 0)) AS total_orden " +
                      "FROM ordenes o " +
-                     "LEFT JOIN platillos p ON o.id_platillo = p.id_platillo " +
-                     "LEFT JOIN paquetes pq ON o.id_platillo = pq.id " +
-                     "LEFT JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                     "JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                     "LEFT JOIN paquetes pq ON o.id_paquete = pq.id_paquete " +
+                     "LEFT JOIN detalle_orden d ON o.id_orden = d.id_orden " +
+                     "LEFT JOIN platillos p ON d.id_platillo = p.id_platillo " +
                      "WHERE o.estado = 'Cobrada' ";
                      
         if (seleccion.equals("Dia de Hoy")) {
