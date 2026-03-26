@@ -4,6 +4,23 @@
  */
 package com.mycompany.perfectstrangers;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author Ephex
@@ -11,6 +28,26 @@ package com.mycompany.perfectstrangers;
 public class PSTOrden extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSTOrden.class.getName());
+
+    private JPanel panelProductos;
+    private List<ProductoItem> productosActuales;
+    private DefaultTableModel modeloOrden;
+    private JTable tablaOrden;
+
+    class ProductoItem {
+        int id;
+        String nombre;
+        double precio;
+        JCheckBox checkBox;
+        public ProductoItem(int id, String nombre, double precio) {
+            this.id = id;
+            this.nombre = nombre;
+            this.precio = precio;
+            this.checkBox = new JCheckBox(nombre + " - $" + precio);
+            this.checkBox.setBackground(new java.awt.Color(0, 0, 0));
+            this.checkBox.setForeground(new java.awt.Color(255, 255, 255));
+        }
+    }
 
     /**
      * Creates new form PSTOrden
@@ -21,6 +58,7 @@ public class PSTOrden extends javax.swing.JFrame {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
         });
+        configurarInterfaz();
     }
 
     /**
@@ -35,8 +73,8 @@ public class PSTOrden extends javax.swing.JFrame {
         jPPrincipal = new javax.swing.JPanel();
         jPCont = new javax.swing.JPanel();
         jBAgregar = new javax.swing.JButton();
-        jBHamburguesas = new javax.swing.JButton();
-        jBAlasBoneless = new javax.swing.JButton();
+        jBCombos = new javax.swing.JButton();
+        jBPlatillos = new javax.swing.JButton();
         jBBebidas = new javax.swing.JButton();
         jPOrden = new javax.swing.JPanel();
         jLOrden = new javax.swing.JLabel();
@@ -49,7 +87,7 @@ public class PSTOrden extends javax.swing.JFrame {
 
         jPPrincipal.setBackground(new java.awt.Color(0, 0, 0));
 
-        jPCont.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        jPCont.setBorder(javax.swing.BorderFactory.createBevelBorder(null));
 
         jBAgregar.setBackground(new java.awt.Color(204, 204, 204));
         jBAgregar.setText("AGREGAR");
@@ -71,13 +109,14 @@ public class PSTOrden extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jBHamburguesas.setText("Hamburguesas");
+        jBCombos.setText("Combos");
 
-        jBAlasBoneless.setText("Alitas/Boneless");
+        jBPlatillos.setText("Platillos");
 
         jBBebidas.setText("Bebidas");
+        jBBebidas.addActionListener(this::jBBebidasActionPerformed);
 
-        jPOrden.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        jPOrden.setBorder(javax.swing.BorderFactory.createBevelBorder(null));
 
         jLOrden.setText("-");
 
@@ -138,9 +177,9 @@ public class PSTOrden extends javax.swing.JFrame {
                         .addGroup(jPPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jPCont, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPPrincipalLayout.createSequentialGroup()
-                                .addComponent(jBAlasBoneless, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jBPlatillos, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jBHamburguesas, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jBCombos, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jBBebidas, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addContainerGap())
@@ -154,8 +193,8 @@ public class PSTOrden extends javax.swing.JFrame {
                     .addGroup(jPPrincipalLayout.createSequentialGroup()
                         .addGap(13, 13, 13)
                         .addGroup(jPPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jBAlasBoneless, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jBHamburguesas, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jBPlatillos, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jBCombos, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jBBebidas, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPCont, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -181,9 +220,182 @@ public class PSTOrden extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jCNoMesaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCNoMesaActionPerformed
+    private void jBBebidasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBBebidasActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jCNoMesaActionPerformed
+    }//GEN-LAST:event_jBBebidasActionPerformed
+
+    private void configurarInterfaz() {
+        // Init mesas
+        jCNoMesa.removeAllItems();
+        for (int i = 1; i <= 10; i++) {
+            jCNoMesa.addItem("Mesa " + i);
+        }
+
+        // Reconfigurar contenedor de productos (jPCont)
+        jPCont.setLayout(new BorderLayout());
+        jPCont.removeAll(); 
+        
+        panelProductos = new JPanel();
+        panelProductos.setLayout(new BoxLayout(panelProductos, BoxLayout.Y_AXIS));
+        panelProductos.setBackground(new java.awt.Color(0, 0, 0));
+        JScrollPane scrollProductos = new JScrollPane(panelProductos);
+        jPCont.add(scrollProductos, BorderLayout.CENTER);
+        
+        JPanel panelInferiorProductos = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelInferiorProductos.setBackground(new java.awt.Color(0, 0, 0));
+        jBAgregar.setText("AGREGAR");
+        panelInferiorProductos.add(jBAgregar);
+        jPCont.add(panelInferiorProductos, BorderLayout.SOUTH);
+        
+        // Reconfigurar contenedor de Orden (jPOrden)
+        jPOrden.setLayout(new BorderLayout(5, 5));
+        jPOrden.removeAll();
+        jPOrden.setBackground(new java.awt.Color(0, 0, 0));
+        jPOrden.add(jCNoMesa, BorderLayout.NORTH);
+        
+        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "Precio", "Cant."}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 3; // Solo permitir editar cantidad
+            }
+        };
+        tablaOrden = new JTable(modeloOrden);
+        JScrollPane scrollOrden = new JScrollPane(tablaOrden);
+        jPOrden.add(scrollOrden, BorderLayout.CENTER);
+        
+        JPanel panelInferiorOrden = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        panelInferiorOrden.setBackground(new java.awt.Color(0, 0, 0));
+        JButton btnEliminar = new JButton("Quitar de la lista");
+        btnEliminar.addActionListener(e -> borrarSeleccionados());
+        panelInferiorOrden.add(btnEliminar);
+        panelInferiorOrden.add(jBRegistrar);
+        
+        jPOrden.add(panelInferiorOrden, BorderLayout.SOUTH);
+
+        jPCont.revalidate();
+        jPCont.repaint();
+        jPOrden.revalidate();
+        jPOrden.repaint();
+
+        // Listeners for Categories matching the UI buttons
+        jBPlatillos.setText("Platillos");
+        jBCombos.setText("Combos");
+        jBBebidas.setText("Bebidas");
+        
+        jBPlatillos.addActionListener(e -> cargarProductos("Platillos"));
+        jBCombos.addActionListener(e -> cargarProductos("Combos"));
+        jBBebidas.addActionListener(e -> cargarProductos("Bebidas"));
+
+        // Remove old action listeners if any or just set the new ones
+        for (java.awt.event.ActionListener al : jBAgregar.getActionListeners()) {
+            jBAgregar.removeActionListener(al);
+        }
+        for (java.awt.event.ActionListener al : jBRegistrar.getActionListeners()) {
+            jBRegistrar.removeActionListener(al);
+        }
+        
+        jBAgregar.addActionListener(e -> agregarAOrden());
+        jBRegistrar.addActionListener(e -> registrarOrden());
+        
+        // Load default category
+        cargarProductos("Platillos");
+    }
+
+    private void cargarProductos(String categoria) {
+        panelProductos.removeAll();
+        productosActuales = new ArrayList<>();
+        
+        String query = "";
+        // Nota: Adaptar las sentencias sql exactas a como estén los datos en tu tabla
+        if (categoria.equals("Platillos")) {
+            query = "SELECT id_platillo AS id, nombre, costo FROM platillos WHERE tipoAlimento NOT LIKE '%Bebida%' AND tipoAlimento NOT LIKE '%Paquete%'";
+        } else if (categoria.equals("Bebidas")) {
+            query = "SELECT id_platillo AS id, nombre, costo FROM platillos WHERE tipoAlimento LIKE '%Bebida%'";
+        } else if (categoria.equals("Combos")) {
+            query = "SELECT MAX(id) AS id, nombrePaq AS nombre, MAX(precio_paquete) AS costo FROM paquetes GROUP BY nombrePaq";
+        }
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(query);
+             ResultSet rs = pst.executeQuery()) {
+             
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String nombre = rs.getString("nombre");
+                double costo = rs.getDouble("costo");
+                
+                ProductoItem item = new ProductoItem(id, nombre, costo);
+                productosActuales.add(item);
+                panelProductos.add(item.checkBox);
+            }
+        } catch (SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error base de datos: " + ex.getMessage());
+        }
+        
+        panelProductos.revalidate();
+        panelProductos.repaint();
+    }
+
+    private void agregarAOrden() {
+        if (productosActuales == null) return;
+        for (ProductoItem item : productosActuales) {
+            if (item.checkBox.isSelected()) {
+                modeloOrden.addRow(new Object[]{ item.id, item.nombre, item.precio, 1 });
+                item.checkBox.setSelected(false);
+            }
+        }
+    }
+
+    private void borrarSeleccionados() {
+        int[] seleccionados = tablaOrden.getSelectedRows();
+        for (int i = seleccionados.length - 1; i >= 0; i--) {
+            modeloOrden.removeRow(seleccionados[i]);
+        }
+    }
+
+    private void registrarOrden() {
+        if (modeloOrden.getRowCount() == 0) {
+            javax.swing.JOptionPane.showMessageDialog(this, "La orden está vacía. Selecciona productos primero.");
+            return;
+        }
+        String mesaStr = jCNoMesa.getSelectedItem().toString();
+
+        String sql = "INSERT INTO ordenes (id_empleado, id_platillo, cant, mesa, fecha, hora, estado) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), 'Pendiente')";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            
+            int idEmpleado = 1; // ID de empleado temporal
+            for (int i = 0; i < modeloOrden.getRowCount(); i++) {
+                int idItem = (int) modeloOrden.getValueAt(i, 0);
+                
+                // Tratar el String y parsear la cantidad correctamente
+                Object cantObj = modeloOrden.getValueAt(i, 3);
+                int cant = 1;
+                if (cantObj instanceof Integer) {
+                    cant = (Integer) cantObj;
+                } else if (cantObj instanceof String) {
+                    try {
+                        cant = Integer.parseInt((String) cantObj);
+                    } catch (NumberFormatException e) { }
+                }
+
+                pst.setInt(1, idEmpleado);
+                pst.setInt(2, idItem);
+                pst.setInt(3, cant);
+                pst.setString(4, mesaStr);
+                pst.addBatch();
+            }
+            pst.executeBatch();
+            javax.swing.JOptionPane.showMessageDialog(this, "¡Orden registrada con éxito para la " + mesaStr + "!");
+            modeloOrden.setRowCount(0); // Limpiar la lista de la orden 
+        } catch (SQLException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error al guardar en BD: " + ex.getMessage());
+        }
+    }
+
+    private void jCNoMesaActionPerformed(java.awt.event.ActionEvent evt) {
+        // ...
+    }
 
     /**
      * @param args the command line arguments
@@ -212,9 +424,9 @@ public class PSTOrden extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jBAgregar;
-    private javax.swing.JButton jBAlasBoneless;
     private javax.swing.JButton jBBebidas;
-    private javax.swing.JButton jBHamburguesas;
+    private javax.swing.JButton jBCombos;
+    private javax.swing.JButton jBPlatillos;
     private javax.swing.JButton jBRegistrar;
     private javax.swing.JButton jBRegresar;
     private javax.swing.JComboBox<String> jCNoMesa;
