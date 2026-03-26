@@ -21,6 +21,111 @@ public class PSHistorial extends javax.swing.JFrame {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
         });
+        
+        configurarInterfaz();
+    }
+
+    private void configurarInterfaz() {
+        cargarFiltros();
+        jCFiltro.addActionListener(e -> cargarHistorial());
+        cargarHistorial();
+    }
+
+    private void cargarFiltros() {
+        jCFiltro.removeAllItems();
+        jCFiltro.addItem("Mostrar Todo");
+        jCFiltro.addItem("Dia de Hoy");
+        jCFiltro.addItem("Esta Semana");
+        jCFiltro.addItem("Este Mes");
+
+        String sql = "SELECT DISTINCT e.nombre FROM ordenes o JOIN empleados e ON o.id_empleado = e.id_empleado WHERE o.estado = 'Cobrada'";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+             
+            while(rs.next()) {
+                String nom = rs.getString("nombre");
+                if(nom != null) {
+                    jCFiltro.addItem("Mesero: " + nom);
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar meseros", ex);
+        }
+    }
+
+    private void cargarHistorial() {
+        String seleccion = (String) jCFiltro.getSelectedItem();
+        if (seleccion == null) return;
+
+        DefaultTableModel modelo = new DefaultTableModel(
+            new Object[]{"Mesa", "Mesero", "Fecha", "Hora", "Total Orden"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        jTHistorial.setModel(modelo);
+
+        String sql = "SELECT o.mesa, e.nombre, o.fecha, o.hora, " +
+                     "SUM(IFNULL(p.costo, 0) * o.cant + IFNULL(pq.precio_paquete, 0) * o.cant) AS total_orden " +
+                     "FROM ordenes o " +
+                     "LEFT JOIN platillos p ON o.id_platillo = p.id_platillo " +
+                     "LEFT JOIN paquetes pq ON o.id_platillo = pq.id " +
+                     "LEFT JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                     "WHERE o.estado = 'Cobrada' ";
+                     
+        if (seleccion.equals("Dia de Hoy")) {
+            sql += "AND o.fecha = CURDATE() ";
+        } else if (seleccion.equals("Esta Semana")) {
+            sql += "AND YEARWEEK(o.fecha, 1) = YEARWEEK(CURDATE(), 1) ";
+        } else if (seleccion.equals("Este Mes")) {
+            sql += "AND MONTH(o.fecha) = MONTH(CURDATE()) AND YEAR(o.fecha) = YEAR(CURDATE()) ";
+        } else if (seleccion.startsWith("Mesero: ")) {
+            String mesero = seleccion.substring(8);
+            sql += "AND e.nombre = ? ";
+        }
+
+        sql += "GROUP BY o.mesa, e.nombre, o.fecha, o.hora ORDER BY o.fecha DESC, o.hora DESC";
+
+        double granTotal = 0.0;
+        
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+             
+            if (seleccion.startsWith("Mesero: ")) {
+                 pst.setString(1, seleccion.substring(8));
+            }
+
+            try (ResultSet rs = pst.executeQuery()) {
+                while(rs.next()) {
+                    String mesa = rs.getString("mesa");
+                    String empleado = rs.getString("nombre");
+                    java.sql.Date fecha = rs.getDate("fecha");
+                    java.sql.Time hora = rs.getTime("hora");
+                    double totalOrd = rs.getDouble("total_orden");
+                    
+                    granTotal += totalOrd;
+                    
+                    modelo.addRow(new Object[]{
+                        mesa, 
+                        empleado != null ? empleado : "N/A", 
+                        fecha, 
+                        hora, 
+                        String.format("$%.2f", totalOrd)
+                    });
+                }
+            }
+            
+            // Fila vacía de separación
+            modelo.addRow(new Object[]{"", "", "", "", ""});
+            // Fila de TOTAL
+            modelo.addRow(new Object[]{"", "", "", "TOTAL VENTA:", String.format("$%.2f", granTotal)});
+            
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar historial", ex);
+        }
     }
 
     /**

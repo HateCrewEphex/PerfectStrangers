@@ -4,6 +4,13 @@
  */
 package com.mycompany.perfectstrangers;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author Ephex
@@ -21,6 +28,115 @@ public class PSCobOrden extends javax.swing.JFrame {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
         });
+        
+        configurarInterfaz();
+    }
+
+    private void configurarInterfaz() {
+        jComboBox1.removeAllItems();
+        jComboBox1.addItem("Selecciona una mesa");
+        for (int i = 1; i <= 10; i++) {
+            jComboBox1.addItem("Mesa " + i);
+        }
+
+        jComboBox1.addActionListener(evt -> cargarOrdenCobrar());
+        jBCobrar.addActionListener(evt -> cobrarOrden());
+        
+        limpiarPantalla();
+    }
+
+    private void limpiarPantalla() {
+        jLInsumos.setText("");
+        jLInsumos.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        jLNAtendio.setText("-");
+        jLTotalCobrar.setText("$0.00");
+    }
+
+    private void cargarOrdenCobrar() {
+        limpiarPantalla();
+        if (jComboBox1.getSelectedIndex() <= 0) return;
+        
+        String mesaStr = jComboBox1.getSelectedItem().toString();
+        
+        // Consulta para obtener las ordenes "Entregada"
+        String sql = "SELECT o.mesa, e.nombre AS nomEmp, p.nombre AS nomP, pq.nombrePaq AS nomPaq, p.costo AS costoP, pq.precio_paquete AS costoPaq, o.cant " +
+                     "FROM ordenes o " +
+                     "LEFT JOIN platillos p ON o.id_platillo = p.id_platillo " +
+                     "LEFT JOIN paquetes pq ON o.id_platillo = pq.id " +
+                     "LEFT JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                     "WHERE o.estado = 'Entregada' AND o.mesa = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+             
+            pst.setString(1, mesaStr);
+            try (ResultSet rs = pst.executeQuery()) {
+                StringBuilder html = new StringBuilder("<html><div style='padding:5px;'>");
+                double total = 0.0;
+                boolean existeOrden = false;
+                String empleado = "-";
+
+                while (rs.next()) {
+                    existeOrden = true;
+                    String nP = rs.getString("nomP");
+                    String nPaq = rs.getString("nomPaq");
+                    String nombreItem = (nP != null) ? nP : (nPaq != null ? nPaq : "Desconocido");
+                    
+                    double valor = 0;
+                    if (nP != null) valor = rs.getDouble("costoP");
+                    else if (nPaq != null) valor = rs.getDouble("costoPaq");
+                    
+                    int cant = rs.getInt("cant");
+                    total += (valor * cant);
+                    empleado = rs.getString("nomEmp") != null ? rs.getString("nomEmp") : "Desconocido";
+
+                    html.append(cant).append("x ").append(nombreItem)
+                        .append(" ($").append(String.format("%.2f", valor)).append(" c/u)<br>");
+                }
+                html.append("</div></html>");
+
+                if (existeOrden) {
+                    jLInsumos.setText(html.toString());
+                    jLNAtendio.setText(empleado);
+                    jLTotalCobrar.setText("$" + String.format("%.2f", total));
+                } else {
+                    jLInsumos.setText("No hay orden pendiente de cobro en esta mesa.");
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar datos para cobrar", ex);
+        }
+    }
+
+    private void cobrarOrden() {
+        if (jComboBox1.getSelectedIndex() <= 0) {
+            JOptionPane.showMessageDialog(this, "Selecciona una mesa para cobrar.");
+            return;
+        }
+        String mesaStr = jComboBox1.getSelectedItem().toString();
+        
+        // Verificar si de verdad hay cuenta que cobrar
+        if (jLTotalCobrar.getText().equals("$0.00")) {
+            JOptionPane.showMessageDialog(this, "No hay saldo por cobrar en esta mesa.");
+            return;
+        }
+
+        String sql = "UPDATE ordenes SET estado = 'Cobrada' WHERE mesa = ? AND estado = 'Entregada'";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+             
+            pst.setString(1, mesaStr);
+            int filasModificadas = pst.executeUpdate();
+            
+            if (filasModificadas > 0) {
+                JOptionPane.showMessageDialog(this, "Orden cobrada con éxito. Total: " + jLTotalCobrar.getText());
+                cargarOrdenCobrar(); // refescar
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo realizar el cobro.");
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al procesar el cobro", ex);
+        }
     }
 
     /**
