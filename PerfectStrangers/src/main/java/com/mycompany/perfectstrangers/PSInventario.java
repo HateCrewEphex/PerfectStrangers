@@ -17,10 +17,54 @@ public class PSInventario extends javax.swing.JFrame {
      */
     public PSInventario() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        configurarInterfaz();
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
         });
+    }
+
+    private void configurarInterfaz() {
+        jPanel1.removeAll();
+        jPanel1.setLayout(new java.awt.BorderLayout(20, 20));
+        jPanel1.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Top Panel
+        javax.swing.JPanel topPanel = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
+        topPanel.setOpaque(false);
+        
+        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+        jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        topPanel.add(jLNVentana, java.awt.BorderLayout.NORTH);
+
+        javax.swing.JPanel filterPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
+        filterPanel.setOpaque(false);
+        jLFiltrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jCFiltro.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
+        jCFiltro.setPreferredSize(new java.awt.Dimension(250, 40));
+        filterPanel.add(jLFiltrar);
+        filterPanel.add(jCFiltro);
+        
+        topPanel.add(filterPanel, java.awt.BorderLayout.SOUTH);
+
+        // Center Panel (Table)
+        jTInventario.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        jTInventario.setRowHeight(30);
+        jTInventario.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+
+        // Bottom Panel
+        javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+        bottomPanel.setOpaque(false);
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        bottomPanel.add(jBRegresar);
+
+        jPanel1.add(topPanel, java.awt.BorderLayout.NORTH);
+        jPanel1.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+        jPanel1.add(bottomPanel, java.awt.BorderLayout.SOUTH);
+
+        jPanel1.revalidate();
+        jPanel1.repaint();
     }
 
     /**

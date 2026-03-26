@@ -23,10 +23,17 @@ public class PSInicio extends javax.swing.JFrame {
      */
     public PSInicio() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         jPFContraseña.setEchoChar('*');
         jPFContraseña.setText("");
         jLAccesoIncorrecto.setText("");
         jBAcceder.addActionListener(evt -> autenticarUsuario());
+        
+        // Centrar el contenido dinámicamente
+        javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
+        fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
+        fondoCentrado.add(jPPrincipal);
+        this.setContentPane(fondoCentrado);
     }
 
     /**

@@ -24,6 +24,7 @@ public class PSCobOrden extends javax.swing.JFrame {
      */
     public PSCobOrden() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
@@ -33,7 +34,81 @@ public class PSCobOrden extends javax.swing.JFrame {
     }
 
     private void configurarInterfaz() {
-        jComboBox1.removeAllItems();
+        jPPrincipal.removeAll();
+        jPPrincipal.setLayout(new java.awt.BorderLayout(20, 20));
+        jPPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Top Panel
+        javax.swing.JPanel topPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
+        topPanel.setOpaque(false);
+        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+        jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        topPanel.add(jLNVentana, java.awt.BorderLayout.NORTH);
+
+        javax.swing.JPanel selectionPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 20, 10));
+        selectionPanel.setOpaque(false);
+        
+        jComboBox1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
+        
+        jLAtendio.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jLNAtendio.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
+        
+        selectionPanel.add(jComboBox1);
+        selectionPanel.add(jLAtendio);
+        selectionPanel.add(jLNAtendio);
+        
+        topPanel.add(selectionPanel, java.awt.BorderLayout.SOUTH);
+
+        // Center Panel (Splitting Insumos and Facturacion)
+        javax.swing.JPanel centerPanel = new javax.swing.JPanel(new java.awt.GridLayout(1, 2, 20, 20));
+        centerPanel.setOpaque(false);
+        
+        jLInsumos.setFont(new java.awt.Font("Consolas", java.awt.Font.PLAIN, 18));
+        jLInsumos.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        jLInsumos.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
+        
+        jLTFacturacion.setFont(new java.awt.Font("Consolas", java.awt.Font.PLAIN, 18));
+        jLTFacturacion.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        jLTFacturacion.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
+
+        centerPanel.add(jLInsumos);
+        centerPanel.add(jLTFacturacion);
+
+        // Bottom Panel
+        javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.BorderLayout(20, 20));
+        bottomPanel.setOpaque(false);
+
+        javax.swing.JPanel totalPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        totalPanel.setOpaque(false);
+        jLTTotal.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 24));
+        jLTotalCobrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 36));
+        jLTotalCobrar.setForeground(new java.awt.Color(50, 205, 50)); // Green color for total
+        totalPanel.add(jLTTotal);
+        totalPanel.add(jLTotalCobrar);
+        
+        javax.swing.JPanel buttonsPanel = new javax.swing.JPanel(new java.awt.BorderLayout(20, 0));
+        buttonsPanel.setOpaque(false);
+        
+        jBCobrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 20));
+        jBCobrar.setPreferredSize(new java.awt.Dimension(200, 60));
+        jBCobrar.setBackground(new java.awt.Color(40, 167, 69)); // Action green
+        jBCobrar.setForeground(java.awt.Color.WHITE);
+
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+
+        buttonsPanel.add(jBCobrar, java.awt.BorderLayout.WEST);
+        buttonsPanel.add(jBRegresar, java.awt.BorderLayout.EAST);
+
+        bottomPanel.add(totalPanel, java.awt.BorderLayout.NORTH);
+        bottomPanel.add(buttonsPanel, java.awt.BorderLayout.SOUTH);
+
+        jPPrincipal.add(topPanel, java.awt.BorderLayout.NORTH);
+        jPPrincipal.add(centerPanel, java.awt.BorderLayout.CENTER);
+        jPPrincipal.add(bottomPanel, java.awt.BorderLayout.SOUTH);
+
+        jPPrincipal.revalidate();
+        jPPrincipal.repaint();
+
         jComboBox1.addItem("Selecciona una mesa");
         for (int i = 1; i <= 10; i++) {
             jComboBox1.addItem("Mesa " + i);
@@ -71,7 +146,7 @@ public class PSCobOrden extends javax.swing.JFrame {
              
             pst.setString(1, mesaStr);
             try (ResultSet rs = pst.executeQuery()) {
-                StringBuilder html = new StringBuilder("<html><div style='padding:5px;'>");
+StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-size: 18px;'>");
                 double total = 0.0;
                 boolean existeOrden = false;
                 String empleado = "-";
@@ -81,17 +156,18 @@ public class PSCobOrden extends javax.swing.JFrame {
                     String nP = rs.getString("nomP");
                     String nPaq = rs.getString("nomPaq");
                     String nombreItem = (nP != null) ? nP : (nPaq != null ? nPaq : "Desconocido");
-                    
+
                     double valor = 0;
                     if (nP != null) valor = rs.getDouble("costoP");
                     else if (nPaq != null) valor = rs.getDouble("costoPaq");
-                    
+
                     int cant = rs.getInt("cant");
                     total += (valor * cant);
                     empleado = rs.getString("nomEmp") != null ? rs.getString("nomEmp") : "Desconocido";
 
-                    html.append(cant).append("x ").append(nombreItem)
-                        .append(" ($").append(String.format("%.2f", valor)).append(" c/u)<br>");
+                    html.append("<p style='margin-bottom: 5px;'>")
+                        .append("<b>").append(cant).append("x</b> ").append(nombreItem)
+                        .append(" <span style='color: #DDDDDD;'>($").append(String.format("%.2f", valor)).append(" c/u)</span></p>");
                 }
                 html.append("</div></html>");
 

@@ -24,6 +24,7 @@ public class PSHistorial extends javax.swing.JFrame {
      */
     public PSHistorial() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
@@ -33,6 +34,52 @@ public class PSHistorial extends javax.swing.JFrame {
     }
 
     private void configurarInterfaz() {
+        jPPrincipal.removeAll();
+        jPPrincipal.setLayout(new java.awt.BorderLayout(20, 20));
+        jPPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Top Panel (Title & Filters)
+        javax.swing.JPanel topPanel = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
+        topPanel.setOpaque(false);
+        
+        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+        jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        topPanel.add(jLNVentana, java.awt.BorderLayout.NORTH);
+
+        javax.swing.JPanel filterPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
+        filterPanel.setOpaque(false);
+        jLOrdenar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jCFiltro.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
+        jCFiltro.setPreferredSize(new java.awt.Dimension(250, 40));
+        filterPanel.add(jLOrdenar);
+        filterPanel.add(jCFiltro);
+        
+        topPanel.add(filterPanel, java.awt.BorderLayout.SOUTH);
+
+        // Center Panel (Table)
+        jTHistorial.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        jTHistorial.setRowHeight(30);
+        jTHistorial.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+
+        // Bottom Panel (Buttons)
+        javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
+        bottomPanel.setOpaque(false);
+
+        jBImprimirTicket.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jBImprimirTicket.setPreferredSize(new java.awt.Dimension(200, 50));
+        
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+
+        bottomPanel.add(jBImprimirTicket, java.awt.BorderLayout.WEST);
+        bottomPanel.add(jBRegresar, java.awt.BorderLayout.EAST);
+
+        jPPrincipal.add(topPanel, java.awt.BorderLayout.NORTH);
+        jPPrincipal.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+        jPPrincipal.add(bottomPanel, java.awt.BorderLayout.SOUTH);
+
+        jPPrincipal.revalidate();
+        jPPrincipal.repaint();
+
         cargarFiltros();
         jCFiltro.addActionListener(e -> cargarHistorial());
         cargarHistorial();

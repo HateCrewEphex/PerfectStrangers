@@ -24,6 +24,7 @@ public class PSMenu extends javax.swing.JFrame {
      */
     public PSMenu() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         configurarNavegacionMenu();
         configurarFondo();
         configurarSesionDatos();

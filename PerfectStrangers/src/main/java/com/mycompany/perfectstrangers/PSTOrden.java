@@ -54,6 +54,7 @@ public class PSTOrden extends javax.swing.JFrame {
      */
     public PSTOrden() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
@@ -225,6 +226,46 @@ public class PSTOrden extends javax.swing.JFrame {
     }//GEN-LAST:event_jBBebidasActionPerformed
 
     private void configurarInterfaz() {
+        // --- HACER RESPONSIVA LA VENTANA COMPLETA ---
+        jPPrincipal.removeAll();
+        jPPrincipal.setLayout(new java.awt.BorderLayout(10, 10));
+        jPPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Título arriba
+        jLNVentana.setFont(new java.awt.Font("Segoe UI", 1, 24));
+        jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jPPrincipal.add(jLNVentana, java.awt.BorderLayout.NORTH);
+
+        // Panel Central dividido en dos (Izquierda Productos, Derecha Orden)
+        javax.swing.JPanel panelCentro = new javax.swing.JPanel(new java.awt.GridLayout(1, 2, 20, 0));
+        panelCentro.setBackground(new java.awt.Color(0, 0, 0));
+
+        // 1. Lado Izquierdo (Productos)
+        javax.swing.JPanel panelIzquierdo = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
+        panelIzquierdo.setBackground(new java.awt.Color(0, 0, 0));
+        
+        // Botones de Categoría arriba del lado izquierdo
+        javax.swing.JPanel panelCategorias = new javax.swing.JPanel(new java.awt.GridLayout(1, 3, 5, 0));
+        panelCategorias.setBackground(new java.awt.Color(0, 0, 0));
+        panelCategorias.add(jBPlatillos);
+        panelCategorias.add(jBCombos);
+        panelCategorias.add(jBBebidas);
+        panelIzquierdo.add(panelCategorias, java.awt.BorderLayout.NORTH);
+        panelIzquierdo.add(jPCont, java.awt.BorderLayout.CENTER);
+
+        // 2. Lado Derecho (Orden)
+        panelCentro.add(panelIzquierdo);
+        panelCentro.add(jPOrden);
+
+        jPPrincipal.add(panelCentro, java.awt.BorderLayout.CENTER);
+
+        // Botón regresar abajo
+        javax.swing.JPanel panelInferior = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        panelInferior.setBackground(new java.awt.Color(0, 0, 0));
+        panelInferior.add(jBRegresar);
+        jPPrincipal.add(panelInferior, java.awt.BorderLayout.SOUTH);
+        // ---------------------------------------------
+        
         // Init mesas
         jCNoMesa.removeAllItems();
         for (int i = 1; i <= 10; i++) {
