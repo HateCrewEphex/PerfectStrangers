@@ -154,7 +154,10 @@ public class PSInicio extends javax.swing.JFrame {
             return;
         }
 
-        String sql = "SELECT id_empleado FROM usuarios WHERE usuario = ? AND contraseña = SHA2(?, 256)";
+        String sql = "SELECT u.id_empleado, e.nombre, e.ap_paterno, e.puesto " +
+                     "FROM usuarios u " +
+                     "JOIN empleados e ON u.id_empleado = e.id_empleado " +
+                     "WHERE u.usuario = ? AND u.contraseña = SHA2(?, 256)";
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -163,6 +166,13 @@ public class PSInicio extends javax.swing.JFrame {
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
+                    Sesion.idEmpleado = resultSet.getInt("id_empleado");
+                    String nombre = resultSet.getString("nombre");
+                    String ap = resultSet.getString("ap_paterno");
+                    Sesion.nombreEmpleado = (nombre != null ? nombre.trim() : "") + 
+                                            (ap != null ? " " + ap.trim() : "");
+                    Sesion.puestoEmpleado = resultSet.getString("puesto") != null ? resultSet.getString("puesto").trim() : "Empleado";
+
                     jLAccesoIncorrecto.setText("");
                     java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
                     dispose();

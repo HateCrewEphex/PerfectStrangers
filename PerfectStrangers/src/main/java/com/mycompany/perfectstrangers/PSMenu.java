@@ -4,6 +4,13 @@
  */
 package com.mycompany.perfectstrangers;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.swing.Timer;
+
 /**
  *
  * @author Ephex
@@ -19,6 +26,27 @@ public class PSMenu extends javax.swing.JFrame {
         initComponents();
         configurarNavegacionMenu();
         configurarFondo();
+        configurarSesionDatos();
+    }
+
+    private void configurarSesionDatos() {
+        // Cargar datos de la sesión guardada del login
+        if (Sesion.nombreEmpleado != null && !Sesion.nombreEmpleado.isEmpty()) {
+            jUsuario.setText(Sesion.nombreEmpleado);
+        }
+        if (Sesion.puestoEmpleado != null && !Sesion.puestoEmpleado.isEmpty()) {
+            jPuesto.setText(Sesion.puestoEmpleado);
+        }
+
+        // Configurar reloj / timer
+        Timer timer = new Timer(1000, new ActionListener() {
+            private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                jTiempo.setText(sdf.format(new Date()));
+            }
+        });
+        timer.start();
     }
 
     private void configurarFondo() {
