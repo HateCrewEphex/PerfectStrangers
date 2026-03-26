@@ -107,8 +107,6 @@ public class PSInventario extends javax.swing.JFrame {
         jLFiltrar.setForeground(new java.awt.Color(255, 255, 255));
         jLFiltrar.setText("FILTRAR POR:");
 
-        jCFiltro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         jTInventario.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},

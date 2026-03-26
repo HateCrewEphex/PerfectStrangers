@@ -233,8 +233,6 @@ public class PSHistorial extends javax.swing.JFrame {
         jLOrdenar.setForeground(new java.awt.Color(255, 255, 255));
         jLOrdenar.setText("ORDENAR POR:");
 
-        jCFiltro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         jBRegresar.setBackground(new java.awt.Color(204, 204, 204));
         jBRegresar.setText("REGRESAR");
 

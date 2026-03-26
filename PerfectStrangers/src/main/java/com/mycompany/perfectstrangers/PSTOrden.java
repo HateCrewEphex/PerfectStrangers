@@ -132,7 +132,6 @@ public class PSTOrden extends javax.swing.JFrame {
         jBRegistrar.setBackground(new java.awt.Color(204, 204, 204));
         jBRegistrar.setText("REGISTRAR");
 
-        jCNoMesa.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         jCNoMesa.addActionListener(this::jCNoMesaActionPerformed);
 
         javax.swing.GroupLayout jPOrdenLayout = new javax.swing.GroupLayout(jPOrden);

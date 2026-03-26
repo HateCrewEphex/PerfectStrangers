@@ -253,8 +253,6 @@ StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-siz
         jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLNVentana.setText("COBRO DE MESA");
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         jLInsumos.setForeground(new java.awt.Color(255, 255, 255));
         jLInsumos.setText("-");
 
