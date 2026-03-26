@@ -24,6 +24,10 @@ public class PSCobOrden extends javax.swing.JFrame {
      */
     public PSCobOrden() {
         initComponents();
+        
+        jBCobrar.setBackground(null);
+        jBRegresar.setBackground(null);
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         try {
             java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
@@ -82,7 +86,7 @@ public class PSCobOrden extends javax.swing.JFrame {
         centerPanel.add(jLInsumos);
         centerPanel.add(jLTFacturacion);
 
-        // Bottom Panel
+        // Bottom Panel&
         javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.BorderLayout(20, 20));
         bottomPanel.setOpaque(false);
 

@@ -24,6 +24,10 @@ public class PSHistorial extends javax.swing.JFrame {
      */
     public PSHistorial() {
         initComponents();
+        
+        jBImprimirTicket.setBackground(null);
+        jBRegresar.setBackground(null);
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         try {
             java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");

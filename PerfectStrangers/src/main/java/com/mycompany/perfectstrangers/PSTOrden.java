@@ -54,6 +54,14 @@ public class PSTOrden extends javax.swing.JFrame {
      */
     public PSTOrden() {
         initComponents();
+        
+        jBAgregar.setBackground(null);
+        jBRegistrar.setBackground(null);
+        jBRegresar.setBackground(null);
+        jBCombos.setBackground(null);
+        jBPlatillos.setBackground(null);
+        jBBebidas.setBackground(null);
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         try {
             java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");

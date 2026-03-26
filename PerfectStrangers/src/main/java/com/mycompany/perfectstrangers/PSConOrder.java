@@ -27,6 +27,11 @@ public class PSConOrder extends javax.swing.JFrame {
      */
     public PSConOrder() {
         initComponents();
+        
+        // Reset background so FlatLaf can apply its dark theme completely
+        jBEntregarOrden.setBackground(null);
+        jBRegresar.setBackground(null);
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         try {
             java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");

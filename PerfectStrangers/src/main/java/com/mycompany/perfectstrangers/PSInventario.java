@@ -17,6 +17,9 @@ public class PSInventario extends javax.swing.JFrame {
      */
     public PSInventario() {
         initComponents();
+        
+        jBRegresar.setBackground(null);
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         try {
             java.net.URL iconURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
