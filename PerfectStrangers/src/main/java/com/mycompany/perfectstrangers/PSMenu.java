@@ -17,6 +17,78 @@ public class PSMenu extends javax.swing.JFrame {
      */
     public PSMenu() {
         initComponents();
+        configurarNavegacionMenu();
+    }
+
+    private void configurarNavegacionMenu() {
+        JInicio.addMenuListener(new javax.swing.event.MenuListener() {
+            @Override
+            public void menuSelected(javax.swing.event.MenuEvent e) {
+                abrirVentana(new PSInicio());
+            }
+
+            @Override
+            public void menuDeselected(javax.swing.event.MenuEvent e) {
+            }
+
+            @Override
+            public void menuCanceled(javax.swing.event.MenuEvent e) {
+            }
+        });
+
+        jMOTomar.addActionListener(evt -> abrirVentana(new PSTOrden()));
+        jMOConsultar.addActionListener(evt -> abrirVentana(new PSConOrder()));
+        jMOCobrar.addActionListener(evt -> abrirVentana(new PSCobOrden()));
+
+        JInventario.addMenuListener(new javax.swing.event.MenuListener() {
+            @Override
+            public void menuSelected(javax.swing.event.MenuEvent e) {
+                abrirVentana(new PSInventario());
+            }
+
+            @Override
+            public void menuDeselected(javax.swing.event.MenuEvent e) {
+            }
+
+            @Override
+            public void menuCanceled(javax.swing.event.MenuEvent e) {
+            }
+        });
+
+        jMenu1.addMenuListener(new javax.swing.event.MenuListener() {
+            @Override
+            public void menuSelected(javax.swing.event.MenuEvent e) {
+                abrirVentana(new PSHistorial());
+            }
+
+            @Override
+            public void menuDeselected(javax.swing.event.MenuEvent e) {
+            }
+
+            @Override
+            public void menuCanceled(javax.swing.event.MenuEvent e) {
+            }
+        });
+
+        jMenu2.addMenuListener(new javax.swing.event.MenuListener() {
+            @Override
+            public void menuSelected(javax.swing.event.MenuEvent e) {
+                System.exit(0);
+            }
+
+            @Override
+            public void menuDeselected(javax.swing.event.MenuEvent e) {
+            }
+
+            @Override
+            public void menuCanceled(javax.swing.event.MenuEvent e) {
+            }
+        });
+    }
+
+    private void abrirVentana(javax.swing.JFrame ventana) {
+        java.awt.EventQueue.invokeLater(() -> ventana.setVisible(true));
+        dispose();
     }
 
     /**
