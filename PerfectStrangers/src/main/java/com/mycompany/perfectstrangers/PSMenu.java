@@ -18,6 +18,38 @@ public class PSMenu extends javax.swing.JFrame {
     public PSMenu() {
         initComponents();
         configurarNavegacionMenu();
+        configurarFondo();
+    }
+
+    private void configurarFondo() {
+        try {
+            // Removemos el layout generado de NetBeans para jPPrincipal
+            jPPrincipal.removeAll();
+            jPPrincipal.setLayout(new java.awt.BorderLayout());
+            
+            // Creamos un JLabel para el GIF
+            java.net.URL urlGif = getClass().getResource("/com/mycompany/perfectstrangers/Animación_en_Bucle_Lista.gif");
+            javax.swing.JLabel labelFondo = new javax.swing.JLabel();
+            if (urlGif != null) {
+                javax.swing.ImageIcon icon = new javax.swing.ImageIcon(urlGif);
+                labelFondo.setIcon(icon);
+                labelFondo.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+            } else {
+                // Alternativa por si el recurso no lo carga correctamente via classpath (si no se ha compilado)
+                javax.swing.ImageIcon icon = new javax.swing.ImageIcon("src/main/java/com/mycompany/perfectstrangers/Animación_en_Bucle_Lista.gif");
+                labelFondo.setIcon(icon);
+                labelFondo.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+            }
+            
+            // Reagregamos los componentes
+            jPPrincipal.add(labelFondo, java.awt.BorderLayout.CENTER);
+            jPPrincipal.add(jMenuInf, java.awt.BorderLayout.SOUTH);
+            
+            jPPrincipal.revalidate();
+            jPPrincipal.repaint();
+        } catch (Exception e) {
+            logger.log(java.util.logging.Level.WARNING, "No se pudo cargar el GIF de fondo.", e);
+        }
     }
 
     private void configurarNavegacionMenu() {
