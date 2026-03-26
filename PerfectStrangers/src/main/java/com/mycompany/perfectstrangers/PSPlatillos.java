@@ -173,7 +173,7 @@ public class PSPlatillos extends javax.swing.JFrame {
                     }
                 }
                 
-                String sql = "INSERT INTO platillos (id_platillo, nombre_alimento, tipo_alimento, costo, descripcion) VALUES (?, ?, ?, ?, '')";
+                String sql = "INSERT INTO platillos (id_platillo, nombre_alimento, tipo_alimento, costo) VALUES (?, ?, ?, ?)";
                 try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
                     pst.setInt(1, nuevoId);
                     pst.setString(2, nombre);
