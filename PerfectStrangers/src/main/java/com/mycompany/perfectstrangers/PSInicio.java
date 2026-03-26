@@ -1,5 +1,10 @@
 package com.mycompany.perfectstrangers;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
@@ -18,6 +23,10 @@ public class PSInicio extends javax.swing.JFrame {
      */
     public PSInicio() {
         initComponents();
+        jPFContraseña.setEchoChar('*');
+        jPFContraseña.setText("");
+        jLAccesoIncorrecto.setText("");
+        jBAcceder.addActionListener(evt -> autenticarUsuario());
     }
 
     /**
@@ -55,7 +64,7 @@ public class PSInicio extends javax.swing.JFrame {
         jTFUsuario.setText("Usuario");
         jTFUsuario.addActionListener(this::jTFUsuarioActionPerformed);
 
-        jPFContraseña.setText("ass");
+        jPFContraseña.setText("");
 
         jLLogo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLLogo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/mycompany/perfectstrangers/logo150.png"))); // NOI18N
@@ -135,6 +144,37 @@ public class PSInicio extends javax.swing.JFrame {
     private void jTFUsuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTFUsuarioActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTFUsuarioActionPerformed
+
+    private void autenticarUsuario() {
+        String usuario = jTFUsuario.getText().trim();
+        String password = new String(jPFContraseña.getPassword());
+
+        if (usuario.isEmpty() || password.isEmpty()) {
+            jLAccesoIncorrecto.setText("Usuario y contraseña son obligatorios.");
+            return;
+        }
+
+        String sql = "SELECT id_empleado FROM usuarios WHERE usuario = ? AND contraseña = SHA2(?, 256)";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, usuario);
+            statement.setString(2, password);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    jLAccesoIncorrecto.setText("");
+                    java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+                    dispose();
+                } else {
+                    jLAccesoIncorrecto.setText("Usuario o contraseña incorrectos.");
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al validar credenciales", ex);
+            jLAccesoIncorrecto.setText("No fue posible conectar con la base de datos.");
+        }
+    }
 
     /**
      * @param args the command line arguments
