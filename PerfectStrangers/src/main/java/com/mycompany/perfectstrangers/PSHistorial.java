@@ -46,48 +46,124 @@ public class PSHistorial extends javax.swing.JFrame {
     }
 
     private void configurarInterfaz() {
+        java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
+        java.awt.Color metal = new java.awt.Color(45, 45, 47);
+
         jPPrincipal.removeAll();
-        jPPrincipal.setLayout(new java.awt.BorderLayout(20, 20));
-        jPPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        jPPrincipal.setLayout(new java.awt.BorderLayout());
+
+        javax.swing.JPanel panelFondoAcero = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+
+                g2.setColor(new java.awt.Color(18, 18, 20));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                java.awt.RadialGradientPaint rgp = new java.awt.RadialGradientPaint(
+                    getWidth() / 2f, getHeight() / 2f, Math.max(getWidth(), getHeight()) / 1.1f,
+                    new float[]{0.4f, 1.0f},
+                    new java.awt.Color[]{
+                        new java.awt.Color(0, 0, 0, 0),
+                        new java.awt.Color(5, 5, 5, 240)
+                    }
+                );
+                g2.setPaint(rgp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                g2.setStroke(new java.awt.BasicStroke(22f));
+                g2.setColor(new java.awt.Color(60, 60, 65));
+                g2.drawRoundRect(10, 10, getWidth() - 20, getHeight() - 20, 20, 20);
+
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.setColor(tonoOro);
+                g2.drawRoundRect(22, 22, getWidth() - 44, getHeight() - 44, 16, 16);
+                g2.dispose();
+            }
+        };
+        panelFondoAcero.setBorder(javax.swing.BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+        javax.swing.JPanel panelContenido = new javax.swing.JPanel(new java.awt.BorderLayout(20, 20));
+        panelContenido.setOpaque(false);
 
         // Top Panel (Title & Filters)
         javax.swing.JPanel topPanel = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
         topPanel.setOpaque(false);
         
-        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 30));
+        jLNVentana.setForeground(tonoOro);
         jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         topPanel.add(jLNVentana, java.awt.BorderLayout.NORTH);
 
         javax.swing.JPanel filterPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
         filterPanel.setOpaque(false);
         jLOrdenar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jLOrdenar.setForeground(tonoOro);
         jCFiltro.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
         jCFiltro.setPreferredSize(new java.awt.Dimension(250, 40));
+        jCFiltro.setBackground(new java.awt.Color(35, 35, 40));
+        jCFiltro.setForeground(java.awt.Color.WHITE);
+        jCFiltro.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(90, 90, 95), 1),
+            javax.swing.BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
         filterPanel.add(jLOrdenar);
         filterPanel.add(jCFiltro);
         
         topPanel.add(filterPanel, java.awt.BorderLayout.SOUTH);
 
         // Center Panel (Table)
-        jTHistorial.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        jTHistorial.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 15));
         jTHistorial.setRowHeight(30);
-        jTHistorial.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        jTHistorial.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 15));
+        jTHistorial.setBackground(new java.awt.Color(30, 30, 34));
+        jTHistorial.setForeground(java.awt.Color.WHITE);
+        jTHistorial.setGridColor(new java.awt.Color(70, 70, 75));
+        jTHistorial.setSelectionBackground(new java.awt.Color(70, 58, 35));
+        jTHistorial.setSelectionForeground(java.awt.Color.WHITE);
+        jTHistorial.getTableHeader().setBackground(metal);
+        jTHistorial.getTableHeader().setForeground(tonoOro);
+
+        jScrollPane1.getViewport().setBackground(new java.awt.Color(30, 30, 34));
+        jScrollPane1.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(75, 75, 80), 2),
+            javax.swing.BorderFactory.createEmptyBorder(4, 4, 4, 4)
+        ));
 
         // Bottom Panel (Buttons)
         javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
         bottomPanel.setOpaque(false);
 
-        jBImprimirTicket.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jBImprimirTicket.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
         jBImprimirTicket.setPreferredSize(new java.awt.Dimension(200, 50));
+        jBImprimirTicket.setBackground(new java.awt.Color(44, 44, 48));
+        jBImprimirTicket.setForeground(tonoOro);
+        jBImprimirTicket.setFocusPainted(false);
+        jBImprimirTicket.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
         
-        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        jBRegresar.setBackground(new java.awt.Color(44, 44, 48));
+        jBRegresar.setForeground(tonoOro);
+        jBRegresar.setFocusPainted(false);
+        jBRegresar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
 
         bottomPanel.add(jBImprimirTicket, java.awt.BorderLayout.WEST);
         bottomPanel.add(jBRegresar, java.awt.BorderLayout.EAST);
 
-        jPPrincipal.add(topPanel, java.awt.BorderLayout.NORTH);
-        jPPrincipal.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-        jPPrincipal.add(bottomPanel, java.awt.BorderLayout.SOUTH);
+        panelContenido.add(topPanel, java.awt.BorderLayout.NORTH);
+        panelContenido.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+        panelContenido.add(bottomPanel, java.awt.BorderLayout.SOUTH);
+
+        panelFondoAcero.add(panelContenido, java.awt.BorderLayout.CENTER);
+        jPPrincipal.add(panelFondoAcero, java.awt.BorderLayout.CENTER);
 
         jPPrincipal.revalidate();
         jPPrincipal.repaint();

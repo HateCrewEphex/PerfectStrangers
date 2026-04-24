@@ -65,12 +65,124 @@ public class PSEmpleados extends javax.swing.JFrame {
                 dispose();
             }
         });
-        
-        // Centrar el contenido dinámicamente
-        javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
-        fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
-        fondoCentrado.add(jPanel1);
-        this.setContentPane(fondoCentrado);
+
+        configurarInterfaz();
+    }
+
+    private void configurarInterfaz() {
+        java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
+        java.awt.Color casiNegro = new java.awt.Color(20, 20, 22);
+        java.awt.Color metal = new java.awt.Color(45, 45, 47);
+
+        javax.swing.JPanel fondoMetalico = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+
+                g2.setColor(new java.awt.Color(16, 16, 18));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                java.awt.RadialGradientPaint rgp = new java.awt.RadialGradientPaint(
+                    getWidth() / 2f, getHeight() / 2f, Math.max(getWidth(), getHeight()) / 1.1f,
+                    new float[]{0.35f, 1.0f},
+                    new java.awt.Color[]{
+                        new java.awt.Color(0, 0, 0, 0),
+                        new java.awt.Color(5, 5, 5, 235)
+                    }
+                );
+                g2.setPaint(rgp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                g2.setStroke(new java.awt.BasicStroke(22f));
+                g2.setColor(new java.awt.Color(60, 60, 65));
+                g2.drawRoundRect(10, 10, getWidth() - 20, getHeight() - 20, 20, 20);
+
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.setColor(tonoOro);
+                g2.drawRoundRect(22, 22, getWidth() - 44, getHeight() - 44, 16, 16);
+                g2.dispose();
+            }
+        };
+        fondoMetalico.setBorder(javax.swing.BorderFactory.createEmptyBorder(45, 45, 45, 45));
+
+        javax.swing.JPanel centro = new javax.swing.JPanel(new java.awt.GridBagLayout());
+        centro.setOpaque(false);
+
+        javax.swing.JPanel tarjeta = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(casiNegro);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.setColor(new java.awt.Color(70, 70, 75));
+                g2.setStroke(new java.awt.BasicStroke(3f));
+                g2.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 16, 16);
+                g2.dispose();
+            }
+        };
+        tarjeta.setOpaque(false);
+        tarjeta.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 22, 20, 22));
+
+        jPanel1.setOpaque(false);
+        jLabel1.setForeground(tonoOro);
+        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+
+        javax.swing.JLabel[] labels = {jLNombre, jLAPaterno, jLAMaterno, jLAMaterno1, jLUsuario, jLContrasena, jLContrasena1};
+        for (javax.swing.JLabel label : labels) {
+            label.setForeground(tonoOro);
+            label.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        }
+
+        javax.swing.JComponent[] campos = {jTNombre, jTAPaterno, jTAMaterno, jCBPuesto, jTUsuario, jPContrasena, jPCContrasena};
+        for (javax.swing.JComponent campo : campos) {
+            campo.setBackground(new java.awt.Color(34, 34, 38));
+            campo.setForeground(java.awt.Color.WHITE);
+            campo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+            campo.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(95, 95, 100), 1),
+                javax.swing.BorderFactory.createEmptyBorder(6, 8, 6, 8)
+            ));
+        }
+
+        jTNombre.setCaretColor(java.awt.Color.WHITE);
+        jTAPaterno.setCaretColor(java.awt.Color.WHITE);
+        jTAMaterno.setCaretColor(java.awt.Color.WHITE);
+        jTUsuario.setCaretColor(java.awt.Color.WHITE);
+        jPContrasena.setCaretColor(java.awt.Color.WHITE);
+        jPCContrasena.setCaretColor(java.awt.Color.WHITE);
+
+        jBRegistrar.setBackground(new java.awt.Color(33, 122, 79));
+        jBRegistrar.setForeground(java.awt.Color.WHITE);
+        jBRegistrar.setFocusPainted(false);
+        jBRegistrar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+
+        jBRegresar.setBackground(new java.awt.Color(44, 44, 48));
+        jBRegresar.setForeground(tonoOro);
+        jBRegresar.setFocusPainted(false);
+        jBRegresar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16)
+        ));
+
+        jPanel1.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(80, 80, 85), 2),
+            javax.swing.BorderFactory.createEmptyBorder(12, 12, 12, 12)
+        ));
+        jPanel1.setBackground(metal);
+
+        tarjeta.add(jPanel1, java.awt.BorderLayout.CENTER);
+        centro.add(tarjeta);
+        fondoMetalico.add(centro, java.awt.BorderLayout.CENTER);
+        setContentPane(fondoMetalico);
+        revalidate();
+        repaint();
     }
 
     private void registrarEmpleado() {

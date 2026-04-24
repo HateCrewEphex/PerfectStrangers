@@ -52,69 +52,140 @@ public class PSConOrder extends javax.swing.JFrame {
     }
 
     private void configurarInterfaz() {
+        // Rediseño Visual - "ORDENES A PREPARAR" Neón y Metal
+        java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
+        java.awt.Color casiNegro = new java.awt.Color(25, 25, 25);
+        java.awt.Color metal = new java.awt.Color(45, 45, 47);
+
         jPPrincipal.removeAll();
-        jPPrincipal.setLayout(new java.awt.BorderLayout(10, 10));
-        jPPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        jPPrincipal.setLayout(new java.awt.BorderLayout());
+        
+        // --- FONDO GENERAL (Tipo Plancha Acero) ---
+        javax.swing.JPanel panelFondoAcero = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Fondo oscuro
+                g2.setColor(new java.awt.Color(15, 12, 10));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Viñeta
+                java.awt.RadialGradientPaint rgp = new java.awt.RadialGradientPaint(
+                    getWidth() / 2f, getHeight() / 2f, Math.max(getWidth(), getHeight()) / 1.1f,
+                    new float[]{ 0.4f, 1.0f },
+                    new java.awt.Color[]{
+                        new java.awt.Color(0, 0, 0, 0), 
+                        new java.awt.Color(10, 10, 10, 240)
+                    }
+                );
+                g2.setPaint(rgp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Marco exterior de acero
+                g2.setStroke(new java.awt.BasicStroke(20f));
+                g2.setColor(metal);
+                g2.drawRect(10, 10, getWidth()-20, getHeight()-20);
+                
+                g2.dispose();
+            }
+        };
+        panelFondoAcero.setBorder(javax.swing.BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
-        // Top Panel for Title
-        javax.swing.JPanel topPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
-        topPanel.setOpaque(false);
-        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 24));
-        jLabel1.setForeground(java.awt.Color.WHITE);
-        jLabel1.setText("CONSOLA DE ÓRDENES - PREPARACIÓN");
-        topPanel.add(jLabel1);
+        // --- CAJA CENTRAL (Pantalla de pedidos) ---
+        javax.swing.JPanel panelPantalla = new javax.swing.JPanel(new java.awt.BorderLayout(0, 20)) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setColor(new java.awt.Color(15, 15, 15)); // Negro puro casi pantalla
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.setColor(tonoOro);
+                g2.drawRect(1, 1, getWidth()-2, getHeight()-2);
+                g2.dispose();
+            }
+        };
+        panelPantalla.setOpaque(false);
+        panelPantalla.setBorder(javax.swing.BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
-        // Center Panel for Orders (GridLayout 1x3)
-        javax.swing.JPanel centerPanel = new javax.swing.JPanel(new java.awt.GridLayout(1, 3, 20, 20));
-        centerPanel.setOpaque(false);
+        // Título "ORDENES A PREPARAR" (Color Plata/Metálico)
+        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+        jLabel1.setForeground(new java.awt.Color(180, 180, 190));
+        jLabel1.setText("ORDENES A PREPARAR");
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        panelPantalla.add(jLabel1, java.awt.BorderLayout.NORTH);
 
-        // Card 1
-        javax.swing.JPanel card1 = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
-        card1.setOpaque(false);
-        jLOrdenaEntregar.setFont(new java.awt.Font("Consolas", java.awt.Font.PLAIN, 18));
-        card1.add(jLOrdenaEntregar, java.awt.BorderLayout.CENTER);
+        // --- ZONA DE LAS TARJETAS (Tickets) ---
+        javax.swing.JPanel panelTarjetas = new javax.swing.JPanel(new java.awt.GridLayout(1, 3, 30, 0));
+        panelTarjetas.setOpaque(false);
+
+        // jLOrdenaEntregar, jLSegundaOrden, jLTercerOrden ya son JLabel pero los usaremos para pintar
+        jLOrdenaEntregar.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLSegundaOrden.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLTercerOrden.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        
+        panelTarjetas.add(jLOrdenaEntregar);
+        panelTarjetas.add(jLSegundaOrden);
+        panelTarjetas.add(jLTercerOrden);
+
+        panelPantalla.add(panelTarjetas, java.awt.BorderLayout.CENTER);
+
+        // --- ZONA INFERIOR (Botones y status de la fila) ---
+        javax.swing.JPanel panelInferior = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelInferior.setOpaque(false);
+
+        // Botón ENTREGAR (Izquierda debajo de la primera tarjeta)
+        jBEntregarOrden.setText("ENTREGAR");
         jBEntregarOrden.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
-        card1.add(jBEntregarOrden, java.awt.BorderLayout.SOUTH);
+        jBEntregarOrden.setForeground(tonoOro);
+        jBEntregarOrden.setBackground(new java.awt.Color(40, 40, 45));
+        jBEntregarOrden.setFocusPainted(false);
+        jBEntregarOrden.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 3),
+            javax.swing.BorderFactory.createEmptyBorder(12, 60, 12, 60)
+        ));
+        javax.swing.JPanel pEntregar = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0));
+        pEntregar.setOpaque(false);
+        pEntregar.add(jBEntregarOrden);
 
-        // Card 2
-        javax.swing.JPanel card2 = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
-        card2.setOpaque(false);
-        jLSegundaOrden.setFont(new java.awt.Font("Consolas", java.awt.Font.PLAIN, 18));
-        card2.add(jLSegundaOrden, java.awt.BorderLayout.CENTER);
-        
-        // Card 3
-        javax.swing.JPanel card3 = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
-        card3.setOpaque(false);
-        jLTercerOrden.setFont(new java.awt.Font("Consolas", java.awt.Font.PLAIN, 18));
-        card3.add(jLTercerOrden, java.awt.BorderLayout.CENTER);
+        // Información "Órdenes por delante" (Centro)
+        javax.swing.JPanel pCentroInfo = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 10));
+        pCentroInfo.setOpaque(false);
+        jLOrdenes.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 20));
+        jLOrdenes.setForeground(new java.awt.Color(220, 220, 220));
+        jLOrdenes.setText("≡ Ordenes por delante: ");
+        jLCOrdenes.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 22));
+        jLCOrdenes.setForeground(tonoOro);
+        pCentroInfo.add(jLOrdenes);
+        pCentroInfo.add(jLCOrdenes);
 
-        centerPanel.add(card1);
-        centerPanel.add(card2);
-        centerPanel.add(card3);
+        // Botón REGRESAR (Derecha)
+        jBRegresar.setText("REGRESAR");
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 15));
+        jBRegresar.setForeground(tonoOro);
+        jBRegresar.setBackground(new java.awt.Color(40, 40, 45));
+        jBRegresar.setFocusPainted(false);
+        jBRegresar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 3),
+            javax.swing.BorderFactory.createEmptyBorder(10, 40, 10, 40)
+        ));
+        javax.swing.JPanel pRegresar = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 0, 0));
+        pRegresar.setOpaque(false);
+        pRegresar.add(jBRegresar);
 
-        // Bottom Panel for info & return button
-        javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
-        bottomPanel.setOpaque(false);
-        
-        javax.swing.JPanel queueInfoPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        queueInfoPanel.setOpaque(false);
-        jLOrdenes.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
-        jLCOrdenes.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
-        queueInfoPanel.add(jLOrdenes);
-        queueInfoPanel.add(jLCOrdenes);
-        
-        javax.swing.JPanel backBtnPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
-        backBtnPanel.setOpaque(false);
-        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
-        backBtnPanel.add(jBRegresar);
+        panelInferior.add(pEntregar, java.awt.BorderLayout.WEST);
+        panelInferior.add(pCentroInfo, java.awt.BorderLayout.CENTER);
+        panelInferior.add(pRegresar, java.awt.BorderLayout.EAST);
 
-        bottomPanel.add(queueInfoPanel, java.awt.BorderLayout.WEST);
-        bottomPanel.add(backBtnPanel, java.awt.BorderLayout.EAST);
+        panelPantalla.add(panelInferior, java.awt.BorderLayout.SOUTH);
 
-        jPPrincipal.add(topPanel, java.awt.BorderLayout.NORTH);
-        jPPrincipal.add(centerPanel, java.awt.BorderLayout.CENTER);
-        jPPrincipal.add(bottomPanel, java.awt.BorderLayout.SOUTH);
-        
+        // Ensamblar
+        panelFondoAcero.add(panelPantalla, java.awt.BorderLayout.CENTER);
+        jPPrincipal.add(panelFondoAcero, java.awt.BorderLayout.CENTER);
+
         jPPrincipal.revalidate();
         jPPrincipal.repaint();
     }
@@ -183,7 +254,7 @@ public class PSConOrder extends javax.swing.JFrame {
         }
     }
 
-    private void aplicarEstiloTarjeta(javax.swing.JLabel label, String html, Color colorFondo) {
+    private void aplicarEstiloTarjeta(javax.swing.JLabel label, String html, Color colorBordeNeon) {
         label.setText(""); // Limpiar texto original
         label.setOpaque(false);
         
@@ -193,8 +264,8 @@ public class PSConOrder extends javax.swing.JFrame {
         javax.swing.JLabel labelInterno = new javax.swing.JLabel(html);
         labelInterno.setOpaque(false);
         labelInterno.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        labelInterno.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        labelInterno.setBorder(javax.swing.BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        labelInterno.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        labelInterno.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
         label.add(labelInterno, java.awt.BorderLayout.CENTER);
         
@@ -203,14 +274,26 @@ public class PSConOrder extends javax.swing.JFrame {
             public void paintBorder(java.awt.Component c, java.awt.Graphics g, int x, int y, int width, int height) {
                 java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(colorFondo);
-                g2.fillRoundRect(x, y, width - 1, height - 1, 35, 35);
+                
+                // Fondo interior (Oscuro carbón)
+                g2.setColor(new java.awt.Color(25, 25, 28));
+                g2.fillRoundRect(x + 5, y + 5, width - 10, height - 10, 25, 25);
+                
+                // Borde Neón Resplandeciente
+                g2.setStroke(new java.awt.BasicStroke(4f));
+                g2.setColor(new Color(colorBordeNeon.getRed(), colorBordeNeon.getGreen(), colorBordeNeon.getBlue(), 80)); // Sombra neón suave
+                g2.drawRoundRect(x + 5, y + 5, width - 10, height - 10, 25, 25);
+                
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.setColor(colorBordeNeon); // Borde duro neón
+                g2.drawRoundRect(x + 5, y + 5, width - 10, height - 10, 25, 25);
+
                 g2.dispose();
             }
 
             @Override
             public java.awt.Insets getBorderInsets(java.awt.Component c) {
-                return new java.awt.Insets(0, 0, 0, 0); // El margen lo maneja labelInterno
+                return new java.awt.Insets(5, 5, 5, 5); 
             }
 
             @Override
@@ -226,26 +309,34 @@ public class PSConOrder extends javax.swing.JFrame {
     private void mostrarOrdenes() {
         String msgVacio = "<html><div style='text-align:center; padding-top:40px; font-size:24px; color:#555555;'>Sin órdenes pendientes</div></html>";
         
-        aplicarEstiloTarjeta(jLOrdenaEntregar, msgVacio, new Color(25, 25, 25));
+        aplicarEstiloTarjeta(jLOrdenaEntregar, msgVacio, new Color(50, 50, 50)); 
         jBEntregarOrden.setEnabled(false);
+        // Borrar hover effects default si estaba inactivo
+        jBEntregarOrden.setForeground(new java.awt.Color(100, 100, 100));
 
-        aplicarEstiloTarjeta(jLSegundaOrden, msgVacio, new Color(25, 25, 25));
-        aplicarEstiloTarjeta(jLTercerOrden, msgVacio, new Color(25, 25, 25));
+        aplicarEstiloTarjeta(jLSegundaOrden, msgVacio, new Color(50, 50, 50));
+        aplicarEstiloTarjeta(jLTercerOrden, msgVacio, new Color(50, 50, 50));
 
         jLCOrdenes.setText("0");
 
+        // Color verde fuerte neón de la Activa
+        Color colActiva = new Color(0, 255, 60);
+        // Color amarillo intenso neón en Espera
+        Color colEspera = new Color(255, 150, 0);
+
         if (listaOrdenes.size() > 0) {
             OrdenPendiente o1 = listaOrdenes.get(0);
-            aplicarEstiloTarjeta(jLOrdenaEntregar, formatHTML(o1, true), new Color(40, 110, 56)); // Verde estilizado
+            aplicarEstiloTarjeta(jLOrdenaEntregar, formatHTML(o1, true), colActiva);
             jBEntregarOrden.setEnabled(true);
+            jBEntregarOrden.setForeground(new java.awt.Color(204, 169, 90)); // Oro si esta activa
         }
         if (listaOrdenes.size() > 1) {
             OrdenPendiente o2 = listaOrdenes.get(1);
-            aplicarEstiloTarjeta(jLSegundaOrden, formatHTML(o2, false), new Color(191, 85, 12)); // Naranja estético
+            aplicarEstiloTarjeta(jLSegundaOrden, formatHTML(o2, false), colEspera);
         }
         if (listaOrdenes.size() > 2) {
             OrdenPendiente o3 = listaOrdenes.get(2);
-            aplicarEstiloTarjeta(jLTercerOrden, formatHTML(o3, false), new Color(191, 85, 12)); // Naranja estético
+            aplicarEstiloTarjeta(jLTercerOrden, formatHTML(o3, false), colEspera);
         }
 
         int faltantes = listaOrdenes.size() > 3 ? listaOrdenes.size() - 3 : 0;
@@ -254,22 +345,42 @@ public class PSConOrder extends javax.swing.JFrame {
 
     private String formatHTML(OrdenPendiente o, boolean esPrimera) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<html><div style='font-family: sans-serif; text-align: center;'>");
+        sb.append("<html><div style='font-family: \"Segoe UI\", sans-serif; text-align: left; width: 100%; padding: 5px;'>");
         
-        // Cabecera tipo ticket de cocina
-        sb.append("<div style='border-bottom: 2px dashed ").append(esPrimera ? "#8dfaab" : "#ffd3a1").append("; padding-bottom: 12px; margin-bottom: 15px;'>");
-        sb.append("<h1 style='font-size: 34px; margin: 0; color: #ffffff; letter-spacing: 2px;'>MESA ").append(o.mesa).append("</h1>");
-        sb.append("<div style='color: ").append(esPrimera ? "#d0fce0" : "#ffead4").append("; font-size: 20px; margin-top: 5px; font-weight: bold;'>&#128340; ").append(o.hora.toString()).append("</div>");
+        // Cabecera "Mesa X" con los íconos
+        String colorAcento = esPrimera ? "#00ff3c" : "#ff9600";
+        sb.append("<div style='border-bottom: 1px solid #4a4a4a; padding-bottom: 15px; margin-bottom: 20px; font-size: 26px; color: #e6e6dc; display: flex; justify-content: space-between;'>");
+        sb.append("<span style='font-weight: normal;'>Mesa: <span style='font-weight: 300;'>").append(o.mesa).append("</span></span>");
+        // Emulamos íconos de hamburguesa/vaso como en el diseño (pueden ser emojis standard de comida)
+        sb.append("<span style='float:right; color:").append(colorAcento).append(";'>&#127828;&#129380;</span>");
         sb.append("</div>");
         
-        // Contenido centrado general
-        sb.append("<div style='margin-top: 15px;'>");
+        // Contenido de la lista de platillos
+        sb.append("<div style='margin-bottom: 30px;'>");
         for (ItemOrden item : o.items) {
-            sb.append("<div style='font-size: 24px; color: #ffffff; margin-bottom: 8px;'>");
-            sb.append("<span style='font-weight: bold; color: ").append(esPrimera ? "#8dfaab" : "#ffd3a1").append(";'>").append(item.cant).append(" x </span>");
-            sb.append(item.nombre);
+            sb.append("<div style='font-size: 18px; color: #e6e6dc; margin-bottom: 10px; display: flex; align-items: center;'>");
+            // Icono sutil
+            sb.append("<span style='color: #888888; font-size: 22px; margin-right: 15px;'>&#9676;</span>");
+            sb.append("<span style='padding-left: 10px;'>").append(item.cant).append("x ").append(item.nombre).append("</span>");
             sb.append("</div>");
         }
+        sb.append("</div>");
+        
+        // Footers de status
+        sb.append("<div style='border-top: 1px solid #4a4a4a; padding-top: 15px;'>");
+        
+        // Estado
+        sb.append("<div style='font-size: 20px; color: #aaaaaa; margin-bottom: 8px;'>");
+        sb.append("&#9888; &nbsp;&nbsp;Estado: ");
+        sb.append("<span style='color: ").append(colorAcento).append(";'>").append(esPrimera ? "Preparar" : "En Espera").append("</span>");
+        sb.append("</div>");
+        
+        // Tiempo
+        sb.append("<div style='font-size: 20px; color: #aaaaaa;'>");
+        sb.append("&#9201; &nbsp;&nbsp;Tiempo: ");
+        sb.append("<span style='color: ").append(colorAcento).append(";'>").append(esPrimera ? o.hora.toString() : "--:--:--").append("</span>");
+        sb.append("</div>");
+        
         sb.append("</div>");
         
         sb.append("</div></html>");

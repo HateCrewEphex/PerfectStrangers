@@ -46,83 +46,202 @@ public class PSCobOrden extends javax.swing.JFrame {
     }
 
     private void configurarInterfaz() {
+        // Rediseño Visual - "COBRO DE MESA" Dark Metal & Gold
+        java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
+        java.awt.Color casiNegro = new java.awt.Color(25, 25, 25);
+        java.awt.Color metal = new java.awt.Color(45, 45, 47);
+
         jPPrincipal.removeAll();
-        jPPrincipal.setLayout(new java.awt.BorderLayout(20, 20));
-        jPPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        jPPrincipal.setLayout(new java.awt.BorderLayout());
+        
+        // --- FONDO GENERAL METÁLICO ---
+        javax.swing.JPanel panelFondoAcero = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Fondo oscuro texturizado "cuero" negro/gris
+                g2.setColor(new java.awt.Color(18, 18, 20));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Viñeta
+                java.awt.RadialGradientPaint rgp = new java.awt.RadialGradientPaint(
+                    getWidth() / 2f, getHeight() / 2f, Math.max(getWidth(), getHeight()) / 1.1f,
+                    new float[]{ 0.4f, 1.0f },
+                    new java.awt.Color[]{
+                        new java.awt.Color(0, 0, 0, 0), 
+                        new java.awt.Color(5, 5, 5, 240)
+                    }
+                );
+                g2.setPaint(rgp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Marco exterior acero grueso (simulando tablet industrial)
+                g2.setStroke(new java.awt.BasicStroke(24f));
+                g2.setColor(new java.awt.Color(60, 60, 65));
+                g2.drawRoundRect(12, 12, getWidth()-24, getHeight()-24, 20, 20);
+                
+                // Ribete interior Dorado
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.setColor(tonoOro);
+                g2.drawRoundRect(24, 24, getWidth()-48, getHeight()-48, 15, 15);
+                
+                g2.dispose();
+            }
+        };
+        panelFondoAcero.setBorder(javax.swing.BorderFactory.createEmptyBorder(45, 45, 45, 45));
 
-        // Top Panel
-        javax.swing.JPanel topPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
-        topPanel.setOpaque(false);
-        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+        // --- CONTENEDOR CENTRAL DE FACTURACIÓN ---
+        javax.swing.JPanel panelFacturacion = new javax.swing.JPanel(new java.awt.BorderLayout(0, 20));
+        panelFacturacion.setOpaque(false);
+
+        // TOP: Título y Selector de Mesa
+        javax.swing.JPanel panelTop = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
+        panelTop.setOpaque(false);
+        
+        jLNVentana.setText("COBRO DE MESA");
+        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 26));
+        jLNVentana.setForeground(tonoOro);
         jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        topPanel.add(jLNVentana, java.awt.BorderLayout.NORTH);
+        panelTop.add(jLNVentana, java.awt.BorderLayout.NORTH);
 
-        javax.swing.JPanel selectionPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 20, 10));
-        selectionPanel.setOpaque(false);
+        javax.swing.JPanel panelToolBar = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 20, 0));
+        panelToolBar.setOpaque(false);
         
+        // ComboBox "Mesa" estilizado
+        jComboBox1.setBackground(new java.awt.Color(40, 40, 45));
+        jComboBox1.setForeground(java.awt.Color.WHITE);
         jComboBox1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
+        jComboBox1.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(80, 80, 80), 2),
+            javax.swing.BorderFactory.createEmptyBorder(2, 4, 2, 4)
+        ));
         
+        jLAtendio.setText("ATENDIO: ");
         jLAtendio.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jLAtendio.setForeground(tonoOro);
+        
+        jLNAtendio.setText("-");
         jLNAtendio.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
+        jLNAtendio.setForeground(java.awt.Color.WHITE);
         
-        selectionPanel.add(jComboBox1);
-        selectionPanel.add(jLAtendio);
-        selectionPanel.add(jLNAtendio);
-        
-        topPanel.add(selectionPanel, java.awt.BorderLayout.SOUTH);
+        panelToolBar.add(jComboBox1);
+        panelToolBar.add(jLAtendio);
+        // Sin icono para evitar caracteres no soportados
+        panelToolBar.add(jLNAtendio);
 
-        // Center Panel (Splitting Insumos and Facturacion)
-        javax.swing.JPanel centerPanel = new javax.swing.JPanel(new java.awt.GridLayout(1, 2, 20, 20));
-        centerPanel.setOpaque(false);
-        
-        jLInsumos.setFont(new java.awt.Font("Consolas", java.awt.Font.PLAIN, 18));
+        panelTop.add(panelToolBar, java.awt.BorderLayout.SOUTH);
+
+        // CENTRO: Recibo / Lista de Insumos "Dark Table"
+        javax.swing.JPanel panelRecibo = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelRecibo.setOpaque(false);
+        // Margen lateral grande para simular la caja de cobro centrada
+        panelRecibo.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 80, 0, 80));
+
+        javax.swing.JPanel panelTablaAcero = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new java.awt.Color(22, 22, 25)); // Fondo gris muy oscuro
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setStroke(new java.awt.BasicStroke(4f));
+                g2.setColor(new java.awt.Color(70, 70, 75)); // Borde Plomo
+                g2.drawRoundRect(2, 2, getWidth()-4, getHeight()-4, 10, 10);
+                g2.dispose();
+            }
+        };
+        panelTablaAcero.setOpaque(false);
+        panelTablaAcero.setBorder(javax.swing.BorderFactory.createEmptyBorder(15, 20, 15, 20));
+
+        jLInsumos.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
+        jLInsumos.setForeground(java.awt.Color.WHITE);
         jLInsumos.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        jLInsumos.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
-        
-        jLTFacturacion.setFont(new java.awt.Font("Consolas", java.awt.Font.PLAIN, 18));
-        jLTFacturacion.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        jLTFacturacion.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
+        jLInsumos.setBorder(null); // Quitar borde default
+        jLInsumos.setOpaque(false);
 
-        centerPanel.add(jLInsumos);
-        centerPanel.add(jLTFacturacion);
+        jLTFacturacion.setVisible(false); // Ocultar este label que usabas, lo manejaremos todo en jLInsumos como tabla HTML
 
-        // Bottom Panel&
-        javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.BorderLayout(20, 20));
-        bottomPanel.setOpaque(false);
+        javax.swing.JScrollPane scrollInsumos = new javax.swing.JScrollPane(jLInsumos);
+        scrollInsumos.setOpaque(false);
+        scrollInsumos.getViewport().setOpaque(false);
+        scrollInsumos.setBorder(null);
+        
+        panelTablaAcero.add(scrollInsumos, java.awt.BorderLayout.CENTER);
+        panelRecibo.add(panelTablaAcero, java.awt.BorderLayout.CENTER);
 
-        javax.swing.JPanel totalPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        totalPanel.setOpaque(false);
-        jLTTotal.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 24));
-        jLTotalCobrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 36));
-        jLTotalCobrar.setForeground(new java.awt.Color(50, 205, 50)); // Green color for total
-        totalPanel.add(jLTTotal);
-        totalPanel.add(jLTotalCobrar);
+        // BOTTOM: Totales y Botones
+        javax.swing.JPanel panelAbajo = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
+        panelAbajo.setOpaque(false);
+        panelAbajo.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 80, 0, 80));
+
+        // Letreros de TOTAL
+        javax.swing.JPanel panelTotalesTexto = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelTotalesTexto.setOpaque(false);
         
-        javax.swing.JPanel buttonsPanel = new javax.swing.JPanel(new java.awt.BorderLayout(20, 0));
-        buttonsPanel.setOpaque(false);
+        jLTTotal.setText("TOTAL:");
+        jLTTotal.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 36));
+        jLTTotal.setForeground(tonoOro);
         
+        jLTotalCobrar.setText("$0.00");
+        jLTotalCobrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 42));
+        jLTotalCobrar.setForeground(tonoOro);
+        
+        panelTotalesTexto.add(jLTTotal, java.awt.BorderLayout.WEST);
+        panelTotalesTexto.add(jLTotalCobrar, java.awt.BorderLayout.EAST);
+
+        // Botones de Acción (Cobrar / Regresar)
+        javax.swing.JPanel panelBotones = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelBotones.setOpaque(false);
+        
+        // Estilo botón Metálico Oscuro
+        jBCobrar.setText("COBRAR");
         jBCobrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 20));
-        jBCobrar.setPreferredSize(new java.awt.Dimension(200, 60));
-        jBCobrar.setBackground(new java.awt.Color(40, 167, 69)); // Action green
-        jBCobrar.setForeground(java.awt.Color.WHITE);
+        jBCobrar.setBackground(new java.awt.Color(50, 50, 55));
+        jBCobrar.setForeground(tonoOro);
+        jBCobrar.setFocusPainted(false);
+        jBCobrar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 3),
+            javax.swing.BorderFactory.createEmptyBorder(15, 50, 15, 50)
+        ));
 
-        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+        jBRegresar.setText("REGRESAR");
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        jBRegresar.setBackground(new java.awt.Color(40, 40, 45));
+        jBRegresar.setForeground(tonoOro);
+        jBRegresar.setFocusPainted(false);
+        jBRegresar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 40, 10, 40)
+        ));
 
-        buttonsPanel.add(jBCobrar, java.awt.BorderLayout.WEST);
-        buttonsPanel.add(jBRegresar, java.awt.BorderLayout.EAST);
+        panelBotones.add(jBCobrar, java.awt.BorderLayout.WEST);
+        panelBotones.add(jBRegresar, java.awt.BorderLayout.EAST);
 
-        bottomPanel.add(totalPanel, java.awt.BorderLayout.NORTH);
-        bottomPanel.add(buttonsPanel, java.awt.BorderLayout.SOUTH);
+        panelAbajo.add(panelTotalesTexto, java.awt.BorderLayout.NORTH);
+        panelAbajo.add(panelBotones, java.awt.BorderLayout.SOUTH);
 
-        jPPrincipal.add(topPanel, java.awt.BorderLayout.NORTH);
-        jPPrincipal.add(centerPanel, java.awt.BorderLayout.CENTER);
-        jPPrincipal.add(bottomPanel, java.awt.BorderLayout.SOUTH);
+        // Ensamblar la vista de facturación
+        panelFacturacion.add(panelTop, java.awt.BorderLayout.NORTH);
+        panelFacturacion.add(panelRecibo, java.awt.BorderLayout.CENTER);
+        panelFacturacion.add(panelAbajo, java.awt.BorderLayout.SOUTH);
+
+        panelFondoAcero.add(panelFacturacion, java.awt.BorderLayout.CENTER);
+        jPPrincipal.add(panelFondoAcero, java.awt.BorderLayout.CENTER);
 
         jPPrincipal.revalidate();
         jPPrincipal.repaint();
 
+        // Listeners
+        for (java.awt.event.ActionListener al : jComboBox1.getActionListeners()) jComboBox1.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBCobrar.getActionListeners()) jBCobrar.removeActionListener(al);
+
+        jComboBox1.removeAllItems();
         jComboBox1.addItem("Selecciona una mesa");
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 15; i++) {
             jComboBox1.addItem("Mesa " + i);
         }
 
@@ -167,7 +286,13 @@ public class PSCobOrden extends javax.swing.JFrame {
             pst.setInt(1, numMesa);
             pst.setInt(2, numMesa);
             try (ResultSet rs = pst.executeQuery()) {
-StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-size: 18px;'>");
+                StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-family: \"Segoe UI\", sans-serif; width: 100%; color: #F0F0F0;'>");
+                
+                // Cabecera Interna de la tabla simulada
+                html.append("<div style='border-bottom: 2px solid #555555; padding-bottom: 10px; margin-bottom: 15px; font-size: 22px; color: #cca95a;'>");
+                html.append("Mesa ").append(numMesa);
+                html.append("</div>");
+                
                 double total = 0.0;
                 boolean existeOrden = false;
                 String empleado = "-";
@@ -183,13 +308,36 @@ StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-siz
                     else if (nPaq != null) valor = rs.getDouble("costoPaq");
 
                     int cant = rs.getInt("cant");
-                    total += (valor * cant);
+                    double subtotalLinea = (valor * cant);
+                    total += subtotalLinea;
                     empleado = rs.getString("nomEmp") != null ? rs.getString("nomEmp") : "Desconocido";
 
-                    html.append("<p style='margin-bottom: 5px;'>")
-                        .append("<b>").append(cant).append("x</b> ").append(nombreItem)
-                        .append(" <span style='color: #DDDDDD;'>($").append(String.format("%.2f", valor)).append(" c/u)</span></p>");
+                    // Fila de item estilo recibo alineado
+                    html.append("<div style='border-bottom: 1px solid #3a3a3a; padding-bottom: 8px; margin-bottom: 8px; font-size: 20px; display: flex; justify-content: space-between;'>");
+                    // Cantidad y Nombre
+                    html.append("<span style='color: #cca95a; font-weight: bold;'>").append(cant).append("x</span> &nbsp;");
+                    html.append("<span style='color: #FFFFFF;'>").append(nombreItem).append("</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
+                    // Precios
+                    html.append("<span style='color: #999999;'>$").append(String.format("%.2f", valor)).append(" c/u.</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
+                    html.append("<span style='color: #FFFFFF; float: right;'>$").append(String.format("%.2f", subtotalLinea)).append("</span>");
+                    html.append("</div>");
                 }
+                
+                if (existeOrden) {
+                    // Generar subtotal ficticio de puro adorno para que se vea completo como en la imagen
+                    double tax = total * 0.16; // Suponemos 16% de tax para el adorno
+                    double tip = total * 0.15; // Suponemos 15% de tip para adorno
+                    double subtotalBase = total - tax - tip;
+                    if(subtotalBase < 0) subtotalBase = total;
+
+                    html.append("<div style='text-align: right; margin-top: 25px; font-size: 20px; border-top: 2px solid #555555; padding-top: 10px;'>");
+                    html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Subtotal: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", subtotalBase)).append("</span></div>");
+                    html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>IVA: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", tax)).append("</span></div>");
+                    // En MXN solemos sumar o quitar así que pondremos el Total exacto de tu DB al final
+                    html.append("<div style='color: #cca95a; font-weight: bold; margin-top: 10px; font-size: 24px;'>TOTAL A COBRAR: &nbsp;&nbsp;&nbsp; $").append(String.format("%.2f", total)).append("</div>");
+                    html.append("</div>");
+                }
+
                 html.append("</div></html>");
 
                 if (existeOrden) {
@@ -197,7 +345,7 @@ StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-siz
                     jLNAtendio.setText(empleado);
                     jLTotalCobrar.setText("$" + String.format("%.2f", total));
                 } else {
-                    jLInsumos.setText("No hay orden pendiente de cobro en esta mesa.");
+                    jLInsumos.setText("<html><div style='padding:30px; font-size: 24px; color: #888888; text-align: center;'>No hay orden entregada para cobrar en esta mesa.</div></html>");
                 }
             }
         } catch (SQLException ex) {

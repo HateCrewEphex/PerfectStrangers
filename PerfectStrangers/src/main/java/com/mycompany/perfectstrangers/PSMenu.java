@@ -65,46 +65,230 @@ public class PSMenu extends javax.swing.JFrame {
             jPPrincipal.removeAll();
             jPPrincipal.setLayout(new java.awt.BorderLayout());
             
-            // Creamos un JLabel para el GIF
-            java.net.URL urlGif = getClass().getResource("/com/mycompany/perfectstrangers/Animación_en_Bucle_Lista.gif");
-            javax.swing.JLabel labelFondo = new javax.swing.JLabel();
-            if (urlGif != null) {
-                javax.swing.ImageIcon icon = new javax.swing.ImageIcon(urlGif);
-                labelFondo.setIcon(icon);
-                labelFondo.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-            } else {
-                // Alternativa por si el recurso no lo carga correctamente via classpath (si no se ha compilado)
-                javax.swing.ImageIcon icon = new javax.swing.ImageIcon("src/main/java/com/mycompany/perfectstrangers/Animación_en_Bucle_Lista.gif");
-                labelFondo.setIcon(icon);
-                labelFondo.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+            // Colores temáticos
+            java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
+            java.awt.Color casiNegro = new java.awt.Color(25, 25, 25);
+            java.awt.Color acero = new java.awt.Color(45, 45, 47);
+            
+            // Panel especial que dibuja el marco metálico industrial y el gif al centro
+            javax.swing.JPanel panelFondoAcero = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+                private java.awt.Image bgImage;
+                {
+                    try {
+                        java.net.URL urlGif = getClass().getResource("/com/mycompany/perfectstrangers/Animación_en_Bucle_Lista.gif");
+                        if (urlGif != null) {
+                            bgImage = new javax.swing.ImageIcon(urlGif).getImage();
+                        }
+                    } catch (Exception e) {}
+                }
+                @Override
+                protected void paintComponent(java.awt.Graphics g) {
+                    super.paintComponent(g);
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    
+                    // Fondo negro profundo
+                    g2.setColor(new java.awt.Color(15, 12, 10));
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                    
+                    // Dibujar la imagen gif/logo centrado, redimensionándolo si es necesario sin perder proporción
+                    if (bgImage != null) {
+                        int imgW = bgImage.getWidth(this);
+                        int imgH = bgImage.getHeight(this);
+                        if (imgW > 0 && imgH > 0) {
+                            int drawH = getHeight() - 150;
+                            int drawW = (int) (drawH * ((double) imgW / imgH));
+                            if (drawW > getWidth() - 150) {
+                                drawW = getWidth() - 150;
+                                drawH = (int) (drawW * ((double) imgH / imgW));
+                            }
+                            int x = (getWidth() - drawW) / 2;
+                            int y = (getHeight() - drawH) / 2;
+                            g2.drawImage(bgImage, x, y, drawW, drawH, this);
+                        }
+                    }
+                    
+                    // Efecto viñeta oscura
+                    java.awt.RadialGradientPaint rgp = new java.awt.RadialGradientPaint(
+                        getWidth() / 2f, getHeight() / 2f, Math.max(getWidth(), getHeight()) / 1.1f,
+                        new float[]{ 0.4f, 1.0f },
+                        new java.awt.Color[]{
+                            new java.awt.Color(0, 0, 0, 0), 
+                            new java.awt.Color(10, 10, 10, 240)
+                        }
+                    );
+                    g2.setPaint(rgp);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                    
+                    // Marco Acero
+                    g2.setStroke(new java.awt.BasicStroke(20f));
+                    g2.setColor(acero);
+                    g2.drawRect(10, 10, getWidth()-20, getHeight()-20);
+                    
+                    // Ribete interior Dorado
+                    g2.setStroke(new java.awt.BasicStroke(2f));
+                    g2.setColor(tonoOro);
+                    g2.drawRect(22, 22, getWidth()-44, getHeight()-44);
+                    
+                    g2.dispose();
+                }
+            };
+            
+            // Reestilizar la barra inferior (jMenuInf)
+            // Cambiamos a FlowLayout y quitamos tamaños fijos para evitar que los textos largos se recorten ("Señora...")
+            jMenuInf.removeAll();
+            jMenuInf.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 10));
+            jMenuInf.setOpaque(true);
+            jMenuInf.setBackground(casiNegro);
+            jMenuInf.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createMatteBorder(2, 0, 0, 0, tonoOro), // Línea dorada arriba
+                javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15)
+            ));
+            
+            java.awt.Font fuenteBarra = new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 15);
+            
+            jLUsuario.setForeground(tonoOro); jLUsuario.setFont(fuenteBarra);
+            jUsuario.setForeground(java.awt.Color.WHITE); jUsuario.setFont(fuenteBarra);
+            jUsuario.setPreferredSize(null); // Quitamos la restricción de NetBeans
+            jUsuario.setMinimumSize(null);
+            
+            jLPuesto.setForeground(tonoOro); jLPuesto.setFont(fuenteBarra);
+            jPuesto.setForeground(java.awt.Color.WHITE); jPuesto.setFont(fuenteBarra);
+            jPuesto.setPreferredSize(null);
+            jPuesto.setMinimumSize(null);
+            
+            jLTiempo.setForeground(tonoOro); jLTiempo.setFont(fuenteBarra);
+            jTiempo.setForeground(java.awt.Color.WHITE); jTiempo.setFont(fuenteBarra);
+            jTiempo.setPreferredSize(null);
+            
+            // Reagregamos los componentes a nuestro nuevo layout elástico
+            jMenuInf.add(jLUsuario);
+            jMenuInf.add(jUsuario);
+            jMenuInf.add(new javax.swing.JLabel("  |  ")); // Separador decorativo
+            jMenuInf.add(jLPuesto);
+            jMenuInf.add(jPuesto);
+            jMenuInf.add(new javax.swing.JLabel("  |  "));
+            jMenuInf.add(jLTiempo);
+            jMenuInf.add(jTiempo);
+            
+            // Ajustar el color de los separadores
+            for(java.awt.Component c : jMenuInf.getComponents()) {
+                if (c instanceof javax.swing.JLabel && ((javax.swing.JLabel)c).getText().equals("  |  ")) {
+                    c.setForeground(tonoOro);
+                    c.setFont(fuenteBarra);
+                }
             }
             
-            // Reagregamos los componentes
-            jPPrincipal.add(labelFondo, java.awt.BorderLayout.CENTER);
-            jPPrincipal.add(jMenuInf, java.awt.BorderLayout.SOUTH);
+            // Retirar el menú de la ventana por defecto
+            this.setJMenuBar(null);
             
+            // ¡Poner la barra de menús DENTRO del estilo metálico!
+            jMenuSup.setOpaque(false); // Fondo transparente para que herede el negro del panel
+            jMenuSup.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createEmptyBorder(25, 25, 0, 25), // Alejar del marco de acero interior
+                javax.swing.BorderFactory.createMatteBorder(0, 0, 2, 0, tonoOro) // Línea inferior dorada
+            ));
+            
+            // Customizar cada menú desplegable principal (JMenu) y su pop-up interior (JPopupMenu)
+            for(int i = 0; i < jMenuSup.getMenuCount(); i++) {
+                javax.swing.JMenu menu = jMenuSup.getMenu(i);
+                if (menu != null) {
+                    menu.setOpaque(false);
+                    menu.setForeground(tonoOro);
+                    menu.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 17)); // Letra más grande y notoria
+                    menu.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
+                    
+                    // Modificar la ventanita pop-up al abrirse estilo metal dorado oscuro
+                    javax.swing.JPopupMenu popup = menu.getPopupMenu();
+                    popup.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                        javax.swing.BorderFactory.createLineBorder(tonoOro, 1),
+                        javax.swing.BorderFactory.createEmptyBorder(2, 2, 2, 2)
+                    ));
+                    popup.setBackground(new java.awt.Color(40, 40, 45)); // Gris Metálico Plomo
+                    popup.setOpaque(true);
+                    
+                    // Modificar todos los Items de menú por dentro (JMenuItem)
+                    for(java.awt.Component subItem : popup.getComponents()) {
+                        if (subItem instanceof javax.swing.JMenuItem) {
+                            javax.swing.JMenuItem mi = (javax.swing.JMenuItem) subItem;
+                            mi.setOpaque(true);
+                            mi.setBackground(new java.awt.Color(40, 40, 45)); // Mismo fondo plomo
+                            mi.setForeground(new java.awt.Color(230, 230, 220)); // Letra crema en lugar de gris feo
+                            mi.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 15));
+                            mi.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Espacio para que queden más gordos
+                            
+                            // Efecto hover (iluminación cuando pasas el mouse):
+                            mi.addChangeListener(new javax.swing.event.ChangeListener() {
+                                @Override
+                                public void stateChanged(javax.swing.event.ChangeEvent e) {
+                                    if (mi.isArmed()) {
+                                        mi.setBackground(casiNegro); // Se vuelve muy negro
+                                        mi.setForeground(tonoOro);   // Se pinta de dorado
+                                    } else {
+                                        mi.setBackground(new java.awt.Color(40, 40, 45)); // Regresa a gris
+                                        mi.setForeground(new java.awt.Color(230, 230, 220)); // Regresa a blanco
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Reagregamos los componentes maestos
+            panelFondoAcero.add(jMenuSup, java.awt.BorderLayout.NORTH); // El menú pegado arriba, incrustado en nuestra chapa
+            jPPrincipal.add(panelFondoAcero, java.awt.BorderLayout.CENTER);
+            jPPrincipal.add(jMenuInf, java.awt.BorderLayout.SOUTH);
+
             jPPrincipal.revalidate();
             jPPrincipal.repaint();
         } catch (Exception e) {
-            logger.log(java.util.logging.Level.WARNING, "No se pudo cargar el GIF de fondo.", e);
+            logger.log(java.util.logging.Level.WARNING, "Error al configurar fondo.", e);
         }
     }
 
     private void configurarNavegacionMenu() {
-        JInicio.addMenuListener(new javax.swing.event.MenuListener() {
+        // En vez de MenuListener (que se acciona con solo deslizar el mouse si otro menú está abierto),
+        // utilizamos MouseListener para forzar un click real si queremos abrir ventanas de golpe desde un encabezado.
+        
+        java.awt.event.MouseAdapter clickHandlerInventario = new java.awt.event.MouseAdapter() {
             @Override
-            public void menuSelected(javax.swing.event.MenuEvent e) {
-                // Ya en Inicio/Menú principal, no hacemos nada para evitar ir al login
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (javax.swing.SwingUtilities.isLeftMouseButton(e)) {
+                    javax.swing.MenuSelectionManager.defaultManager().clearSelectedPath();
+                    abrirVentana(new PSInventario());
+                }
             }
+        };
+        
+        java.awt.event.MouseAdapter clickHandlerHistorial = new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (javax.swing.SwingUtilities.isLeftMouseButton(e)) {
+                    javax.swing.MenuSelectionManager.defaultManager().clearSelectedPath();
+                    abrirVentana(new PSHistorial());
+                }
+            }
+        };
 
+        java.awt.event.MouseAdapter clickHandlerSalir = new java.awt.event.MouseAdapter() {
             @Override
-            public void menuDeselected(javax.swing.event.MenuEvent e) {
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (javax.swing.SwingUtilities.isLeftMouseButton(e)) {
+                    System.exit(0);
+                }
             }
+        };
 
-            @Override
-            public void menuCanceled(javax.swing.event.MenuEvent e) {
-            }
-        });
+        // Eliminar listeners de hover y usar clics
+        for (javax.swing.event.MenuListener ml : JInicio.getMenuListeners()) JInicio.removeMenuListener(ml);
+        for (javax.swing.event.MenuListener ml : JInventario.getMenuListeners()) JInventario.removeMenuListener(ml);
+        for (javax.swing.event.MenuListener ml : jMenu1.getMenuListeners()) jMenu1.removeMenuListener(ml);
+        for (javax.swing.event.MenuListener ml : jMenu2.getMenuListeners()) jMenu2.removeMenuListener(ml);
+
+        JInventario.addMouseListener(clickHandlerInventario);
+        jMenu1.addMouseListener(clickHandlerHistorial);
+        jMenu2.addMouseListener(clickHandlerSalir);
 
         // Configurar menú de Empleados dentro de la pestaña "Menú"
         javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Alta de Empleados");
@@ -131,51 +315,6 @@ public class PSMenu extends javax.swing.JFrame {
         jMOTomar.addActionListener(evt -> abrirVentana(new PSTOrden()));
         jMOConsultar.addActionListener(evt -> abrirVentana(new PSConOrder()));
         jMOCobrar.addActionListener(evt -> abrirVentana(new PSCobOrden()));
-
-        JInventario.addMenuListener(new javax.swing.event.MenuListener() {
-            @Override
-            public void menuSelected(javax.swing.event.MenuEvent e) {
-                abrirVentana(new PSInventario());
-            }
-
-            @Override
-            public void menuDeselected(javax.swing.event.MenuEvent e) {
-            }
-
-            @Override
-            public void menuCanceled(javax.swing.event.MenuEvent e) {
-            }
-        });
-
-        jMenu1.addMenuListener(new javax.swing.event.MenuListener() {
-            @Override
-            public void menuSelected(javax.swing.event.MenuEvent e) {
-                abrirVentana(new PSHistorial());
-            }
-
-            @Override
-            public void menuDeselected(javax.swing.event.MenuEvent e) {
-            }
-
-            @Override
-            public void menuCanceled(javax.swing.event.MenuEvent e) {
-            }
-        });
-
-        jMenu2.addMenuListener(new javax.swing.event.MenuListener() {
-            @Override
-            public void menuSelected(javax.swing.event.MenuEvent e) {
-                System.exit(0);
-            }
-
-            @Override
-            public void menuDeselected(javax.swing.event.MenuEvent e) {
-            }
-
-            @Override
-            public void menuCanceled(javax.swing.event.MenuEvent e) {
-            }
-        });
     }
 
     private boolean isAperturaEnProgreso = false;

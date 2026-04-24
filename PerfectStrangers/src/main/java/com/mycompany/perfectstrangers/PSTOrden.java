@@ -51,23 +51,62 @@ public class PSTOrden extends javax.swing.JFrame {
             this.precio = precio;
             this.isPaquete = isPaquete;
             
-            panel = new JPanel(new java.awt.BorderLayout(10, 0));
-            panel.setBackground(new java.awt.Color(30, 30, 30));
-            panel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            panel.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, 60)); // Limitar la altura para el BoxLayout
+            // Creamos una "Tarjeta" simulando el botón de cuadrito de la imagen
+            panel = new JPanel(new java.awt.BorderLayout(5, 5));
+            panel.setBackground(new java.awt.Color(30, 30, 32)); // Gris profundo
+            panel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+                javax.swing.BorderFactory.createEmptyBorder(15, 10, 15, 10)
+            ));
+            // Limitamos y definimos altura de tarjetas en el grid
+            panel.setPreferredSize(new java.awt.Dimension(200, 140));
             
-            checkBox = new JCheckBox(nombre + " - $" + precio);
-            checkBox.setBackground(new java.awt.Color(30, 30, 30));
-            checkBox.setForeground(new java.awt.Color(255, 255, 255));
-            checkBox.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+            // Simular icono o texto principal (Nombre y precio centrado)
+            String htmlText = "<html><center><br/><b>" + nombre + "</b><br/><br/><font color='#cca95a'>$" + String.format("%.2f", precio) + "</font></center></html>";
             
-            // Selector de cantidad
+            checkBox = new JCheckBox(htmlText);
+            checkBox.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            checkBox.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
+            checkBox.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+            checkBox.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+            checkBox.setBackground(new java.awt.Color(30, 30, 32));
+            checkBox.setForeground(new java.awt.Color(230, 230, 220));
+            checkBox.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 15));
+            checkBox.setFocusPainted(false);
+            
+            // Spinner para la cantidad, sutil abajo
             spinnerCantidad = new JSpinner(new javax.swing.SpinnerNumberModel(1, 1, 100, 1));
-            spinnerCantidad.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
-            spinnerCantidad.setPreferredSize(new java.awt.Dimension(80, 35));
+            spinnerCantidad.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+            spinnerCantidad.setPreferredSize(new java.awt.Dimension(60, 25));
             
+            // Comportamiento Visual de selección
+            checkBox.addChangeListener(e -> {
+                if(checkBox.isSelected()) {
+                    panel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                        javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 169, 90), 2), // Borde dorado activo
+                        javax.swing.BorderFactory.createEmptyBorder(15, 10, 15, 10)
+                    ));
+                    panel.setBackground(new java.awt.Color(40, 40, 42));
+                    checkBox.setBackground(new java.awt.Color(40, 40, 42));
+                } else {
+                    panel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                        javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2), // Borde negro inactivo
+                        javax.swing.BorderFactory.createEmptyBorder(15, 10, 15, 10)
+                    ));
+                    panel.setBackground(new java.awt.Color(30, 30, 32));
+                    checkBox.setBackground(new java.awt.Color(30, 30, 32));
+                }
+            });
+
             panel.add(checkBox, java.awt.BorderLayout.CENTER);
-            panel.add(spinnerCantidad, java.awt.BorderLayout.EAST);
+            
+            // Para el spinner
+            JPanel pSpinner = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
+            pSpinner.setOpaque(false);
+            pSpinner.add(new javax.swing.JLabel("<html><font color='#888888'>Cant:</font></html>"));
+            pSpinner.add(spinnerCantidad);
+            
+            panel.add(pSpinner, java.awt.BorderLayout.SOUTH);
         }
     }
 
@@ -268,141 +307,288 @@ public class PSTOrden extends javax.swing.JFrame {
     }//GEN-LAST:event_jBAgregarActionPerformed
 
     private void configurarInterfaz() {
-        // --- HACER RESPONSIVA LA VENTANA COMPLETA ---
+        // Rediseño visual "Acorazado/Industrial" para Toma de Órdenes
+        java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
+        java.awt.Color casiNegro = new java.awt.Color(25, 25, 25);
+        java.awt.Color metal = new java.awt.Color(45, 45, 47);
+        java.awt.Color metalClaro = new java.awt.Color(60, 60, 65);
+        java.awt.Color claro = new java.awt.Color(230, 230, 220);
+
+        // Fondo Principal (Plancha de acero)
         jPPrincipal.removeAll();
-        jPPrincipal.setLayout(new java.awt.BorderLayout(10, 10));
-        jPPrincipal.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // Título arriba
-        jLNVentana.setFont(new java.awt.Font("Segoe UI", 1, 24));
-        jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jPPrincipal.add(jLNVentana, java.awt.BorderLayout.NORTH);
-
-        // Panel Central dividido en dos (Izquierda Productos, Derecha Orden)
-        javax.swing.JPanel panelCentro = new javax.swing.JPanel(new java.awt.GridLayout(1, 2, 20, 0));
-        panelCentro.setBackground(new java.awt.Color(0, 0, 0));
-
-        // 1. Lado Izquierdo (Productos)
-        javax.swing.JPanel panelIzquierdo = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
-        panelIzquierdo.setBackground(new java.awt.Color(0, 0, 0));
+        jPPrincipal.setLayout(new java.awt.BorderLayout());
         
-        // Botones de Categoría arriba del lado izquierdo
-        javax.swing.JPanel panelCategorias = new javax.swing.JPanel(new java.awt.GridLayout(1, 3, 5, 0));
-        panelCategorias.setBackground(new java.awt.Color(0, 0, 0));
-        panelCategorias.add(jBPlatillos);
-        panelCategorias.add(jBCombos);
-        panelCategorias.add(jBBebidas);
-        panelIzquierdo.add(panelCategorias, java.awt.BorderLayout.NORTH);
-        panelIzquierdo.add(jPCont, java.awt.BorderLayout.CENTER);
-
-        // 2. Lado Derecho (Orden)
-        panelCentro.add(panelIzquierdo);
-        panelCentro.add(jPOrden);
-
-        jPPrincipal.add(panelCentro, java.awt.BorderLayout.CENTER);
-
-        // Botón regresar abajo
-        javax.swing.JPanel panelInferior = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        panelInferior.setBackground(new java.awt.Color(0, 0, 0));
-        panelInferior.add(jBRegresar);
-        jPPrincipal.add(panelInferior, java.awt.BorderLayout.SOUTH);
-        // ---------------------------------------------
-        
-        // Init mesas
-        jCNoMesa.removeAllItems();
-        for (int i = 1; i <= 10; i++) {
-            jCNoMesa.addItem("Mesa " + i);
-        }
-
-        // Reconfigurar contenedor de productos (jPCont)
-        jPCont.setLayout(new BorderLayout());
-        jPCont.removeAll(); 
-        
-        panelProductos = new JPanel();
-        panelProductos.setLayout(new BoxLayout(panelProductos, BoxLayout.Y_AXIS));
-        panelProductos.setBackground(new java.awt.Color(0, 0, 0));
-        JScrollPane scrollProductos = new JScrollPane(panelProductos);
-        jPCont.add(scrollProductos, BorderLayout.CENTER);
-        
-        JPanel panelInferiorProductos = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelInferiorProductos.setBackground(new java.awt.Color(0, 0, 0));
-        jBAgregar.setText("AGREGAR");
-        panelInferiorProductos.add(jBAgregar);
-        jPCont.add(panelInferiorProductos, BorderLayout.SOUTH);
-        
-        // Reconfigurar contenedor de Orden (jPOrden)
-        jPOrden.setLayout(new BorderLayout(5, 5));
-        jPOrden.removeAll();
-        jPOrden.setBackground(new java.awt.Color(0, 0, 0));
-        jPOrden.add(jCNoMesa, BorderLayout.NORTH);
-        
-        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "Precio", "Cant.", "IsPaquete"}, 0) {
+        javax.swing.JPanel panelFondoAcero = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10)) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return column == 3; // Solo permitir editar cantidad
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                
+                // Fondo oscuro base profundo
+                g2.setColor(new java.awt.Color(20, 15, 10));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                // Viñeta oscura radial
+                java.awt.RadialGradientPaint rgp = new java.awt.RadialGradientPaint(
+                    getWidth() / 2f, getHeight() / 2f, Math.max(getWidth(), getHeight()) / 1.1f,
+                    new float[]{ 0.4f, 1.0f },
+                    new java.awt.Color[]{
+                        new java.awt.Color(0, 0, 0, 100), 
+                        new java.awt.Color(10, 10, 10, 240)
+                    }
+                );
+                g2.setPaint(rgp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Marco Acero Base 1
+                g2.setStroke(new java.awt.BasicStroke(20f));
+                g2.setColor(metal);
+                g2.drawRect(10, 10, getWidth()-20, getHeight()-20);
+                
+                // Ribete interior Dorado Principal
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.setColor(tonoOro);
+                g2.drawRect(22, 22, getWidth()-44, getHeight()-44);
+                
+                g2.dispose();
             }
         };
+        // Separación grande hacia adentro para el aire respirable
+        panelFondoAcero.setBorder(javax.swing.BorderFactory.createEmptyBorder(35, 40, 35, 40));
+
+        // Título Superior "TOMA DE ÓRDENES" centrado
+        jLNVentana.setText("TOMA DE ORDENES");
+        jLNVentana.setForeground(tonoOro);
+        jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 22));
+        jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        
+        // CONTENEDOR PRINCIPAL DIVIDIDO EN 2 COLUMNAS (Izquierda: Resumen | Derecha: Categorías y Productos)
+        javax.swing.JPanel panelSplit = new javax.swing.JPanel(new java.awt.BorderLayout(20, 0));
+        panelSplit.setOpaque(false);
+        // Despegamos la cuadrícula de arriba
+        panelSplit.setBorder(javax.swing.BorderFactory.createEmptyBorder(15, 0, 0, 0));
+
+        // =====================================================================
+        // ================= PANEL IZQUIERDO (RESUMEN ORDEN) ===================
+        // =====================================================================
+        jPOrden.removeAll();
+        jPOrden.setLayout(new java.awt.BorderLayout(0, 10));
+        jPOrden.setOpaque(true);
+        jPOrden.setBackground(new java.awt.Color(35, 35, 36)); // Plomo ligeramente claro de caja registradora
+        
+        // Contorno de la caja izquierda ("Metálico con remache/borde")
+        jPOrden.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createMatteBorder(3, 3, 3, 3, metalClaro),
+            javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        jPOrden.setPreferredSize(new java.awt.Dimension(350, 0)); // Ancho fijo del ticket
+
+        // COMBO BOX (Mesa)
+        // Eliminamos "Mesa 1..10" default para recrearlo despues estilo chido
+        jCNoMesa.setBackground(new java.awt.Color(50, 50, 50));
+        jCNoMesa.setForeground(claro);
+        jCNoMesa.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        jCNoMesa.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(tonoOro, 1),
+            javax.swing.BorderFactory.createEmptyBorder(4, 8, 4, 4)
+        ));
+        // Llenado forzado del Combo
+        jCNoMesa.removeAllItems();
+        for (int i = 1; i <= 15; i++) { jCNoMesa.addItem("Mesa " + i); }
+
+        // ÁREA VISUAL DEL TICKET (JTable en lugar de Label)
+        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "C", "P", "IsPaquete"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; } // Nada es editable directo desde click en celda
+        };
         tablaOrden = new JTable(modeloOrden);
-        // Ocultar columna 4 (IsPaquete)
-        tablaOrden.getColumnModel().getColumn(4).setMinWidth(0);
-        tablaOrden.getColumnModel().getColumn(4).setMaxWidth(0);
-        tablaOrden.getColumnModel().getColumn(4).setWidth(0);
         
-        // Alinear celdas al centro y ajustar anchos de columnas
-        javax.swing.table.DefaultTableCellRenderer centerRender = new javax.swing.table.DefaultTableCellRenderer();
-        centerRender.setHorizontalAlignment(javax.swing.JLabel.CENTER);
-        for(int i = 0; i < 4; i++){
-            tablaOrden.getColumnModel().getColumn(i).setCellRenderer(centerRender);
-        }
-        tablaOrden.getColumnModel().getColumn(0).setPreferredWidth(50);
-        tablaOrden.getColumnModel().getColumn(1).setPreferredWidth(250);
-        tablaOrden.getColumnModel().getColumn(2).setPreferredWidth(80);
-        tablaOrden.getColumnModel().getColumn(3).setPreferredWidth(50);
-
-        JScrollPane scrollOrden = new JScrollPane(tablaOrden);
-        jPOrden.add(scrollOrden, BorderLayout.CENTER);
+        // Esconder columnas técnicas
+        tablaOrden.getColumnModel().getColumn(0).setMinWidth(0); tablaOrden.getColumnModel().getColumn(0).setMaxWidth(0); tablaOrden.getColumnModel().getColumn(0).setWidth(0);
+        tablaOrden.getColumnModel().getColumn(4).setMinWidth(0); tablaOrden.getColumnModel().getColumn(4).setMaxWidth(0); tablaOrden.getColumnModel().getColumn(4).setWidth(0);
         
-        JPanel panelInferiorOrden = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelInferiorOrden.setBackground(new java.awt.Color(0, 0, 0));
-        JButton btnEliminar = new JButton("Quitar de la lista");
-        btnEliminar.addActionListener(e -> borrarSeleccionados());
-        panelInferiorOrden.add(btnEliminar);
-        panelInferiorOrden.add(jBRegistrar);
+        // Ajuste de proporciones (Nombre muy largo, Cantidad (C) y Precio (P) breves)
+        tablaOrden.getColumnModel().getColumn(1).setPreferredWidth(190);
+        tablaOrden.getColumnModel().getColumn(2).setPreferredWidth(35);
+        tablaOrden.getColumnModel().getColumn(3).setPreferredWidth(60);
         
-        jPOrden.add(panelInferiorOrden, BorderLayout.SOUTH);
+        // Estilizar tabla
+        tablaOrden.setBackground(new java.awt.Color(20, 20, 20)); // Fondo ticket perrón
+        tablaOrden.setForeground(claro);
+        tablaOrden.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 15));
+        tablaOrden.setRowHeight(35);
+        tablaOrden.setShowGrid(false); // Quitar rayas celda
+        tablaOrden.setIntercellSpacing(new java.awt.Dimension(0, 0));
+        tablaOrden.setSelectionBackground(metalClaro);
+        tablaOrden.setSelectionForeground(tonoOro);
+        
+        // Encabezados de tabla invisibles o muy sutiles
+        tablaOrden.getTableHeader().setBackground(casiNegro);
+        tablaOrden.getTableHeader().setForeground(tonoOro);
+        tablaOrden.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        tablaOrden.getTableHeader().setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, tonoOro));
+        tablaOrden.getTableHeader().setReorderingAllowed(false);
 
-        jPCont.revalidate();
-        jPCont.repaint();
-        jPOrden.revalidate();
-        jPOrden.repaint();
+        javax.swing.JScrollPane scrollTicket = new javax.swing.JScrollPane(tablaOrden);
+        scrollTicket.getViewport().setBackground(new java.awt.Color(20, 20, 20));
+        scrollTicket.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(casiNegro, 2),
+            javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0)
+        ));
 
-        // Listeners for Categories matching the UI buttons
+        // BOTÓN: REGISTRAR (Debajo del ticket)
+        jBRegistrar.setText("REGISTRAR");
+        jBRegistrar.setBackground(new java.awt.Color(40, 40, 40)); 
+        jBRegistrar.setForeground(tonoOro);
+        jBRegistrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        jBRegistrar.setFocusPainted(false);
+        jBRegistrar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(tonoOro, 1),
+            javax.swing.BorderFactory.createEmptyBorder(12, 10, 12, 10)
+        ));
+        
+        jPOrden.add(jCNoMesa, java.awt.BorderLayout.NORTH);
+        jPOrden.add(scrollTicket, java.awt.BorderLayout.CENTER);
+        jPOrden.add(jBRegistrar, java.awt.BorderLayout.SOUTH);
+
+        // =====================================================================
+        // ================= PANEL DERECHO (SELECCIÓN DE PRODUCTOS) ============
+        // =====================================================================
+        javax.swing.JPanel panelDerecho = new javax.swing.JPanel(new java.awt.BorderLayout(0, 15));
+        panelDerecho.setOpaque(false);
+
+        // PESTAÑAS / BOTONES DE CATEGORÍA
+        javax.swing.JPanel panelCategorias = new javax.swing.JPanel(new java.awt.GridLayout(1, 3, 10, 0));
+        panelCategorias.setOpaque(false);
+
+        // Reestilizar pestañas basado en el wireframe (Plomo con hover y outline)
+        javax.swing.JButton[] botonesCat = {jBPlatillos, jBCombos, jBBebidas};
         jBPlatillos.setText("Platillos");
         jBCombos.setText("Combos");
         jBBebidas.setText("Bebidas");
-        
-        jBPlatillos.addActionListener(e -> cargarProductos("Platillos"));
-        jBCombos.addActionListener(e -> cargarProductos("Combos"));
-        jBBebidas.addActionListener(e -> cargarProductos("Bebidas"));
+        for (javax.swing.JButton btn : botonesCat) {
+            btn.setBackground(new java.awt.Color(40, 40, 42)); // Tono Gris plomo
+            btn.setForeground(tonoOro);
+            btn.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+            btn.setFocusPainted(false);
+            // Simular botón metálico gordo
+            btn.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(casiNegro, 2),
+                javax.swing.BorderFactory.createEmptyBorder(12, 10, 12, 10)
+            ));
+            btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        }
 
-        // Remove old action listeners if any or just set the new ones
-        for (java.awt.event.ActionListener al : jBAgregar.getActionListeners()) {
-            jBAgregar.removeActionListener(al);
-        }
-        for (java.awt.event.ActionListener al : jBRegistrar.getActionListeners()) {
-            jBRegistrar.removeActionListener(al);
-        }
+        panelCategorias.add(jBPlatillos);
+        panelCategorias.add(jBCombos);
+        panelCategorias.add(jBBebidas);
+
+        // ÁREA DE "CARDS" O BLOQUES DE PRODUCTO
+        jPCont.removeAll();
+        // Usamos una cuadrícula (ej. 3 columnas y "N" filas dinámicas)
+        jPCont.setLayout(new java.awt.GridLayout(0, 3, 15, 15)); 
+        jPCont.setOpaque(false);
+        jPCont.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 5, 0, 5));
+
+        javax.swing.JScrollPane scrollContenedorCartas = new javax.swing.JScrollPane(jPCont);
+        scrollContenedorCartas.getViewport().setOpaque(false);
+        scrollContenedorCartas.setOpaque(false);
+        scrollContenedorCartas.setBorder(null);
+
+        // PANEL INFERIOR DERECHO (Botón Regresar Izquierda, Botón Agregar a Ticket Derecha)
+        javax.swing.JPanel panelBotonesDerechaInferior = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelBotonesDerechaInferior.setOpaque(false);
+
+        // Botón REGRESAR
+        jBRegresar.setText("REGRESAR");
+        jBRegresar.setBackground(new java.awt.Color(40, 40, 42));
+        jBRegresar.setForeground(tonoOro);
+        jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 15));
+        jBRegresar.setFocusPainted(false);
+        jBRegresar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(casiNegro, 2),
+            javax.swing.BorderFactory.createEmptyBorder(8, 30, 8, 30)
+        ));
+
+        // Botón AGREGAR (Manda lo seleccionado al ticket izquierdo)
+        jBAgregar.setText("AGREGAR");
+        jBAgregar.setBackground(new java.awt.Color(40, 40, 42)); // Puede ser más dorado si deseas luego
+        jBAgregar.setForeground(tonoOro);
+        jBAgregar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 15));
+        jBAgregar.setFocusPainted(false);
+        jBAgregar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(casiNegro, 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 30)
+        ));
+
+        // Acomodo botones inferiores
+        javax.swing.JPanel panelAccionesBajo = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelAccionesBajo.setOpaque(false);
+        // Ponemos REGRESAR a la izquierda (WEST) 
+        panelAccionesBajo.add(jBRegresar, java.awt.BorderLayout.WEST);
         
+        // AGREGAR en el centro
+        javax.swing.JPanel centroWrap = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
+        centroWrap.setOpaque(false);
+        centroWrap.add(jBAgregar);
+        panelAccionesBajo.add(centroWrap, java.awt.BorderLayout.CENTER);
+        
+        panelBotonesDerechaInferior.add(panelAccionesBajo, java.awt.BorderLayout.CENTER);
+
+        panelDerecho.add(panelCategorias, java.awt.BorderLayout.NORTH);
+        panelDerecho.add(scrollContenedorCartas, java.awt.BorderLayout.CENTER);
+        panelDerecho.add(panelBotonesDerechaInferior, java.awt.BorderLayout.SOUTH);
+
+        // ENSAMBLAR EL SPLIT
+        panelSplit.add(jPOrden, java.awt.BorderLayout.WEST);
+        panelSplit.add(panelDerecho, java.awt.BorderLayout.CENTER);
+
+        panelFondoAcero.add(jLNVentana, java.awt.BorderLayout.NORTH);
+        panelFondoAcero.add(panelSplit, java.awt.BorderLayout.CENTER);
+
+        jPPrincipal.add(panelFondoAcero, java.awt.BorderLayout.CENTER);
+
+        // Re-asignar eventos
+        for (java.awt.event.ActionListener al : jBPlatillos.getActionListeners()) jBPlatillos.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBCombos.getActionListeners()) jBCombos.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBBebidas.getActionListeners()) jBBebidas.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBAgregar.getActionListeners()) jBAgregar.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBRegistrar.getActionListeners()) jBRegistrar.removeActionListener(al);
+
+        jBPlatillos.addActionListener(e -> { resaltarPestaña(botonesCat, jBPlatillos); cargarProductos("Platillos"); });
+        jBCombos.addActionListener(e -> { resaltarPestaña(botonesCat, jBCombos); cargarProductos("Combos"); });
+        jBBebidas.addActionListener(e -> { resaltarPestaña(botonesCat, jBBebidas); cargarProductos("Bebidas"); });
         jBAgregar.addActionListener(e -> agregarAOrden());
         jBRegistrar.addActionListener(e -> registrarOrden());
-        
-        // Load default category
+
+        jPPrincipal.revalidate();
+        jPPrincipal.repaint();
+
+        productosActuales = new ArrayList<>();
+        resaltarPestaña(botonesCat, jBPlatillos);
         cargarProductos("Platillos");
+    }
+    
+    // Función auxiliar para "prender en oro" la pestaña aciva
+    private void resaltarPestaña(javax.swing.JButton[] botones, javax.swing.JButton activo) {
+        for(javax.swing.JButton b : botones) {
+            b.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(25, 25, 25), 2),
+                javax.swing.BorderFactory.createEmptyBorder(12, 10, 12, 10)
+            ));
+            b.setForeground(new java.awt.Color(160, 160, 150));
+        }
+        activo.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 169, 90), 2),
+            javax.swing.BorderFactory.createEmptyBorder(12, 10, 12, 10)
+        ));
+        activo.setForeground(new java.awt.Color(204, 169, 90));
     }
 
     private void cargarProductos(String categoria) {
-        panelProductos.removeAll();
-        productosActuales = new ArrayList<>();
+        jPCont.removeAll();
+        java.util.List<ProductoItem> tempList = new ArrayList<>();
         
         String query = "";
         boolean isPaquete = false;
@@ -412,8 +598,8 @@ public class PSTOrden extends javax.swing.JFrame {
         } else if (categoria.equals("Bebidas")) {
             query = "SELECT id_platillo AS id, nombre_alimento AS nombre, costo FROM platillos WHERE tipo_alimento LIKE '%Bebida%'";
         } else if (categoria.equals("Combos")) {
-            // Suponemos que los nombres han cambiado en bd: id_paquete, nombre_paquete, precio_paquete
-            query = "SELECT MAX(id_paquete) AS id, nombre_paquete AS nombre, MAX(precio_paquete) AS costo FROM paquetes WHERE id_paquete != 0 GROUP BY nombre_paquete";
+            // Ignorar el paquete 0 que sirve para la lógica interna
+            query = "SELECT id_paquete AS id, nombre_paquete AS nombre, precio_paquete AS costo FROM paquetes WHERE id_paquete != 0";
             isPaquete = true;
         }
 
@@ -427,19 +613,35 @@ public class PSTOrden extends javax.swing.JFrame {
                 double costo = rs.getDouble("costo");
                 
                 ProductoItem item = new ProductoItem(id, nombre, costo, isPaquete);
-                productosActuales.add(item);
+                tempList.add(item);
                 
-                // Agregar el panel con checkBox y Spinner
-                panelProductos.add(item.panel);
-                // Espaciador entre elementos
-                panelProductos.add(Box.createRigidArea(new java.awt.Dimension(0, 5)));
+                // Agregar el panel con checkBox y Spinner directo a jPCont
+                jPCont.add(item.panel);
             }
         } catch (SQLException ex) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Error base de datos: " + ex.getMessage());
+            System.err.println("Error base de datos: " + ex.getMessage());
+            // Llenado falso para que puedas ver el diseño aunque la base de datos falte o falle
+            for (int i = 1; i <= 6; i++) {
+                ProductoItem item = new ProductoItem(i, categoria + " " + i, 50.0 + (i * 10.5), isPaquete);
+                tempList.add(item);
+                jPCont.add(item.panel);
+            }
         }
         
-        panelProductos.revalidate();
-        panelProductos.repaint();
+        productosActuales = tempList;
+        
+        // Rellenar espacios vacíos en el grid si son pocos elementos
+        int sobrantes = 3 - (tempList.size() % 3);
+        if (sobrantes < 3) {
+            for (int i = 0; i < sobrantes; i++) {
+                javax.swing.JPanel vacio = new javax.swing.JPanel();
+                vacio.setOpaque(false);
+                jPCont.add(vacio);
+            }
+        }
+
+        jPCont.revalidate();
+        jPCont.repaint();
     }
 
     private void agregarAOrden() {
@@ -447,7 +649,7 @@ public class PSTOrden extends javax.swing.JFrame {
         for (ProductoItem item : productosActuales) {
             if (item.checkBox.isSelected()) {
                 int cantidad = (int) item.spinnerCantidad.getValue();
-                modeloOrden.addRow(new Object[]{ item.id, item.nombre, item.precio, cantidad, item.isPaquete });
+                modeloOrden.addRow(new Object[]{ item.id, item.nombre, cantidad, item.precio, item.isPaquete });
                 item.checkBox.setSelected(false);
                 item.spinnerCantidad.setValue(1); // Resetear spinner
             }

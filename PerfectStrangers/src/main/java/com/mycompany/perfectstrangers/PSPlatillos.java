@@ -67,13 +67,144 @@ public class PSPlatillos extends javax.swing.JFrame {
             dispose();
         });
         
-        // Centrar UI
-        javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout());
-        fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
-        fondoCentrado.add(jPPrincipal);
-        this.setContentPane(fondoCentrado);
+        configurarInterfaz();
         
         setModo("NUEVO");
+    }
+
+    private void configurarInterfaz() {
+        java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
+        java.awt.Color casiNegro = new java.awt.Color(20, 20, 22);
+        java.awt.Color metal = new java.awt.Color(45, 45, 47);
+
+        javax.swing.JPanel fondoMetalico = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+
+                g2.setColor(new java.awt.Color(16, 16, 18));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                java.awt.RadialGradientPaint rgp = new java.awt.RadialGradientPaint(
+                    getWidth() / 2f, getHeight() / 2f, Math.max(getWidth(), getHeight()) / 1.1f,
+                    new float[]{0.35f, 1.0f},
+                    new java.awt.Color[]{
+                        new java.awt.Color(0, 0, 0, 0),
+                        new java.awt.Color(5, 5, 5, 235)
+                    }
+                );
+                g2.setPaint(rgp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                g2.setStroke(new java.awt.BasicStroke(22f));
+                g2.setColor(new java.awt.Color(60, 60, 65));
+                g2.drawRoundRect(10, 10, getWidth() - 20, getHeight() - 20, 20, 20);
+
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.setColor(tonoOro);
+                g2.drawRoundRect(22, 22, getWidth() - 44, getHeight() - 44, 16, 16);
+                g2.dispose();
+            }
+        };
+        fondoMetalico.setBorder(javax.swing.BorderFactory.createEmptyBorder(45, 45, 45, 45));
+
+        javax.swing.JPanel centro = new javax.swing.JPanel(new java.awt.GridBagLayout());
+        centro.setOpaque(false);
+
+        javax.swing.JPanel tarjeta = new javax.swing.JPanel(new java.awt.BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(casiNegro);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+                g2.setColor(new java.awt.Color(70, 70, 75));
+                g2.setStroke(new java.awt.BasicStroke(3f));
+                g2.drawRoundRect(2, 2, getWidth() - 4, getHeight() - 4, 16, 16);
+                g2.dispose();
+            }
+        };
+        tarjeta.setOpaque(false);
+        tarjeta.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 22, 20, 22));
+
+        jPPrincipal.setOpaque(false);
+        jPPlatillos.setBackground(metal);
+        jPPlatillos.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(80, 80, 85), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+
+        jLabel1.setForeground(tonoOro);
+        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 28));
+
+        javax.swing.JLabel[] labels = {jLabel2, jLabel3, jLabel4, jLabel5};
+        for (javax.swing.JLabel label : labels) {
+            label.setForeground(tonoOro);
+            label.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        }
+
+        javax.swing.JComponent[] campos = {jTNomPlatillo, jTPrecio, jComboBox1, jComboBox2};
+        for (javax.swing.JComponent campo : campos) {
+            campo.setBackground(new java.awt.Color(34, 34, 38));
+            campo.setForeground(java.awt.Color.WHITE);
+            campo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+            campo.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(95, 95, 100), 1),
+                javax.swing.BorderFactory.createEmptyBorder(6, 8, 6, 8)
+            ));
+        }
+        jTNomPlatillo.setCaretColor(java.awt.Color.WHITE);
+        jTPrecio.setCaretColor(java.awt.Color.WHITE);
+
+        jButton1.setBackground(new java.awt.Color(44, 44, 48));
+        jButton1.setForeground(tonoOro);
+        jButton1.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16)
+        ));
+        jButton1.setFocusPainted(false);
+
+        aplicarEstiloBotonModo(jBAltaPlatillo);
+        aplicarEstiloBotonModo(jBActPlatillo);
+        aplicarEstiloBotonModo(jBEliPlatillo);
+
+        jBGuardar.setFocusPainted(false);
+        jBGuardar.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 24, 10, 24)
+        ));
+
+        tarjeta.add(jPPrincipal, java.awt.BorderLayout.CENTER);
+        centro.add(tarjeta);
+        fondoMetalico.add(centro, java.awt.BorderLayout.CENTER);
+        setContentPane(fondoMetalico);
+        revalidate();
+        repaint();
+    }
+
+    private void aplicarEstiloBotonModo(javax.swing.JButton boton) {
+        boton.setForeground(java.awt.Color.WHITE);
+        boton.setBackground(new java.awt.Color(44, 44, 48));
+        boton.setFocusPainted(false);
+        boton.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16)
+        ));
+    }
+
+    private void resaltarModo(javax.swing.JButton seleccionado) {
+        java.awt.Color activo = new java.awt.Color(204, 169, 90);
+        java.awt.Color normal = new java.awt.Color(44, 44, 48);
+        javax.swing.JButton[] botones = {jBAltaPlatillo, jBActPlatillo, jBEliPlatillo};
+        for (javax.swing.JButton boton : botones) {
+            boton.setBackground(normal);
+            boton.setForeground(java.awt.Color.WHITE);
+        }
+        seleccionado.setBackground(activo);
+        seleccionado.setForeground(new java.awt.Color(20, 20, 20));
     }
 
     private void setModo(String modo) {
@@ -82,31 +213,35 @@ public class PSPlatillos extends javax.swing.JFrame {
         jTPrecio.setText("");
         
         if (modo.equals("NUEVO")) {
+            resaltarModo(jBAltaPlatillo);
             jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Nuevo" }));
             jComboBox1.setEnabled(false);
             jTNomPlatillo.setEnabled(true);
             jComboBox2.setEnabled(true);
             jTPrecio.setEnabled(true);
             jBGuardar.setText("GUARDAR");
-            jBGuardar.setBackground(new java.awt.Color(40, 167, 69)); // Verde
+            jBGuardar.setBackground(new java.awt.Color(33, 122, 79));
         } else {
             jComboBox1.setEnabled(true);
             cargarIdsPlatillos();
             
             if (modo.equals("ACTUALIZAR")) {
+                resaltarModo(jBActPlatillo);
                 jTNomPlatillo.setEnabled(true);
                 jComboBox2.setEnabled(true);
                 jTPrecio.setEnabled(true);
                 jBGuardar.setText("ACTUALIZAR");
-                jBGuardar.setBackground(new java.awt.Color(0, 123, 255)); // Azul
+                jBGuardar.setBackground(new java.awt.Color(45, 108, 156));
             } else if (modo.equals("ELIMINAR")) {
+                resaltarModo(jBEliPlatillo);
                 jTNomPlatillo.setEnabled(false);
                 jComboBox2.setEnabled(false);
                 jTPrecio.setEnabled(false);
                 jBGuardar.setText("ELIMINAR");
-                jBGuardar.setBackground(new java.awt.Color(220, 53, 69)); // Rojo
+                jBGuardar.setBackground(new java.awt.Color(138, 52, 52));
             }
         }
+        jBGuardar.setForeground(java.awt.Color.WHITE);
     }
     
     private void cargarIdsPlatillos() {
