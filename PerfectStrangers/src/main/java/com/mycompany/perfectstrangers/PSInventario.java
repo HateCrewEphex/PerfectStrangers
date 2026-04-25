@@ -30,10 +30,30 @@ public class PSInventario extends javax.swing.JFrame {
         this.setTitle("PerfectStrangers - Inventario");
 
         configurarInterfaz();
+        mostrarInventarioPendiente();
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
         });
+    }
+
+    private void mostrarInventarioPendiente() {
+        javax.swing.table.DefaultTableModel modelo = new javax.swing.table.DefaultTableModel(
+            new Object[]{"Estado", "Detalle"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        modelo.addRow(new Object[]{"Pendiente", "La tabla de inventario aún no está definida. Aquí no se muestran productos."});
+
+        jTInventario.setModel(modelo);
+        javax.swing.table.DefaultTableCellRenderer centerRender = new javax.swing.table.DefaultTableCellRenderer();
+        centerRender.setHorizontalAlignment(javax.swing.JLabel.CENTER);
+        for (int i = 0; i < jTInventario.getColumnCount(); i++) {
+            jTInventario.getColumnModel().getColumn(i).setCellRenderer(centerRender);
+        }
     }
 
     private void configurarInterfaz() {

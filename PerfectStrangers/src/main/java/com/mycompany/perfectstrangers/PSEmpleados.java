@@ -208,45 +208,27 @@ public class PSEmpleados extends javax.swing.JFrame {
             con.setAutoCommit(false); // Para iniciar transacción
             
             try {
-                int nuevoIdEmpleado = 1;
-                String sqlMaxId = "SELECT MAX(id_empleado) FROM empleados";
-                try (java.sql.PreparedStatement pstMax = con.prepareStatement(sqlMaxId);
-                     java.sql.ResultSet rsMax = pstMax.executeQuery()) {
-                    if (rsMax.next()) {
-                        int maxId = rsMax.getInt(1);
-                        if (maxId > 0) {
-                            nuevoIdEmpleado = maxId + 1;
-                        }
-                    }
-                }
-                
-                String sqlEmpleado = "INSERT INTO empleados (id_empleado, nombre, ap_paterno, ap_materno, puesto) VALUES (?, ?, ?, ?, ?)";
-                try (java.sql.PreparedStatement pst1 = con.prepareStatement(sqlEmpleado)) {
-                    pst1.setInt(1, nuevoIdEmpleado);
-                    pst1.setString(2, nombre);
-                    pst1.setString(3, aPaterno);
-                    pst1.setString(4, aMaterno);
-                    pst1.setString(5, puesto);
+                String sqlEmpleado = "INSERT INTO empleados (nombre, ap_paterno, ap_materno, puesto) VALUES (?, ?, ?, ?)";
+                int nuevoIdEmpleado;
+                try (java.sql.PreparedStatement pst1 = con.prepareStatement(sqlEmpleado, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+                    pst1.setString(1, nombre);
+                    pst1.setString(2, aPaterno);
+                    pst1.setString(3, aMaterno);
+                    pst1.setString(4, puesto);
                     pst1.executeUpdate();
 
-                    int nuevoIdUsuario = 1;
-                    String sqlMaxUsuario = "SELECT MAX(id_usuario) FROM usuarios";
-                    try (java.sql.PreparedStatement pstMaxUsr = con.prepareStatement(sqlMaxUsuario);
-                         java.sql.ResultSet rsMaxUsr = pstMaxUsr.executeQuery()) {
-                        if (rsMaxUsr.next()) {
-                            int maxIdUsr = rsMaxUsr.getInt(1);
-                            if (maxIdUsr > 0) {
-                                nuevoIdUsuario = maxIdUsr + 1;
-                            }
+                    try (java.sql.ResultSet rsKeys = pst1.getGeneratedKeys()) {
+                        if (!rsKeys.next()) {
+                            throw new java.sql.SQLException("No fue posible obtener el ID del empleado recién creado.");
                         }
+                        nuevoIdEmpleado = rsKeys.getInt(1);
                     }
 
-                    String sqlUsuario = "INSERT INTO usuarios (id_usuario, id_empleado, usuario, contrasena) VALUES (?, ?, ?, SHA2(?, 256))";
+                    String sqlUsuario = "INSERT INTO usuarios (usuario, contrasena, id_empleado) VALUES (?, SHA2(?, 256), ?)";
                     try (java.sql.PreparedStatement pst2 = con.prepareStatement(sqlUsuario)) {
-                        pst2.setInt(1, nuevoIdUsuario);
-                        pst2.setInt(2, nuevoIdEmpleado);
-                        pst2.setString(3, usuario);
-                        pst2.setString(4, contrasena);
+                        pst2.setString(1, usuario);
+                        pst2.setString(2, contrasena);
+                        pst2.setInt(3, nuevoIdEmpleado);
                         pst2.executeUpdate();
                     }
                 }

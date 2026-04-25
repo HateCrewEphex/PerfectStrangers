@@ -210,10 +210,10 @@ public class PSCombos extends javax.swing.JFrame {
         if (conexion == null) return;
         jCIDPlatillo.removeAllItems();
         try {
-            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT id_platillo, nombre_alimento FROM platillos");
+            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT id_producto, nombre FROM productos WHERE es_combo = FALSE ORDER BY nombre");
             java.sql.ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                jCIDPlatillo.addItem(rs.getInt("id_platillo") + " - " + rs.getString("nombre_alimento"));
+                jCIDPlatillo.addItem(rs.getInt("id_producto") + " - " + rs.getString("nombre"));
             }
         } catch (Exception ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
@@ -225,10 +225,10 @@ public class PSCombos extends javax.swing.JFrame {
         jCComboSel.removeAllItems();
         jCComboSel.addItem("Nuevo");
         try {
-            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT id_paquete FROM paquetes WHERE id_paquete != 0");
+            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT id_producto FROM productos WHERE es_combo = TRUE ORDER BY id_producto");
             java.sql.ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                jCComboSel.addItem(String.valueOf(rs.getInt("id_paquete")));
+                jCComboSel.addItem(String.valueOf(rs.getInt("id_producto")));
             }
         } catch (Exception ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
@@ -463,23 +463,6 @@ public class PSCombos extends javax.swing.JFrame {
         }
     }
 
-    private int generarNuevoIdCombo() {
-        int nuevoId = 1;
-        try {
-            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT MAX(id_paquete) FROM paquetes");
-            java.sql.ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                int maxId = rs.getInt(1);
-                if (maxId > 0) {
-                    nuevoId = maxId + 1;
-                }
-            }
-        } catch (java.sql.SQLException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        return nuevoId;
-    }
-
     private void guardarPaquete() {
         String nombreCombo = jTNomPlatillo.getText();
         String tipoCombo = (String) jCTipoCombo.getSelectedItem();
@@ -495,28 +478,26 @@ public class PSCombos extends javax.swing.JFrame {
         
         try {
             if (modoActual.equals("NUEVO")) {
-                int idNuevoPaquete = generarNuevoIdCombo();
-                
-                java.sql.PreparedStatement ps = conexion.prepareStatement("INSERT INTO paquetes (id_paquete, nombre_paquete, tipo_paquete, precio_paquete) VALUES (?, ?, ?, ?)");
-                ps.setInt(1, idNuevoPaquete);
+                java.sql.PreparedStatement ps = conexion.prepareStatement("INSERT INTO productos (categoria, nombre, precio, es_combo) VALUES (?, ?, ?, TRUE)", java.sql.Statement.RETURN_GENERATED_KEYS);
+                ps.setString(1, tipoCombo);
                 ps.setString(2, nombreCombo);
-                ps.setString(3, tipoCombo);
-                ps.setDouble(4, precio);
+                ps.setDouble(3, precio);
                 ps.executeUpdate();
-                
-                if (idNuevoPaquete != -1) {
-                    guardarPlatillosPaquete(idNuevoPaquete);
-                    javax.swing.JOptionPane.showMessageDialog(this, "Combo creado correctamente con ID: " + idNuevoPaquete);
+
+                int idNuevoCombo;
+                try (java.sql.ResultSet rsKeys = ps.getGeneratedKeys()) {
+                    if (!rsKeys.next()) {
+                        throw new java.sql.SQLException("No fue posible obtener el ID del combo recién creado.");
+                    }
+                    idNuevoCombo = rsKeys.getInt(1);
                 }
+
+                guardarPlatillosPaquete(idNuevoCombo);
+                javax.swing.JOptionPane.showMessageDialog(this, "Combo creado correctamente con ID: " + idNuevoCombo);
             } else if (modoActual.equals("ACTUALIZAR") && idComboStr != null && !idComboStr.equals("Nuevo")) {
                 int idCombo = Integer.parseInt(idComboStr);
-                
-                if (idCombo == 0) {
-                    javax.swing.JOptionPane.showMessageDialog(this, "El combo 0 no se puede actualizar.", "Acción denegada", javax.swing.JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                
-                java.sql.PreparedStatement ps = conexion.prepareStatement("UPDATE paquetes SET nombre_paquete = ?, tipo_paquete = ?, precio_paquete = ? WHERE id_paquete = ?");
+
+                java.sql.PreparedStatement ps = conexion.prepareStatement("UPDATE productos SET categoria = ?, nombre = ?, precio = ?, es_combo = TRUE WHERE id_producto = ?");
                 ps.setString(1, nombreCombo);
                 ps.setString(2, tipoCombo);
                 ps.setDouble(3, precio);
@@ -524,7 +505,7 @@ public class PSCombos extends javax.swing.JFrame {
                 ps.executeUpdate();
                 
                 // Borrar los anteriores y guardar los nuevos
-                java.sql.PreparedStatement psDel = conexion.prepareStatement("DELETE FROM detalle_paquetes WHERE id_paquete = ?");
+                java.sql.PreparedStatement psDel = conexion.prepareStatement("DELETE FROM detalles_combo WHERE id_combo = ?");
                 psDel.setInt(1, idCombo);
                 psDel.executeUpdate();
                 
@@ -540,7 +521,7 @@ public class PSCombos extends javax.swing.JFrame {
     }
 
     private void guardarPlatillosPaquete(int idPaquete) throws java.sql.SQLException {
-        java.sql.PreparedStatement ps = conexion.prepareStatement("INSERT INTO detalle_paquetes (id_paquete, id_platillo, cant) VALUES (?, ?, ?)");
+        java.sql.PreparedStatement ps = conexion.prepareStatement("INSERT INTO detalles_combo (id_combo, id_producto_incluido, cantidad) VALUES (?, ?, ?)");
         
         // Agrupar platillos duplicados para sumar la cantidad
         java.util.Map<Integer, Integer> conteoPlatillos = new java.util.HashMap<>();
@@ -575,12 +556,12 @@ public class PSCombos extends javax.swing.JFrame {
             }
             
             // Borrar de detalle_paquetes primero por la fk
-            java.sql.PreparedStatement psDelDet = conexion.prepareStatement("DELETE FROM detalle_paquetes WHERE id_paquete = ?");
+            java.sql.PreparedStatement psDelDet = conexion.prepareStatement("DELETE FROM detalles_combo WHERE id_combo = ?");
             psDelDet.setInt(1, idCombo);
             psDelDet.executeUpdate();
             
             // Lógica de eliminación en tabla maestra
-            java.sql.PreparedStatement ps = conexion.prepareStatement("DELETE FROM paquetes WHERE id_paquete = ?");
+            java.sql.PreparedStatement ps = conexion.prepareStatement("DELETE FROM productos WHERE id_producto = ? AND es_combo = TRUE");
             ps.setInt(1, idCombo);
             ps.executeUpdate();
             
@@ -704,30 +685,30 @@ public class PSCombos extends javax.swing.JFrame {
 
     private void cargarDatosCombo(String idCombo) {
         try {
-            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT * FROM paquetes WHERE id_paquete = ?");
+            java.sql.PreparedStatement ps = conexion.prepareStatement("SELECT * FROM productos WHERE id_producto = ? AND es_combo = TRUE");
             ps.setInt(1, Integer.parseInt(idCombo));
             java.sql.ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                jTNomPlatillo.setText(rs.getString("nombre_paquete"));
-                jTPrecio.setText(rs.getString("precio_paquete"));
-                jCTipoCombo.setSelectedItem(rs.getString("tipo_paquete"));
+                jTNomPlatillo.setText(rs.getString("nombre"));
+                jTPrecio.setText(rs.getString("precio"));
+                jCTipoCombo.setSelectedItem(rs.getString("categoria"));
             }
             
             // Cargar los platillos del paquete
             platillosSeleccionados.clear();
             java.sql.PreparedStatement psPlat = conexion.prepareStatement(
-                "SELECT dp.id_platillo, dp.cant, p.nombre_alimento " +
-                "FROM detalle_paquetes dp " +
-                "JOIN platillos p ON dp.id_platillo = p.id_platillo " +
-                "WHERE dp.id_paquete = ?");
+                "SELECT dc.id_producto_incluido, dc.cantidad, p.nombre " +
+                "FROM detalles_combo dc " +
+                "JOIN productos p ON dc.id_producto_incluido = p.id_producto " +
+                "WHERE dc.id_combo = ?");
             psPlat.setInt(1, Integer.parseInt(idCombo));
             java.sql.ResultSet rsPlat = psPlat.executeQuery();
             
             StringBuilder nombresPlatillos = new StringBuilder();
             while (rsPlat.next()) {
-                int idPlatillo = rsPlat.getInt("id_platillo");
-                int cant = rsPlat.getInt("cant");
-                String nombrePlatillo = rsPlat.getString("nombre_alimento");
+                int idPlatillo = rsPlat.getInt("id_producto_incluido");
+                int cant = rsPlat.getInt("cantidad");
+                String nombrePlatillo = rsPlat.getString("nombre");
                 
                 for(int i = 0; i < cant; i++) {
                     platillosSeleccionados.add(idPlatillo);

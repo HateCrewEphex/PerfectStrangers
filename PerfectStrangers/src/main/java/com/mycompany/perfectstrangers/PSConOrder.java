@@ -27,6 +27,12 @@ public class PSConOrder extends javax.swing.JFrame {
      */
     public PSConOrder() {
         initComponents();
+
+        try {
+            DBConnection.asegurarEstadoDetalleOrden();
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "No fue posible preparar el esquema de detalle de órdenes", ex);
+        }
         
         // Reset background so FlatLaf can apply its dark theme completely
         jBEntregarOrden.setBackground(null);
@@ -193,13 +199,14 @@ public class PSConOrder extends javax.swing.JFrame {
     private class ItemOrden {
         String nombre;
         int cant;
-        public ItemOrden(String n, int c) { nombre = n; cant = c; }
+        String nota;
+        public ItemOrden(String n, int c, String nota) { nombre = n; cant = c; this.nota = nota; }
     }
     
     private class OrdenPendiente {
+        int idOrden;
         String mesa;
-        java.sql.Date fecha;
-        java.sql.Time hora;
+        java.sql.Timestamp fechaHora;
         List<ItemOrden> items = new ArrayList<>();
     }
 
@@ -207,17 +214,12 @@ public class PSConOrder extends javax.swing.JFrame {
 
     private void cargarOrdenes() {
         listaOrdenes.clear();
-        String sql = "SELECT o.mesa, o.fecha, o.hora, p.nombre_alimento AS nomP, NULL AS nomPaq, d.cant " +
-                     "FROM ordenes o " +
-                     "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
-                     "INNER JOIN platillos p ON d.id_platillo = p.id_platillo " +
-                     "WHERE o.estado = 'Levantada' " +
-                     "UNION ALL " +
-                     "SELECT o.mesa, o.fecha, o.hora, NULL AS nomP, pq.nombre_paquete AS nomPaq, 1 AS cant " +
-                     "FROM ordenes o " +
-                     "INNER JOIN paquetes pq ON o.id_paquete = pq.id_paquete " +
-                     "WHERE o.estado = 'Levantada' AND o.id_paquete != 0 " +
-                     "ORDER BY fecha ASC, hora ASC";
+        String sql = "SELECT o.id_orden, o.mesa, o.fecha_hora, p.nombre AS nomProd, d.cantidad AS cant, d.notas_especiales AS nota " +
+                 "FROM ordenes o " +
+                 "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
+                 "INNER JOIN productos p ON d.id_producto = p.id_producto " +
+                 "WHERE o.estado_pago IN ('Pendiente', 'Parcial') AND d.estado_detalle = 'Pendiente' " +
+                 "ORDER BY o.fecha_hora ASC, o.id_orden ASC";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql);
@@ -226,25 +228,24 @@ public class PSConOrder extends javax.swing.JFrame {
             Map<String, OrdenPendiente> mapa = new LinkedHashMap<>();
 
             while (rs.next()) {
+                int idOrden = rs.getInt("id_orden");
                 String mesa = rs.getString("mesa");
-                java.sql.Date fecha = rs.getDate("fecha");
-                java.sql.Time hora = rs.getTime("hora");
-                String nP = rs.getString("nomP");
-                String nPaq = rs.getString("nomPaq");
-                String nombreItem = (nP != null) ? nP : (nPaq != null ? nPaq : "Desconocido");
+                java.sql.Timestamp fechaHora = rs.getTimestamp("fecha_hora");
+                String nombreItem = rs.getString("nomProd") != null ? rs.getString("nomProd") : "Desconocido";
                 int cant = rs.getInt("cant");
+                String nota = rs.getString("nota");
 
-                String key = mesa + "|" + fecha + "|" + hora;
+                String key = String.valueOf(idOrden);
                 OrdenPendiente op = mapa.get(key);
                 if (op == null) {
                     op = new OrdenPendiente();
+                    op.idOrden = idOrden;
                     op.mesa = mesa;
-                    op.fecha = fecha;
-                    op.hora = hora;
+                    op.fechaHora = fechaHora;
                     mapa.put(key, op);
                     listaOrdenes.add(op);
                 }
-                op.items.add(new ItemOrden(nombreItem, cant));
+                op.items.add(new ItemOrden(nombreItem, cant, nota));
             }
 
             mostrarOrdenes();
@@ -363,6 +364,9 @@ public class PSConOrder extends javax.swing.JFrame {
             sb.append("<span style='color: #888888; font-size: 22px; margin-right: 15px;'>&#9676;</span>");
             sb.append("<span style='padding-left: 10px;'>").append(item.cant).append("x ").append(item.nombre).append("</span>");
             sb.append("</div>");
+            if (item.nota != null && !item.nota.trim().isEmpty()) {
+                sb.append("<div style='font-size: 16px; color: #cca95a; margin: -4px 0 14px 38px; font-style: italic;'>Nota: ").append(item.nota).append("</div>");
+            }
         }
         sb.append("</div>");
         
@@ -378,7 +382,8 @@ public class PSConOrder extends javax.swing.JFrame {
         // Tiempo
         sb.append("<div style='font-size: 20px; color: #aaaaaa;'>");
         sb.append("&#9201; &nbsp;&nbsp;Tiempo: ");
-        sb.append("<span style='color: ").append(colorAcento).append(";'>").append(esPrimera ? o.hora.toString() : "--:--:--").append("</span>");
+        String tiempo = o.fechaHora != null ? o.fechaHora.toString().substring(11, 19) : "--:--:--";
+        sb.append("<span style='color: ").append(colorAcento).append(";'>").append(esPrimera ? tiempo : "--:--:--").append("</span>");
         sb.append("</div>");
         
         sb.append("</div>");
@@ -390,14 +395,22 @@ public class PSConOrder extends javax.swing.JFrame {
     private void entregarOrdenPrimera() {
         if (listaOrdenes.isEmpty()) return;
         OrdenPendiente o = listaOrdenes.get(0);
-        
-        String sql = "UPDATE ordenes SET estado = 'Entregada' WHERE mesa = ? AND fecha = ? AND hora = ?";
+
+        String sqlDetalle = "UPDATE detalle_orden SET estado_detalle = 'Entregada' WHERE id_orden = ? AND estado_detalle = 'Pendiente'";
+        String sqlOrden = "UPDATE ordenes SET estado_preparacion = 'Entregada' WHERE id_orden = ? AND NOT EXISTS (SELECT 1 FROM detalle_orden WHERE id_orden = ? AND estado_detalle = 'Pendiente')";
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement pst = con.prepareStatement(sql)) {
-            pst.setString(1, o.mesa);
-            pst.setDate(2, o.fecha);
-            pst.setTime(3, o.hora);
-            pst.executeUpdate();
+             PreparedStatement pstDetalle = con.prepareStatement(sqlDetalle);
+             PreparedStatement pstOrden = con.prepareStatement(sqlOrden)) {
+            con.setAutoCommit(false);
+
+            pstDetalle.setInt(1, o.idOrden);
+            pstDetalle.executeUpdate();
+
+            pstOrden.setInt(1, o.idOrden);
+            pstOrden.setInt(2, o.idOrden);
+            pstOrden.executeUpdate();
+
+            con.commit();
             
             cargarOrdenes(); 
         } catch (SQLException ex) {

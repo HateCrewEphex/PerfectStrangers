@@ -47,8 +47,8 @@ public class PSPlatillos extends javax.swing.JFrame {
         jBActPlatillo.setFont(fontLabels);
         jBEliPlatillo.setFont(fontLabels);
         
-        // Configurar ComboBox tipo alimento
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Alimento", "Bebida" }));
+        // Configurar ComboBox de categoría real en el nuevo esquema
+        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Platillos", "Bebidas" }));
         
         // Eventos de botones principales
         jBAltaPlatillo.addActionListener(e -> setModo("NUEVO"));
@@ -247,10 +247,10 @@ public class PSPlatillos extends javax.swing.JFrame {
     private void cargarIdsPlatillos() {
         jComboBox1.removeAllItems();
         try (java.sql.Connection con = DBConnection.getConnection();
-             java.sql.PreparedStatement pst = con.prepareStatement("SELECT id_platillo FROM platillos ORDER BY id_platillo ASC");
+             java.sql.PreparedStatement pst = con.prepareStatement("SELECT id_producto FROM productos WHERE es_combo = FALSE ORDER BY id_producto ASC");
              java.sql.ResultSet rs = pst.executeQuery()) {
             while (rs.next()) {
-                jComboBox1.addItem(String.valueOf(rs.getInt("id_platillo")));
+                jComboBox1.addItem(String.valueOf(rs.getInt("id_producto")));
             }
         } catch (java.sql.SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al cargar IDs", ex);
@@ -262,13 +262,13 @@ public class PSPlatillos extends javax.swing.JFrame {
         
         String idPlatillo = jComboBox1.getSelectedItem().toString();
         try (java.sql.Connection con = DBConnection.getConnection();
-             java.sql.PreparedStatement pst = con.prepareStatement("SELECT nombre_alimento, tipo_alimento, costo FROM platillos WHERE id_platillo = ?")) {
+             java.sql.PreparedStatement pst = con.prepareStatement("SELECT nombre, categoria, precio FROM productos WHERE id_producto = ? AND es_combo = FALSE")) {
             pst.setInt(1, Integer.parseInt(idPlatillo));
             try (java.sql.ResultSet rs = pst.executeQuery()) {
                 if (rs.next()) {
-                    jTNomPlatillo.setText(rs.getString("nombre_alimento"));
-                    jComboBox2.setSelectedItem(rs.getString("tipo_alimento"));
-                    jTPrecio.setText(rs.getString("costo"));
+                    jTNomPlatillo.setText(rs.getString("nombre"));
+                    jComboBox2.setSelectedItem(rs.getString("categoria"));
+                    jTPrecio.setText(rs.getString("precio"));
                 }
             }
         } catch (java.sql.SQLException ex) {
@@ -300,35 +300,32 @@ public class PSPlatillos extends javax.swing.JFrame {
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
             if (modoActual.equals("NUEVO")) {
-                int nuevoId = 1;
-                try (java.sql.PreparedStatement pstMax = con.prepareStatement("SELECT MAX(id_platillo) FROM platillos");
-                     java.sql.ResultSet rsMax = pstMax.executeQuery()) {
-                    if (rsMax.next() && rsMax.getInt(1) > 0) {
-                        nuevoId = rsMax.getInt(1) + 1;
-                    }
-                }
-                
-                String sql = "INSERT INTO platillos (id_platillo, nombre_alimento, tipo_alimento, costo) VALUES (?, ?, ?, ?)";
-                try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
-                    pst.setInt(1, nuevoId);
+                String sql = "INSERT INTO productos (categoria, nombre, precio, es_combo) VALUES (?, ?, ?, FALSE)";
+                try (java.sql.PreparedStatement pst = con.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+                    pst.setString(1, tipo);
                     pst.setString(2, nombre);
-                    pst.setString(3, tipo);
-                    pst.setDouble(4, precio);
+                    pst.setDouble(3, precio);
                     pst.executeUpdate();
-                    javax.swing.JOptionPane.showMessageDialog(this, "Platillo agregado con éxito (ID: " + nuevoId + ").");
+                    try (java.sql.ResultSet rsKeys = pst.getGeneratedKeys()) {
+                        if (rsKeys.next()) {
+                            javax.swing.JOptionPane.showMessageDialog(this, "Producto agregado con éxito (ID: " + rsKeys.getInt(1) + ").");
+                        } else {
+                            javax.swing.JOptionPane.showMessageDialog(this, "Producto agregado con éxito.");
+                        }
+                    }
                 }
             } else if (modoActual.equals("ACTUALIZAR")) {
                 if (jComboBox1.getSelectedItem() == null) return;
                 int id = Integer.parseInt(jComboBox1.getSelectedItem().toString());
                 
-                String sql = "UPDATE platillos SET nombre_alimento = ?, tipo_alimento = ?, costo = ? WHERE id_platillo = ?";
+                String sql = "UPDATE productos SET nombre = ?, categoria = ?, precio = ? WHERE id_producto = ? AND es_combo = FALSE";
                 try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
                     pst.setString(1, nombre);
                     pst.setString(2, tipo);
                     pst.setDouble(3, precio);
                     pst.setInt(4, id);
                     pst.executeUpdate();
-                    javax.swing.JOptionPane.showMessageDialog(this, "Platillo actualizado con éxito.");
+                    javax.swing.JOptionPane.showMessageDialog(this, "Producto actualizado con éxito.");
                 }
             } else if (modoActual.equals("ELIMINAR")) {
                 if (jComboBox1.getSelectedItem() == null) return;
@@ -337,11 +334,11 @@ public class PSPlatillos extends javax.swing.JFrame {
                 
                 int confirm = javax.swing.JOptionPane.showConfirmDialog(this, "¿Estás seguro que deseas eliminar el platillo: " + nombrePlatillo + "?", "Validar Eliminación", javax.swing.JOptionPane.YES_NO_OPTION, javax.swing.JOptionPane.WARNING_MESSAGE);
                 if (confirm == javax.swing.JOptionPane.YES_OPTION) {
-                    String sql = "DELETE FROM platillos WHERE id_platillo = ?";
+                    String sql = "DELETE FROM productos WHERE id_producto = ? AND es_combo = FALSE";
                     try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
                         pst.setInt(1, id);
                         pst.executeUpdate();
-                        javax.swing.JOptionPane.showMessageDialog(this, "Platillo eliminado con éxito.");
+                        javax.swing.JOptionPane.showMessageDialog(this, "Producto eliminado con éxito.");
                     }
                 } else {
                     return;

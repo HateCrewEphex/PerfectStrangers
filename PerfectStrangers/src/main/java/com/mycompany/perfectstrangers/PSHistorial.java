@@ -92,6 +92,7 @@ public class PSHistorial extends javax.swing.JFrame {
         javax.swing.JPanel topPanel = new javax.swing.JPanel(new java.awt.BorderLayout(0, 10));
         topPanel.setOpaque(false);
         
+        jLNVentana.setText("HISTORIAL DE PAGOS");
         jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 30));
         jLNVentana.setForeground(tonoOro);
         jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -136,8 +137,9 @@ public class PSHistorial extends javax.swing.JFrame {
         javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
         bottomPanel.setOpaque(false);
 
+        jBImprimirTicket.setText("VER DETALLES DE PAGO");
         jBImprimirTicket.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
-        jBImprimirTicket.setPreferredSize(new java.awt.Dimension(200, 50));
+        jBImprimirTicket.setPreferredSize(new java.awt.Dimension(250, 50));
         jBImprimirTicket.setBackground(new java.awt.Color(44, 44, 48));
         jBImprimirTicket.setForeground(tonoOro);
         jBImprimirTicket.setFocusPainted(false);
@@ -145,6 +147,8 @@ public class PSHistorial extends javax.swing.JFrame {
             javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
             javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20)
         ));
+        for (java.awt.event.ActionListener al : jBImprimirTicket.getActionListeners()) jBImprimirTicket.removeActionListener(al);
+        jBImprimirTicket.addActionListener(evt -> verDetallesSeleccionado());
         
         jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
         jBRegresar.setBackground(new java.awt.Color(44, 44, 48));
@@ -169,8 +173,18 @@ public class PSHistorial extends javax.swing.JFrame {
         jPPrincipal.repaint();
 
         cargarFiltros();
+        for (java.awt.event.ActionListener al : jCFiltro.getActionListeners()) jCFiltro.removeActionListener(al);
         jCFiltro.addActionListener(e -> cargarHistorial());
         cargarHistorial();
+        
+        // Agregar doble clic a la tabla
+        jTHistorial.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    verDetallesSeleccionado();
+                }
+            }
+        });
     }
 
     private void cargarFiltros() {
@@ -180,7 +194,7 @@ public class PSHistorial extends javax.swing.JFrame {
         jCFiltro.addItem("Esta Semana");
         jCFiltro.addItem("Este Mes");
 
-        String sql = "SELECT DISTINCT e.nombre FROM ordenes o JOIN empleados e ON o.id_empleado = e.id_empleado WHERE o.estado = 'Cobrada'";
+        String sql = "SELECT DISTINCT e.nombre FROM pagos p JOIN ordenes o ON p.id_orden = o.id_orden JOIN empleados e ON o.id_empleado = e.id_empleado";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql);
              ResultSet rs = pst.executeQuery()) {
@@ -201,7 +215,7 @@ public class PSHistorial extends javax.swing.JFrame {
         if (seleccion == null) return;
 
         DefaultTableModel modelo = new DefaultTableModel(
-            new Object[]{"Mesa", "Mesero", "Fecha", "Hora", "Total Orden"}, 0
+            new Object[]{"ID Pago", "ID Orden", "Mesa", "Mesero", "Método", "Monto Abonado", "Cambio", "Fecha", "Hora"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -216,28 +230,29 @@ public class PSHistorial extends javax.swing.JFrame {
         for(int i = 0; i < jTHistorial.getColumnCount(); i++){
             jTHistorial.getColumnModel().getColumn(i).setCellRenderer(centerRender);
         }
+        
+        jTHistorial.getColumnModel().getColumn(0).setPreferredWidth(60);
+        jTHistorial.getColumnModel().getColumn(1).setPreferredWidth(60);
+        jTHistorial.getColumnModel().getColumn(2).setPreferredWidth(70);
 
-        String sql = "SELECT o.mesa, e.nombre, o.fecha, o.hora, " +
-                     "(MAX(IFNULL(pq.precio_paquete, 0)) + IFNULL(SUM(p.costo * d.cant), 0)) AS total_orden " +
-                     "FROM ordenes o " +
-                     "JOIN empleados e ON o.id_empleado = e.id_empleado " +
-                     "LEFT JOIN paquetes pq ON o.id_paquete = pq.id_paquete " +
-                     "LEFT JOIN detalle_orden d ON o.id_orden = d.id_orden " +
-                     "LEFT JOIN platillos p ON d.id_platillo = p.id_platillo " +
-                     "WHERE o.estado = 'Cobrada' ";
+        String sql = "SELECT p.id_pago, o.id_orden, o.mesa, CONCAT(e.nombre, ' ', e.ap_paterno, IFNULL(CONCAT(' ', e.ap_materno), '')) AS nombre_mesero, " +
+             "p.metodo_pago, p.monto_pagado, p.cambio, DATE(p.fecha_hora_pago) AS fecha, TIME(p.fecha_hora_pago) AS hora " +
+                 "FROM pagos p " +
+                 "JOIN ordenes o ON p.id_orden = o.id_orden " +
+                 "JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                 "WHERE 1=1 ";
                      
         if (seleccion.equals("Dia de Hoy")) {
-            sql += "AND o.fecha = CURDATE() ";
+            sql += "AND DATE(p.fecha_hora_pago) = CURDATE() ";
         } else if (seleccion.equals("Esta Semana")) {
-            sql += "AND YEARWEEK(o.fecha, 1) = YEARWEEK(CURDATE(), 1) ";
+            sql += "AND YEARWEEK(p.fecha_hora_pago, 1) = YEARWEEK(CURDATE(), 1) ";
         } else if (seleccion.equals("Este Mes")) {
-            sql += "AND MONTH(o.fecha) = MONTH(CURDATE()) AND YEAR(o.fecha) = YEAR(CURDATE()) ";
+            sql += "AND MONTH(p.fecha_hora_pago) = MONTH(CURDATE()) AND YEAR(p.fecha_hora_pago) = YEAR(CURDATE()) ";
         } else if (seleccion.startsWith("Mesero: ")) {
-            String mesero = seleccion.substring(8);
-            sql += "AND e.nombre = ? ";
+            sql += "AND CONCAT(e.nombre, ' ', e.ap_paterno, IFNULL(CONCAT(' ', e.ap_materno), '')) = ? ";
         }
 
-        sql += "GROUP BY o.mesa, e.nombre, o.fecha, o.hora ORDER BY o.fecha DESC, o.hora DESC";
+        sql += "ORDER BY p.fecha_hora_pago DESC";
 
         double granTotal = 0.0;
         
@@ -250,31 +265,153 @@ public class PSHistorial extends javax.swing.JFrame {
 
             try (ResultSet rs = pst.executeQuery()) {
                 while(rs.next()) {
+                    int idPago = rs.getInt("id_pago");
+                    int idOrden = rs.getInt("id_orden");
                     String mesa = rs.getString("mesa");
-                    String empleado = rs.getString("nombre");
+                    String empleado = rs.getString("nombre_mesero");
+                    String metodo = rs.getString("metodo_pago");
+                    double monto = rs.getDouble("monto_pagado");
+                    double cambio = rs.getDouble("cambio");
                     java.sql.Date fecha = rs.getDate("fecha");
                     java.sql.Time hora = rs.getTime("hora");
-                    double totalOrd = rs.getDouble("total_orden");
                     
-                    granTotal += totalOrd;
+                    granTotal += monto;
                     
                     modelo.addRow(new Object[]{
+                        idPago,
+                        idOrden,
                         mesa, 
                         empleado != null ? empleado : "N/A", 
+                        metodo,
+                        String.format("$%.2f", monto),
+                        String.format("$%.2f", cambio),
                         fecha, 
-                        hora, 
-                        String.format("$%.2f", totalOrd)
+                        hora
                     });
                 }
             }
             
             // Fila vacía de separación
-            modelo.addRow(new Object[]{"", "", "", "", ""});
+            modelo.addRow(new Object[]{"", "", "", "", "", "", "", "", ""});
             // Fila de TOTAL
-            modelo.addRow(new Object[]{"", "", "", "TOTAL VENTA:", String.format("$%.2f", granTotal)});
+            modelo.addRow(new Object[]{"", "", "", "", "TOTAL PAGOS:", String.format("$%.2f", granTotal), "", "", ""});
             
         } catch (SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al cargar historial", ex);
+        }
+    }
+
+    private void verDetallesSeleccionado() {
+        int row = jTHistorial.getSelectedRow();
+        if (row < 0 || jTHistorial.getValueAt(row, 1) == null || jTHistorial.getValueAt(row, 1).toString().isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Selecciona un pago de la tabla para ver sus detalles.");
+            return;
+        }
+        
+        try {
+            int idPago = Integer.parseInt(jTHistorial.getValueAt(row, 0).toString());
+            int idOrden = Integer.parseInt(jTHistorial.getValueAt(row, 1).toString());
+            mostrarDetalleTicket(idOrden, idPago);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Selecciona una fila válida de pago.");
+        }
+    }
+
+    private void mostrarDetalleTicket(int idOrden, int idPago) {
+        String sqlPago = "SELECT metodo_pago, monto_pagado, monto_recibido, cambio, fecha_hora_pago FROM pagos WHERE id_pago = ?";
+        String sqlOrden = "SELECT o.mesa, e.nombre AS nomEmp, p.nombre AS nomProd, p.precio AS costoP, d.cantidad AS cant, d.notas_especiales AS nota, o.total_calculado " +
+                 "FROM ordenes o " +
+                 "INNER JOIN empleados e ON o.id_empleado = e.id_empleado " +
+                 "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
+                 "INNER JOIN productos p ON d.id_producto = p.id_producto " +
+             "WHERE o.id_orden = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pstPago = con.prepareStatement(sqlPago);
+             PreparedStatement pstOrden = con.prepareStatement(sqlOrden)) {
+             
+            pstPago.setInt(1, idPago);
+            String metodo = "";
+            double montoPagado = 0, montoRecibido = 0, cambio = 0;
+            String fechaHora = "";
+            try (ResultSet rsPago = pstPago.executeQuery()) {
+                if (rsPago.next()) {
+                    metodo = rsPago.getString("metodo_pago");
+                    montoPagado = rsPago.getDouble("monto_pagado");
+                    montoRecibido = rsPago.getDouble("monto_recibido");
+                    cambio = rsPago.getDouble("cambio");
+                    fechaHora = rsPago.getString("fecha_hora_pago");
+                }
+            }
+
+            pstOrden.setInt(1, idOrden);
+            try (ResultSet rs = pstOrden.executeQuery()) {
+                StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-family: \"Segoe UI\", sans-serif; width: 100%; color: #333333; background-color: #FFFFFF;'>");
+            
+                html.append("<div style='border-bottom: 2px dashed #555555; padding-bottom: 10px; margin-bottom: 15px; font-size: 22px; color: #000; text-align: center; font-weight: bold;'>");
+                html.append("TICKET DE PAGO<br><span style='font-size:16px; font-weight: normal;'>ID Pago: ").append(idPago).append(" | Orden: ").append(idOrden).append("</span>");
+                html.append("<br><span style='font-size:14px; font-weight: normal;'>").append(fechaHora).append("</span>");
+                html.append("</div>");
+            
+                double total = 0.0;
+                boolean existeOrden = false;
+                String empleado = "-";
+                String mesa = "-";
+                double totalCalculado = 0;
+
+                while (rs.next()) {
+                    existeOrden = true;
+                    mesa = rs.getString("mesa");
+                    String nombreItem = rs.getString("nomProd") != null ? rs.getString("nomProd") : "Desconocido";
+                    double valor = rs.getDouble("costoP");
+                    int cant = rs.getInt("cant");
+                    String nota = rs.getString("nota");
+                    totalCalculado = rs.getDouble("total_calculado");
+                    double subtotalLinea = (valor * cant);
+                    total += subtotalLinea;
+                    empleado = rs.getString("nomEmp") != null ? rs.getString("nomEmp") : "Desconocido";
+
+                    html.append("<div style='border-bottom: 1px solid #EEEEEE; padding-bottom: 8px; margin-bottom: 8px; font-size: 16px; display: flex; justify-content: space-between;'>");
+                    html.append("<span style='font-weight: bold;'>").append(cant).append("x</span> &nbsp;");
+                    html.append("<span>").append(nombreItem).append("</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
+                    html.append("<span style='color: #666666;'>$").append(String.format("%.2f", valor)).append(" c/u.</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
+                    html.append("<span style='float: right; font-weight: bold;'>$").append(String.format("%.2f", subtotalLinea)).append("</span>");
+                    html.append("</div>");
+                    if (nota != null && !nota.trim().isEmpty()) {
+                        html.append("<div style='margin: -4px 0 8px 24px; font-size: 14px; color: #555; font-style: italic;'>Nota: ").append(nota).append("</div>");
+                    }
+                }
+
+                if (!existeOrden) {
+                     javax.swing.JOptionPane.showMessageDialog(this, "No se encontraron detalles de productos para esta orden.");
+                     return;
+                }
+
+                html.append("<div style='text-align: right; margin-top: 25px; font-size: 18px; border-top: 2px dashed #555555; padding-top: 10px;'>");
+                html.append("<div style='margin-bottom: 4px;'>Mesa: &nbsp;&nbsp;&nbsp; <b>").append(mesa).append("</b></div>");
+                html.append("<div style='margin-bottom: 4px;'>Mesero: &nbsp;&nbsp;&nbsp; <b>").append(empleado).append("</b></div>");
+                html.append("<div style='margin-bottom: 4px; color: #555;'>Total de la Orden General: &nbsp;&nbsp;&nbsp; $").append(String.format("%.2f", totalCalculado)).append("</div>");
+                
+                html.append("<div style='margin-top: 10px; border-top: 1px solid #EEEEEE; padding-top: 10px;'></div>");
+                html.append("<div style='margin-bottom: 4px;'>Método de Pago: &nbsp;&nbsp;&nbsp; <b>").append(metodo).append("</b></div>");
+                html.append("<div style='margin-bottom: 4px;'>Monto Entregado: &nbsp;&nbsp;&nbsp; <b>$").append(String.format("%.2f", montoRecibido)).append("</b></div>");
+                html.append("<div style='margin-bottom: 4px;'>Monto Abonado (Cobrado): &nbsp;&nbsp;&nbsp; <b>$").append(String.format("%.2f", montoPagado)).append("</b></div>");
+                if(cambio > 0) {
+                    html.append("<div style='margin-bottom: 4px; color: #27ae60; font-weight: bold;'>Cambio Regresado: &nbsp;&nbsp;&nbsp; $").append(String.format("%.2f", cambio)).append("</div>");
+                }
+                
+                html.append("</div></div></html>");
+
+                javax.swing.JEditorPane area = new javax.swing.JEditorPane("text/html", html.toString());
+                area.setEditable(false);
+                area.setCaretPosition(0);
+                javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(area);
+                scroll.setPreferredSize(new java.awt.Dimension(450, 600));
+
+                javax.swing.JOptionPane.showMessageDialog(this, scroll, "Detalle de Pago y Orden", javax.swing.JOptionPane.PLAIN_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar detalle de ticket", ex);
         }
     }
 

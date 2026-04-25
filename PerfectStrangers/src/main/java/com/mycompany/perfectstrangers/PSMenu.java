@@ -305,8 +305,8 @@ public class PSMenu extends javax.swing.JFrame {
         jItemCombos.addActionListener(evt -> abrirVentana(new PSCombos()));
         jMenu.add(jItemCombos);
 
-        // Validar que solo un administrador pueda ver la pestaña "Menú"
-        if (Sesion.puestoEmpleado != null && (Sesion.puestoEmpleado.equalsIgnoreCase("Administrador") || Sesion.puestoEmpleado.equalsIgnoreCase("Administrativo"))) {
+        // Validar que solo un administrador o gerente pueda ver la pestaña "Menú"
+        if (Sesion.puestoEmpleado != null && (Sesion.puestoEmpleado.equalsIgnoreCase("Administrador") || Sesion.puestoEmpleado.equalsIgnoreCase("Administrativo") || Sesion.puestoEmpleado.equalsIgnoreCase("Gerente"))) {
             jMenu.setVisible(true);
         } else {
             jMenu.setVisible(false);
