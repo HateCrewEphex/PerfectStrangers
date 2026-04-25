@@ -37,8 +37,7 @@ public class PSCombos extends javax.swing.JFrame {
         
         configurarInterfaz();
         
-        try { 
-            conexion = DBConnection.getConnection(); 
+        try (java.sql.Connection conexion = DBConnection.getConnection()) { 
         } catch (Exception e) {
             System.err.println("Error de conexion en Combos: " + e.getMessage());
         }
@@ -781,7 +780,7 @@ public class PSCombos extends javax.swing.JFrame {
     private void jCComboSelActionPerformed(java.awt.event.ActionEvent evt) {
         String idCombo = (String) jCComboSel.getSelectedItem();
         if (idCombo != null && !idCombo.equals("Nuevo")) {
-            cargarDatosCombo(idCombo);
+            // cargarDatosCombo(idCombo); // Método no implementado, el JComboBox está oculto
         } else if ("Nuevo".equals(idCombo)) {
             jTNomPlatillo.setText("");
             jTPrecio.setText("");
