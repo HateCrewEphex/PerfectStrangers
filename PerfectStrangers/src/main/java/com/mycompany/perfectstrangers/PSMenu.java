@@ -291,7 +291,7 @@ public class PSMenu extends javax.swing.JFrame {
         jMenu2.addMouseListener(clickHandlerSalir);
 
         // Configurar menú de Empleados dentro de la pestaña "Menú"
-        javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Alta de Empleados");
+        javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Control de usuarios");
         jItemEmpleados.addActionListener(evt -> abrirVentana(new PSEmpleados()));
         jMenu.add(jItemEmpleados);
         

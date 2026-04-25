@@ -11,8 +11,9 @@ package com.mycompany.perfectstrangers;
 public class PSPlatillos extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSPlatillos.class.getName());
-
-    private String modoActual = "NUEVO"; // NUEVO, ACTUALIZAR, ELIMINAR
+    private int idProductoActual = -1;
+    private javax.swing.JTable jTableProductos;
+    private javax.swing.table.DefaultTableModel modeloTabla;
 
     /**
      * Creates new form PSPlatillos
@@ -50,14 +51,9 @@ public class PSPlatillos extends javax.swing.JFrame {
         // Configurar ComboBox de categoría real en el nuevo esquema
         jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Platillos", "Bebidas" }));
         
-        // Eventos de botones principales
-        jBAltaPlatillo.addActionListener(e -> setModo("NUEVO"));
-        jBActPlatillo.addActionListener(e -> setModo("ACTUALIZAR"));
-        jBEliPlatillo.addActionListener(e -> setModo("ELIMINAR"));
-        
-        jComboBox1.addActionListener(e -> cargarDatosPlatillo());
-        
-        jBGuardar.addActionListener(e -> ejecutarAccion());
+        jBGuardar.setText("REGISTRAR");
+        jBGuardar.setBackground(new java.awt.Color(33, 122, 79));
+        jBGuardar.addActionListener(e -> registrarProducto());
         jBGuardar.setForeground(java.awt.Color.WHITE);
         
         // Boton regresar
@@ -68,8 +64,6 @@ public class PSPlatillos extends javax.swing.JFrame {
         });
         
         configurarInterfaz();
-        
-        setModo("NUEVO");
     }
 
     private void configurarInterfaz() {
@@ -178,11 +172,102 @@ public class PSPlatillos extends javax.swing.JFrame {
         ));
 
         tarjeta.add(jPPrincipal, java.awt.BorderLayout.CENTER);
+        
+        // --- BOTONES EXTRA PARA CRUD ---
+        javax.swing.JPanel panelBotonesExtra = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 15, 10));
+        panelBotonesExtra.setOpaque(false);
+        
+        javax.swing.JButton jBNuevo = new javax.swing.JButton("NUEVO");
+        javax.swing.JButton jBActualizar = new javax.swing.JButton("ACTUALIZAR");
+        javax.swing.JButton jBEliminar = new javax.swing.JButton("ELIMINAR");
+        
+        javax.swing.JButton[] extras = {jBNuevo, jBActualizar, jBEliminar};
+        for (javax.swing.JButton btn : extras) {
+            btn.setBackground(new java.awt.Color(44, 44, 48));
+            btn.setForeground(tonoOro);
+            btn.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+            btn.setFocusPainted(false);
+            btn.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+                javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16)
+            ));
+            panelBotonesExtra.add(btn);
+        }
+        
+        jBNuevo.setBackground(new java.awt.Color(30, 80, 160)); 
+        jBNuevo.setForeground(java.awt.Color.WHITE);
+        
+        jBActualizar.setBackground(new java.awt.Color(160, 120, 30)); 
+        jBActualizar.setForeground(java.awt.Color.WHITE);
+        
+        jBEliminar.setBackground(new java.awt.Color(160, 40, 40)); 
+        jBEliminar.setForeground(java.awt.Color.WHITE);
+        
+        jBNuevo.addActionListener(e -> limpiarCampos());
+        jBActualizar.addActionListener(e -> actualizarProducto());
+        jBEliminar.addActionListener(e -> eliminarProducto());
+        
+        tarjeta.add(panelBotonesExtra, java.awt.BorderLayout.SOUTH);
+        
         centro.add(tarjeta);
-        fondoMetalico.add(centro, java.awt.BorderLayout.CENTER);
+        
+        // --- TABLA DE PRODUCTOS ---
+        modeloTabla = new javax.swing.table.DefaultTableModel(
+            new Object [][] {},
+            new String [] {"ID", "Categoría", "Nombre", "Precio", "Es Combo"}
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        jTableProductos = new javax.swing.JTable(modeloTabla);
+        jTableProductos.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        jTableProductos.setRowHeight(30);
+        jTableProductos.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        jTableProductos.getTableHeader().setBackground(new java.awt.Color(34, 34, 38));
+        jTableProductos.getTableHeader().setForeground(tonoOro);
+        jTableProductos.setBackground(new java.awt.Color(34, 34, 38));
+        jTableProductos.setForeground(java.awt.Color.WHITE);
+        jTableProductos.setSelectionBackground(new java.awt.Color(60, 60, 65));
+        jTableProductos.setSelectionForeground(tonoOro);
+
+        jTableProductos.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                seleccionarProductoDeTabla();
+            }
+        });
+
+        javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(jTableProductos);
+        scrollPane.getViewport().setBackground(casiNegro);
+        scrollPane.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createEmptyBorder(0, 20, 0, 0),
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(70, 70, 75), 3)
+        ));
+        
+        javax.swing.JPanel panelTabla = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelTabla.setOpaque(false);
+        panelTabla.add(scrollPane, java.awt.BorderLayout.CENTER);
+
+        javax.swing.JPanel mainSplit = new javax.swing.JPanel(new java.awt.BorderLayout());
+        mainSplit.setOpaque(false);
+        mainSplit.add(centro, java.awt.BorderLayout.WEST);
+        mainSplit.add(panelTabla, java.awt.BorderLayout.CENTER);
+
+        fondoMetalico.add(mainSplit, java.awt.BorderLayout.CENTER);
         setContentPane(fondoMetalico);
         revalidate();
         repaint();
+        
+        jBAltaPlatillo.setVisible(false);
+        jBActPlatillo.setVisible(false);
+        jBEliPlatillo.setVisible(false);
+        
+        jLabel2.setText("ES COMBO:");
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "No", "Sí" }));
+        
+        limpiarCampos();
     }
 
     private void aplicarEstiloBotonModo(javax.swing.JButton boton) {
@@ -195,163 +280,164 @@ public class PSPlatillos extends javax.swing.JFrame {
         ));
     }
 
-    private void resaltarModo(javax.swing.JButton seleccionado) {
-        java.awt.Color activo = new java.awt.Color(204, 169, 90);
-        java.awt.Color normal = new java.awt.Color(44, 44, 48);
-        javax.swing.JButton[] botones = {jBAltaPlatillo, jBActPlatillo, jBEliPlatillo};
-        for (javax.swing.JButton boton : botones) {
-            boton.setBackground(normal);
-            boton.setForeground(java.awt.Color.WHITE);
-        }
-        seleccionado.setBackground(activo);
-        seleccionado.setForeground(new java.awt.Color(20, 20, 20));
-    }
+    private void resaltarModo(javax.swing.JButton seleccionado) {}
+    private void setModo(String modo) {}
+    private void cargarIdsPlatillos() {}
+    private void cargarDatosPlatillo() {}
+    private void ejecutarAccion() {}
 
-    private void setModo(String modo) {
-        this.modoActual = modo;
-        jTNomPlatillo.setText("");
-        jTPrecio.setText("");
-        
-        if (modo.equals("NUEVO")) {
-            resaltarModo(jBAltaPlatillo);
-            jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Nuevo" }));
-            jComboBox1.setEnabled(false);
-            jTNomPlatillo.setEnabled(true);
-            jComboBox2.setEnabled(true);
-            jTPrecio.setEnabled(true);
-            jBGuardar.setText("GUARDAR");
-            jBGuardar.setBackground(new java.awt.Color(33, 122, 79));
-        } else {
-            jComboBox1.setEnabled(true);
-            cargarIdsPlatillos();
-            
-            if (modo.equals("ACTUALIZAR")) {
-                resaltarModo(jBActPlatillo);
-                jTNomPlatillo.setEnabled(true);
-                jComboBox2.setEnabled(true);
-                jTPrecio.setEnabled(true);
-                jBGuardar.setText("ACTUALIZAR");
-                jBGuardar.setBackground(new java.awt.Color(45, 108, 156));
-            } else if (modo.equals("ELIMINAR")) {
-                resaltarModo(jBEliPlatillo);
-                jTNomPlatillo.setEnabled(false);
-                jComboBox2.setEnabled(false);
-                jTPrecio.setEnabled(false);
-                jBGuardar.setText("ELIMINAR");
-                jBGuardar.setBackground(new java.awt.Color(138, 52, 52));
-            }
-        }
-        jBGuardar.setForeground(java.awt.Color.WHITE);
-    }
-    
-    private void cargarIdsPlatillos() {
-        jComboBox1.removeAllItems();
-        try (java.sql.Connection con = DBConnection.getConnection();
-             java.sql.PreparedStatement pst = con.prepareStatement("SELECT id_producto FROM productos WHERE es_combo = FALSE ORDER BY id_producto ASC");
-             java.sql.ResultSet rs = pst.executeQuery()) {
-            while (rs.next()) {
-                jComboBox1.addItem(String.valueOf(rs.getInt("id_producto")));
-            }
-        } catch (java.sql.SQLException ex) {
-            logger.log(java.util.logging.Level.SEVERE, "Error al cargar IDs", ex);
-        }
-    }
-    
-    private void cargarDatosPlatillo() {
-        if (jComboBox1.getSelectedItem() == null || jComboBox1.getSelectedItem().equals("Nuevo")) return;
-        
-        String idPlatillo = jComboBox1.getSelectedItem().toString();
-        try (java.sql.Connection con = DBConnection.getConnection();
-             java.sql.PreparedStatement pst = con.prepareStatement("SELECT nombre, categoria, precio FROM productos WHERE id_producto = ? AND es_combo = FALSE")) {
-            pst.setInt(1, Integer.parseInt(idPlatillo));
-            try (java.sql.ResultSet rs = pst.executeQuery()) {
-                if (rs.next()) {
-                    jTNomPlatillo.setText(rs.getString("nombre"));
-                    jComboBox2.setSelectedItem(rs.getString("categoria"));
-                    jTPrecio.setText(rs.getString("precio"));
+    private void cargarProductos() {
+        modeloTabla.setRowCount(0);
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            String sql = "SELECT id_producto, categoria, nombre, precio, es_combo FROM productos ORDER BY id_producto ASC";
+            try (java.sql.PreparedStatement pst = con.prepareStatement(sql);
+                 java.sql.ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    modeloTabla.addRow(new Object[]{
+                        rs.getInt("id_producto"),
+                        rs.getString("categoria"),
+                        rs.getString("nombre"),
+                        rs.getDouble("precio"),
+                        rs.getBoolean("es_combo") ? "Sí" : "No"
+                    });
                 }
             }
-        } catch (java.sql.SQLException ex) {
-            logger.log(java.util.logging.Level.SEVERE, "Error al cargar datos del platillo", ex);
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar productos", ex);
         }
     }
 
-    private void ejecutarAccion() {
+    private void seleccionarProductoDeTabla() {
+        int fila = jTableProductos.getSelectedRow();
+        if (fila == -1) return;
+        
+        int id = (int) modeloTabla.getValueAt(fila, 0);
+        idProductoActual = id;
+        
+        jComboBox2.setSelectedItem((String) modeloTabla.getValueAt(fila, 1));
+        jTNomPlatillo.setText((String) modeloTabla.getValueAt(fila, 2));
+        jTPrecio.setText(String.valueOf(modeloTabla.getValueAt(fila, 3)));
+        jComboBox1.setSelectedItem((String) modeloTabla.getValueAt(fila, 4));
+        
+        jLabel1.setText("EDITANDO ID: " + idProductoActual);
+        jBGuardar.setEnabled(false);
+    }
+
+    private void registrarProducto() {
         String nombre = jTNomPlatillo.getText().trim();
-        String tipo = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Alimento";
+        String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillos";
         String precioStr = jTPrecio.getText().trim();
-        
-        if (modoActual.equals("NUEVO") || modoActual.equals("ACTUALIZAR")) {
-            if (nombre.isEmpty() || precioStr.isEmpty()) {
-                javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos.");
-                return;
-            }
+        boolean esCombo = "Sí".equals(jComboBox1.getSelectedItem());
+
+        if (nombre.isEmpty() || precioStr.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos.");
+            return;
         }
-        
+
         double precio = 0;
-        if (!modoActual.equals("ELIMINAR")) {
-            try {
-                precio = Double.parseDouble(precioStr);
-            } catch (NumberFormatException e) {
-                javax.swing.JOptionPane.showMessageDialog(this, "El precio debe ser un número válido.");
-                return;
-            }
+        try {
+            precio = Double.parseDouble(precioStr);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "El precio debe ser un número válido.");
+            return;
         }
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            if (modoActual.equals("NUEVO")) {
-                String sql = "INSERT INTO productos (categoria, nombre, precio, es_combo) VALUES (?, ?, ?, FALSE)";
-                try (java.sql.PreparedStatement pst = con.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-                    pst.setString(1, tipo);
-                    pst.setString(2, nombre);
-                    pst.setDouble(3, precio);
-                    pst.executeUpdate();
-                    try (java.sql.ResultSet rsKeys = pst.getGeneratedKeys()) {
-                        if (rsKeys.next()) {
-                            javax.swing.JOptionPane.showMessageDialog(this, "Producto agregado con éxito (ID: " + rsKeys.getInt(1) + ").");
-                        } else {
-                            javax.swing.JOptionPane.showMessageDialog(this, "Producto agregado con éxito.");
-                        }
-                    }
-                }
-            } else if (modoActual.equals("ACTUALIZAR")) {
-                if (jComboBox1.getSelectedItem() == null) return;
-                int id = Integer.parseInt(jComboBox1.getSelectedItem().toString());
-                
-                String sql = "UPDATE productos SET nombre = ?, categoria = ?, precio = ? WHERE id_producto = ? AND es_combo = FALSE";
-                try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
-                    pst.setString(1, nombre);
-                    pst.setString(2, tipo);
-                    pst.setDouble(3, precio);
-                    pst.setInt(4, id);
-                    pst.executeUpdate();
-                    javax.swing.JOptionPane.showMessageDialog(this, "Producto actualizado con éxito.");
-                }
-            } else if (modoActual.equals("ELIMINAR")) {
-                if (jComboBox1.getSelectedItem() == null) return;
-                int id = Integer.parseInt(jComboBox1.getSelectedItem().toString());
-                String nombrePlatillo = jTNomPlatillo.getText().trim();
-                
-                int confirm = javax.swing.JOptionPane.showConfirmDialog(this, "¿Estás seguro que deseas eliminar el platillo: " + nombrePlatillo + "?", "Validar Eliminación", javax.swing.JOptionPane.YES_NO_OPTION, javax.swing.JOptionPane.WARNING_MESSAGE);
-                if (confirm == javax.swing.JOptionPane.YES_OPTION) {
-                    String sql = "DELETE FROM productos WHERE id_producto = ? AND es_combo = FALSE";
-                    try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
-                        pst.setInt(1, id);
-                        pst.executeUpdate();
-                        javax.swing.JOptionPane.showMessageDialog(this, "Producto eliminado con éxito.");
-                    }
-                } else {
-                    return;
-                }
+            String sql = "INSERT INTO productos (categoria, nombre, precio, es_combo) VALUES (?, ?, ?, ?)";
+            try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                pst.setString(1, categoria);
+                pst.setString(2, nombre);
+                pst.setDouble(3, precio);
+                pst.setBoolean(4, esCombo);
+                pst.executeUpdate();
             }
-            
-            // Refrescar UI después de la acción
-            setModo(modoActual);
-            
-        } catch (java.sql.SQLException ex) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Error en base de datos: " + ex.getMessage());
-            logger.log(java.util.logging.Level.SEVERE, "Error DB", ex);
+            javax.swing.JOptionPane.showMessageDialog(this, "Producto registrado con éxito.");
+            limpiarCampos();
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error al registrar: " + ex.getMessage());
         }
+    }
+
+    private void actualizarProducto() {
+        if (idProductoActual == -1) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Primero debe buscar o seleccionar un producto para actualizar.");
+            return;
+        }
+        
+        String nombre = jTNomPlatillo.getText().trim();
+        String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillos";
+        String precioStr = jTPrecio.getText().trim();
+        boolean esCombo = "Sí".equals(jComboBox1.getSelectedItem());
+
+        if (nombre.isEmpty() || precioStr.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos.");
+            return;
+        }
+        
+        double precio = 0;
+        try {
+            precio = Double.parseDouble(precioStr);
+        } catch (NumberFormatException e) {
+            javax.swing.JOptionPane.showMessageDialog(this, "El precio debe ser un número válido.");
+            return;
+        }
+
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            String sql = "UPDATE productos SET categoria=?, nombre=?, precio=?, es_combo=? WHERE id_producto=?";
+            try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                pst.setString(1, categoria);
+                pst.setString(2, nombre);
+                pst.setDouble(3, precio);
+                pst.setBoolean(4, esCombo);
+                pst.setInt(5, idProductoActual);
+                pst.executeUpdate();
+            }
+            javax.swing.JOptionPane.showMessageDialog(this, "Producto actualizado con éxito.");
+            limpiarCampos();
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error al actualizar: " + ex.getMessage());
+        }
+    }
+
+    private void eliminarProducto() {
+        if (idProductoActual == -1) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Primero debe seleccionar un producto para dar de baja.");
+            return;
+        }
+        
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(this, "¿Está seguro que desea eliminar este producto?", "Confirmar Baja", javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirm != javax.swing.JOptionPane.YES_OPTION) return;
+        
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            String sql = "DELETE FROM productos WHERE id_producto=?";
+            try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                pst.setInt(1, idProductoActual);
+                pst.executeUpdate();
+            }
+            javax.swing.JOptionPane.showMessageDialog(this, "Producto eliminado con éxito.");
+            limpiarCampos();
+        } catch (Exception ex) {
+            if (ex.getMessage().contains("foreign key") || ex.getMessage().contains("constraint")) {
+                javax.swing.JOptionPane.showMessageDialog(this, "No se puede eliminar el producto porque tiene registros asociados (ej. órdenes).");
+            } else {
+                javax.swing.JOptionPane.showMessageDialog(this, "Error al eliminar: " + ex.getMessage());
+            }
+        }
+    }
+
+    private void limpiarCampos() {
+        jTNomPlatillo.setText("");
+        if(jComboBox2.getItemCount() > 0) jComboBox2.setSelectedIndex(0);
+        if(jComboBox1.getItemCount() > 0) jComboBox1.setSelectedIndex(0);
+        jTPrecio.setText("");
+        
+        idProductoActual = -1;
+        jLabel1.setText("CONTROL DE PLATILLOS");
+        jBGuardar.setEnabled(true);
+        if (jTableProductos != null) {
+            jTableProductos.clearSelection();
+        }
+        cargarProductos();
     }
 
     /**

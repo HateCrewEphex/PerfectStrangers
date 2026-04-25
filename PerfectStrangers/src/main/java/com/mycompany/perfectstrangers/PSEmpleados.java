@@ -11,6 +11,9 @@ package com.mycompany.perfectstrangers;
 public class PSEmpleados extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSEmpleados.class.getName());
+    private int idEmpleadoActual = -1;
+    private javax.swing.JTable jTableEmpleados;
+    private javax.swing.table.DefaultTableModel modeloTabla;
 
     /**
      * Creates new form PSEmpleados
@@ -178,11 +181,96 @@ public class PSEmpleados extends javax.swing.JFrame {
         jPanel1.setBackground(metal);
 
         tarjeta.add(jPanel1, java.awt.BorderLayout.CENTER);
+        
+        // --- BOTONES EXTRA PARA CRUD ---
+        javax.swing.JPanel panelBotonesExtra = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 15, 10));
+        panelBotonesExtra.setOpaque(false);
+        
+        javax.swing.JButton jBNuevo = new javax.swing.JButton("NUEVO");
+        javax.swing.JButton jBActualizar = new javax.swing.JButton("ACTUALIZAR");
+        javax.swing.JButton jBEliminar = new javax.swing.JButton("DAR DE BAJA");
+        
+        javax.swing.JButton[] extras = {jBNuevo, jBActualizar, jBEliminar};
+        for (javax.swing.JButton btn : extras) {
+            btn.setBackground(new java.awt.Color(44, 44, 48));
+            btn.setForeground(tonoOro);
+            btn.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+            btn.setFocusPainted(false);
+            btn.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+                javax.swing.BorderFactory.createEmptyBorder(8, 16, 8, 16)
+            ));
+            panelBotonesExtra.add(btn);
+        }
+        
+        jBNuevo.setBackground(new java.awt.Color(30, 80, 160)); 
+        jBNuevo.setForeground(java.awt.Color.WHITE);
+        
+        jBActualizar.setBackground(new java.awt.Color(160, 120, 30)); 
+        jBActualizar.setForeground(java.awt.Color.WHITE);
+        
+        jBEliminar.setBackground(new java.awt.Color(160, 40, 40)); 
+        jBEliminar.setForeground(java.awt.Color.WHITE);
+        
+        jBNuevo.addActionListener(e -> limpiarCampos());
+        jBActualizar.addActionListener(e -> actualizarEmpleado());
+        jBEliminar.addActionListener(e -> eliminarEmpleado());
+        
+        tarjeta.add(panelBotonesExtra, java.awt.BorderLayout.SOUTH);
+        // -------------------------------
+        
         centro.add(tarjeta);
-        fondoMetalico.add(centro, java.awt.BorderLayout.CENTER);
+        
+        // --- TABLA DE EMPLEADOS ---
+        modeloTabla = new javax.swing.table.DefaultTableModel(
+            new Object [][] {},
+            new String [] {"ID", "Nombre", "A. Paterno", "A. Materno", "Puesto", "Usuario"}
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        jTableEmpleados = new javax.swing.JTable(modeloTabla);
+        jTableEmpleados.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        jTableEmpleados.setRowHeight(30);
+        jTableEmpleados.getTableHeader().setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        jTableEmpleados.getTableHeader().setBackground(new java.awt.Color(34, 34, 38));
+        jTableEmpleados.getTableHeader().setForeground(tonoOro);
+        jTableEmpleados.setBackground(new java.awt.Color(34, 34, 38));
+        jTableEmpleados.setForeground(java.awt.Color.WHITE);
+        jTableEmpleados.setSelectionBackground(new java.awt.Color(60, 60, 65));
+        jTableEmpleados.setSelectionForeground(tonoOro);
+
+        jTableEmpleados.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                seleccionarEmpleadoDeTabla();
+            }
+        });
+
+        javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(jTableEmpleados);
+        scrollPane.getViewport().setBackground(casiNegro);
+        scrollPane.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createEmptyBorder(0, 20, 0, 0),
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(70, 70, 75), 3)
+        ));
+        
+        javax.swing.JPanel panelTabla = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelTabla.setOpaque(false);
+        panelTabla.add(scrollPane, java.awt.BorderLayout.CENTER);
+
+        javax.swing.JPanel mainSplit = new javax.swing.JPanel(new java.awt.BorderLayout());
+        mainSplit.setOpaque(false);
+        mainSplit.add(centro, java.awt.BorderLayout.WEST);
+        mainSplit.add(panelTabla, java.awt.BorderLayout.CENTER);
+
+        fondoMetalico.add(mainSplit, java.awt.BorderLayout.CENTER);
         setContentPane(fondoMetalico);
         revalidate();
         repaint();
+        
+        cargarEmpleados();
     }
 
     private void registrarEmpleado() {
@@ -247,6 +335,156 @@ public class PSEmpleados extends javax.swing.JFrame {
         }
     }
 
+    private void cargarEmpleados() {
+        modeloTabla.setRowCount(0);
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            String sql = "SELECT e.id_empleado, e.nombre, e.ap_paterno, e.ap_materno, e.puesto, u.usuario FROM empleados e LEFT JOIN usuarios u ON e.id_empleado = u.id_empleado ORDER BY e.id_empleado ASC";
+            try (java.sql.PreparedStatement pst = con.prepareStatement(sql);
+                 java.sql.ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    modeloTabla.addRow(new Object[]{
+                        rs.getInt("id_empleado"),
+                        rs.getString("nombre"),
+                        rs.getString("ap_paterno"),
+                        rs.getString("ap_materno"),
+                        rs.getString("puesto"),
+                        rs.getString("usuario")
+                    });
+                }
+            }
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar empleados", ex);
+        }
+    }
+
+    private void seleccionarEmpleadoDeTabla() {
+        int fila = jTableEmpleados.getSelectedRow();
+        if (fila == -1) return;
+        
+        int id = (int) modeloTabla.getValueAt(fila, 0);
+        idEmpleadoActual = id;
+        
+        jTNombre.setText((String) modeloTabla.getValueAt(fila, 1));
+        jTAPaterno.setText((String) modeloTabla.getValueAt(fila, 2));
+        jTAMaterno.setText((String) modeloTabla.getValueAt(fila, 3));
+        String puesto = (String) modeloTabla.getValueAt(fila, 4);
+        if (puesto != null) {
+            jCBPuesto.setSelectedItem(puesto);
+        }
+        jTUsuario.setText((String) modeloTabla.getValueAt(fila, 5));
+        jPContrasena.setText("");
+        jPCContrasena.setText("");
+        
+        jLabel1.setText("EDITANDO ID: " + idEmpleadoActual);
+        jBRegistrar.setEnabled(false);
+    }
+
+    private void actualizarEmpleado() {
+        if (idEmpleadoActual == -1) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Primero debe buscar un empleado para actualizar.");
+            return;
+        }
+        
+        String nombre = jTNombre.getText().trim();
+        String aPaterno = jTAPaterno.getText().trim();
+        String aMaterno = jTAMaterno.getText().trim();
+        String puesto = jCBPuesto.getSelectedItem().toString();
+        String usuario = jTUsuario.getText().trim();
+        String contrasena = new String(jPContrasena.getPassword());
+        String cContrasena = new String(jPCContrasena.getPassword());
+
+        if (nombre.isEmpty() || aPaterno.isEmpty() || puesto.isEmpty() || usuario.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena los campos obligatorios (nombre, apellido, puesto, usuario).");
+            return;
+        }
+        
+        if (!contrasena.isEmpty() && !contrasena.equals(cContrasena)) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Las contraseñas no coinciden.");
+            return;
+        }
+
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                String sqlUpdateEmp = "UPDATE empleados SET nombre=?, ap_paterno=?, ap_materno=?, puesto=? WHERE id_empleado=?";
+                try (java.sql.PreparedStatement pst = con.prepareStatement(sqlUpdateEmp)) {
+                    pst.setString(1, nombre);
+                    pst.setString(2, aPaterno);
+                    pst.setString(3, aMaterno);
+                    pst.setString(4, puesto);
+                    pst.setInt(5, idEmpleadoActual);
+                    pst.executeUpdate();
+                }
+                
+                if (!contrasena.isEmpty()) {
+                    String sqlUpdateUsu = "UPDATE usuarios SET usuario=?, contrasena=SHA2(?, 256) WHERE id_empleado=?";
+                    try (java.sql.PreparedStatement pst = con.prepareStatement(sqlUpdateUsu)) {
+                        pst.setString(1, usuario);
+                        pst.setString(2, contrasena);
+                        pst.setInt(3, idEmpleadoActual);
+                        pst.executeUpdate();
+                    }
+                } else {
+                    String sqlUpdateUsu = "UPDATE usuarios SET usuario=? WHERE id_empleado=?";
+                    try (java.sql.PreparedStatement pst = con.prepareStatement(sqlUpdateUsu)) {
+                        pst.setString(1, usuario);
+                        pst.setInt(2, idEmpleadoActual);
+                        pst.executeUpdate();
+                    }
+                }
+                
+                con.commit();
+                javax.swing.JOptionPane.showMessageDialog(this, "Empleado actualizado con éxito.");
+                limpiarCampos();
+            } catch (Exception ex) {
+                con.rollback();
+                javax.swing.JOptionPane.showMessageDialog(this, "Error al actualizar: " + ex.getMessage());
+            }
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error de conexión: " + ex.getMessage());
+        }
+    }
+
+    private void eliminarEmpleado() {
+        if (idEmpleadoActual == -1) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Primero debe buscar un empleado para dar de baja.");
+            return;
+        }
+        
+        int confirm = javax.swing.JOptionPane.showConfirmDialog(this, "¿Está seguro que desea dar de baja (eliminar) a este empleado?", "Confirmar Baja", javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirm != javax.swing.JOptionPane.YES_OPTION) return;
+        
+        try (java.sql.Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                String sqlDelUsu = "DELETE FROM usuarios WHERE id_empleado=?";
+                try (java.sql.PreparedStatement pst = con.prepareStatement(sqlDelUsu)) {
+                    pst.setInt(1, idEmpleadoActual);
+                    pst.executeUpdate();
+                }
+                
+                String sqlDelEmp = "DELETE FROM empleados WHERE id_empleado=?";
+                try (java.sql.PreparedStatement pst = con.prepareStatement(sqlDelEmp)) {
+                    pst.setInt(1, idEmpleadoActual);
+                    pst.executeUpdate();
+                }
+                
+                con.commit();
+                javax.swing.JOptionPane.showMessageDialog(this, "Empleado dado de baja con éxito.");
+                limpiarCampos();
+            } catch (Exception ex) {
+                con.rollback();
+                if (ex.getMessage().contains("foreign key") || ex.getMessage().contains("constraint")) {
+                    javax.swing.JOptionPane.showMessageDialog(this, "No se puede eliminar el empleado porque tiene registros asociados (ej. órdenes).");
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(this, "Error al dar de baja: " + ex.getMessage());
+                }
+            }
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Error de conexión: " + ex.getMessage());
+        }
+    }
+
     private void limpiarCampos() {
         jTNombre.setText("");
         jTAPaterno.setText("");
@@ -255,6 +493,14 @@ public class PSEmpleados extends javax.swing.JFrame {
         jTUsuario.setText("");
         jPContrasena.setText("");
         jPCContrasena.setText("");
+        
+        idEmpleadoActual = -1;
+        jLabel1.setText("CONTROL DE USUARIOS");
+        jBRegistrar.setEnabled(true);
+        if (jTableEmpleados != null) {
+            jTableEmpleados.clearSelection();
+        }
+        cargarEmpleados();
     }
 
     /**
@@ -292,7 +538,7 @@ public class PSEmpleados extends javax.swing.JFrame {
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("ALTA DE EMPLEADOS");
+        jLabel1.setText("CONTROL DE USUARIOS");
 
         jLNombre.setForeground(new java.awt.Color(255, 255, 255));
         jLNombre.setText("Nombre(s)");
@@ -315,7 +561,7 @@ public class PSEmpleados extends javax.swing.JFrame {
         jLAMaterno1.setForeground(new java.awt.Color(255, 255, 255));
         jLAMaterno1.setText("Puesto:");
 
-        jCBPuesto.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Administrativo", "Mesero", "Cocinero" }));
+        jCBPuesto.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Gerente", "Mesero", "Cocinero" }));
 
         jBRegresar.setText("REGRESAR");
 
