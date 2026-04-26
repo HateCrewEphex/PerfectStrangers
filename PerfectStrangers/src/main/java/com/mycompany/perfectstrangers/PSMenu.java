@@ -135,7 +135,7 @@ public class PSMenu extends javax.swing.JFrame {
             };
             
             // Reestilizar la barra inferior (jMenuInf)
-            // Cambiamos a FlowLayout y quitamos tamaños fijos para evitar que los textos largos se recorten ("Señora...")
+            // Cambiamos a FlowLayout y quitamos tamaños fijos para evitar que los textos largos se recorten
             jMenuInf.removeAll();
             jMenuInf.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 10));
             jMenuInf.setOpaque(true);
@@ -291,7 +291,7 @@ public class PSMenu extends javax.swing.JFrame {
         jMenu2.addMouseListener(clickHandlerSalir);
 
         // Configurar menú de Empleados dentro de la pestaña "Menú"
-        javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Control de usuarios");
+        javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Alta de Empleados");
         jItemEmpleados.addActionListener(evt -> abrirVentana(new PSEmpleados()));
         jMenu.add(jItemEmpleados);
         
@@ -305,8 +305,8 @@ public class PSMenu extends javax.swing.JFrame {
         jItemCombos.addActionListener(evt -> abrirVentana(new PSCombos()));
         jMenu.add(jItemCombos);
 
-        // Validar que solo un administrador o gerente pueda ver la pestaña "Menú"
-        if (Sesion.puestoEmpleado != null && (Sesion.puestoEmpleado.equalsIgnoreCase("Administrador") || Sesion.puestoEmpleado.equalsIgnoreCase("Administrativo") || Sesion.puestoEmpleado.equalsIgnoreCase("Gerente"))) {
+        // Validar que solo un administrador pueda ver la pestaña "Menú"
+        if (Sesion.puestoEmpleado != null && (Sesion.puestoEmpleado.equalsIgnoreCase("Administrador") || Sesion.puestoEmpleado.equalsIgnoreCase("Administrativo"))) {
             jMenu.setVisible(true);
         } else {
             jMenu.setVisible(false);

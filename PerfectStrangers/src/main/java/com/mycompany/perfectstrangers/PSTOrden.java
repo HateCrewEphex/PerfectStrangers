@@ -426,7 +426,7 @@ public class PSTOrden extends javax.swing.JFrame {
         for (int i = 1; i <= 15; i++) { jCNoMesa.addItem("Mesa " + i); }
 
         // ÁREA VISUAL DEL TICKET (JTable en lugar de Label)
-        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "C", "P", "IsCombo", "Notas"}, 0) {
+        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "C", "P", "IsCombo", "Notas", "X"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; } // Nada es editable directo desde click en celda
         };
@@ -438,9 +438,22 @@ public class PSTOrden extends javax.swing.JFrame {
         tablaOrden.getColumnModel().getColumn(5).setMinWidth(0); tablaOrden.getColumnModel().getColumn(5).setMaxWidth(0); tablaOrden.getColumnModel().getColumn(5).setWidth(0);
         
         // Ajuste de proporciones (Nombre muy largo, Cantidad (C) y Precio (P) breves)
-        tablaOrden.getColumnModel().getColumn(1).setPreferredWidth(190);
-        tablaOrden.getColumnModel().getColumn(2).setPreferredWidth(35);
-        tablaOrden.getColumnModel().getColumn(3).setPreferredWidth(60);
+        tablaOrden.getColumnModel().getColumn(1).setPreferredWidth(170);
+        tablaOrden.getColumnModel().getColumn(2).setPreferredWidth(30);
+        tablaOrden.getColumnModel().getColumn(3).setPreferredWidth(50);
+        tablaOrden.getColumnModel().getColumn(6).setPreferredWidth(35); // Para el botón X
+
+        // Evento para borrar fila al presionar en "X"
+        tablaOrden.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int row = tablaOrden.rowAtPoint(evt.getPoint());
+                int col = tablaOrden.columnAtPoint(evt.getPoint());
+                if (row >= 0 && col == 6) {
+                    modeloOrden.removeRow(row);
+                }
+            }
+        });
         
         // Estilizar tabla
         tablaOrden.setBackground(new java.awt.Color(20, 20, 20)); // Fondo ticket perrón
@@ -682,7 +695,7 @@ public class PSTOrden extends javax.swing.JFrame {
             if (item.checkBox.isSelected()) {
                 int cantidad = (int) item.spinnerCantidad.getValue();
                 String notas = item.notaEspecial != null ? item.notaEspecial.getText().trim() : "";
-                modeloOrden.addRow(new Object[]{ item.id, item.nombre, cantidad, item.precio, item.esCombo, notas });
+                modeloOrden.addRow(new Object[]{ item.id, item.nombre, cantidad, item.precio, item.esCombo, notas, "❌" });
                 item.checkBox.setSelected(false);
                 item.spinnerCantidad.setValue(1); // Resetear spinner
                 if (item.notaEspecial != null) {

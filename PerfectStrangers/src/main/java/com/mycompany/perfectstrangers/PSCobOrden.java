@@ -8,10 +8,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.awt.BorderLayout;
+import java.awt.Font;
 
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -450,6 +456,11 @@ public class PSCobOrden extends javax.swing.JFrame {
             return;
         }
 
+        if ("Tarjeta".equals(metodoPago)) {
+            cobrarConTerminalMercadoPago(numMesa, metodoPago);
+            return;
+        }
+
         if (!"Efectivo".equals(metodoPago)) {
             int confirmacion = JOptionPane.showConfirmDialog(
                 this,
@@ -506,6 +517,84 @@ public class PSCobOrden extends javax.swing.JFrame {
                 "Entregar Cambio",
                 JOptionPane.INFORMATION_MESSAGE);
         }
+
+        registrarPagoEnSistema(numMesa, metodoPago, montoRecibido, montoAbonado, cambioCalculado);
+    }
+
+    private void cobrarConTerminalMercadoPago(int numMesa, String metodoPago) {
+        int idOrdenSeleccionada = obtenerIdOrdenPendiente(numMesa);
+        if (idOrdenSeleccionada <= 0) {
+            JOptionPane.showMessageDialog(this, "No se encontró una orden pendiente para enviar a la terminal.");
+            return;
+        }
+
+        double totalCobro = totalActual;
+        JDialog dialogCargando = new JDialog(this, "Procesando con Mercado Pago", true);
+        JLabel lblMensaje = new JLabel("Esperando pago en la terminal física...", SwingConstants.CENTER);
+        lblMensaje.setFont(new Font("Arial", Font.BOLD, 14));
+        dialogCargando.add(lblMensaje, BorderLayout.CENTER);
+        dialogCargando.setSize(380, 150);
+        dialogCargando.setLocationRelativeTo(this);
+        dialogCargando.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        MercadoPagoAPI api = new MercadoPagoAPI();
+
+        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() {
+                return api.procesarCobroEnTerminal(totalCobro, idOrdenSeleccionada);
+            }
+
+            @Override
+            protected void done() {
+                dialogCargando.dispose();
+                try {
+                    boolean pagoExitoso = get();
+                    if (pagoExitoso) {
+                        registrarPagoEnSistema(numMesa, metodoPago, totalCobro, totalCobro, 0.0);
+                    } else {
+                        String mensaje = api.getUltimoErrorUsuario();
+                        if (mensaje == null || mensaje.isBlank()) {
+                            mensaje = "El cobro fue cancelado, rechazado o expiró en la terminal.";
+                        }
+                        JOptionPane.showMessageDialog(PSCobOrden.this,
+                            mensaje,
+                            "Atención",
+                            JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    logger.log(java.util.logging.Level.SEVERE, "Error al obtener respuesta de la terminal", ex);
+                    JOptionPane.showMessageDialog(PSCobOrden.this,
+                        "Error interno al procesar el pago: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+
+        worker.execute();
+        dialogCargando.setVisible(true);
+    }
+
+    private int obtenerIdOrdenPendiente(int numMesa) {
+        String sql = "SELECT o.id_orden FROM ordenes o " +
+                 "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregada' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
+                 "ORDER BY o.fecha_hora ASC, o.id_orden ASC LIMIT 1";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setInt(1, numMesa);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_orden");
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al obtener la orden pendiente para terminal", ex);
+        }
+        return -1;
+    }
+
+    private void registrarPagoEnSistema(int numMesa, String metodoPago, double montoRecibido, double montoAbonado, double cambioCalculado) {
 
         String sqlOrdenes = "SELECT o.id_orden, o.total_calculado, COALESCE(pagos.total_pagado, 0) AS total_pagado " +
                  "FROM ordenes o " +
