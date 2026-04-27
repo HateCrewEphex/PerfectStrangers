@@ -341,7 +341,7 @@ public class PSCobOrden extends javax.swing.JFrame {
                  "COALESCE(SUM(o.total_calculado - COALESCE(pagos.total_pagado, 0)), 0) AS total_pendiente " +
                  "FROM ordenes o " +
                  "LEFT JOIN (SELECT id_orden, SUM(monto_pagado) AS total_pagado FROM pagos GROUP BY id_orden) pagos ON o.id_orden = pagos.id_orden " +
-                 "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregada' AND o.estado_pago IN ('Pendiente', 'Parcial')";
+             "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregado' AND o.estado_pago IN ('Pendiente', 'Parcial')";
 
         // Consulta para obtener todas las órdenes entregadas que sigan pendientes o parciales en esa mesa
         String sql = "SELECT o.id_orden, o.mesa, e.nombre AS nomEmp, p.nombre AS nomProd, p.precio AS costoP, d.cantidad AS cant, d.notas_especiales AS nota " +
@@ -349,7 +349,7 @@ public class PSCobOrden extends javax.swing.JFrame {
                  "INNER JOIN empleados e ON o.id_empleado = e.id_empleado " +
                  "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
                  "INNER JOIN productos p ON d.id_producto = p.id_producto " +
-             "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregada' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
+             "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregado' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
              "ORDER BY o.fecha_hora ASC, o.id_orden ASC, d.id_detalle ASC";
 
         try (Connection con = DBConnection.getConnection();
@@ -577,7 +577,7 @@ public class PSCobOrden extends javax.swing.JFrame {
 
     private int obtenerIdOrdenPendiente(int numMesa) {
         String sql = "SELECT o.id_orden FROM ordenes o " +
-                 "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregada' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
+             "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregado' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
                  "ORDER BY o.fecha_hora ASC, o.id_orden ASC LIMIT 1";
 
         try (Connection con = DBConnection.getConnection();
@@ -599,9 +599,9 @@ public class PSCobOrden extends javax.swing.JFrame {
         String sqlOrdenes = "SELECT o.id_orden, o.total_calculado, COALESCE(pagos.total_pagado, 0) AS total_pagado " +
                  "FROM ordenes o " +
                  "LEFT JOIN (SELECT id_orden, SUM(monto_pagado) AS total_pagado FROM pagos GROUP BY id_orden) pagos ON o.id_orden = pagos.id_orden " +
-                 "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregada' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
+             "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregado' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
                  "ORDER BY o.fecha_hora ASC, o.id_orden ASC";
-        String sqlPago = "INSERT INTO pagos (id_orden, metodo_pago, monto_pagado, monto_recibido, cambio) VALUES (?, ?, ?, ?, ?)";
+        String sqlPago = "INSERT INTO pagos (id_orden, monto_pagado, metodo_pago, estado_pago, referencia_externa) VALUES (?, ?, ?, ?, ?)";
         String sqlOrden = "UPDATE ordenes SET estado_pago = ? WHERE id_orden = ?";
         double saldoRestante = montoAbonado;
         boolean primerPagoRegistrado = false;
@@ -631,17 +631,16 @@ public class PSCobOrden extends javax.swing.JFrame {
                         double restanteDespues = Math.max(restanteOrden - aplicado, 0.0);
 
                         pstPago.setInt(1, idOrden);
-                        pstPago.setString(2, metodoPago);
-                        pstPago.setDouble(3, aplicado);
-                        
-                        // Guardar el monto recibido real y el cambio solo en el primer registro de pago de esta transacción para no duplicarlo en BD
-                        if (!primerPagoRegistrado) {
-                            pstPago.setDouble(4, montoRecibido);
-                            pstPago.setDouble(5, cambioCalculado);
+                        pstPago.setDouble(2, aplicado);
+                        pstPago.setString(3, metodoPago);
+                        pstPago.setString(4, "Completado");
+
+                        // Referencia externa opcional para tarjeta/transferencia.
+                        if (!primerPagoRegistrado && !"Efectivo".equals(metodoPago)) {
+                            pstPago.setString(5, "Pago validado en terminal/externo");
                             primerPagoRegistrado = true;
                         } else {
-                            pstPago.setDouble(4, aplicado);
-                            pstPago.setDouble(5, 0.0);
+                            pstPago.setString(5, null);
                         }
                         
                         pstPago.addBatch();

@@ -26,15 +26,7 @@ public class PSConOrder extends javax.swing.JFrame {
      * Creates new form PSConOrder
      */
     public PSConOrder() {
-        initComponents();
-
-        try {
-            DBConnection.asegurarEstadoDetalleOrden();
-        } catch (SQLException ex) {
-            logger.log(java.util.logging.Level.SEVERE, "No fue posible preparar el esquema de detalle de órdenes", ex);
-        }
-        
-        // Reset background so FlatLaf can apply its dark theme completely
+        initComponents();// Reset background so FlatLaf can apply its dark theme completely
         jBEntregarOrden.setBackground(null);
         jBRegresar.setBackground(null);
         

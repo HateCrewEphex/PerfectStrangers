@@ -281,8 +281,9 @@ public class PSEmpleados extends javax.swing.JFrame {
         String usuario = jTUsuario.getText().trim();
         String contrasena = new String(jPContrasena.getPassword());
         String cContrasena = new String(jPCContrasena.getPassword());
+        String nombreCompleto = construirNombreCompleto(nombre, aPaterno, aMaterno);
 
-        if (nombre.isEmpty() || aPaterno.isEmpty() || puesto.isEmpty() || usuario.isEmpty() || contrasena.isEmpty()) {
+        if (nombreCompleto.isEmpty() || puesto.isEmpty() || usuario.isEmpty() || contrasena.isEmpty()) {
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos obligatorios.");
             return;
         }
@@ -293,42 +294,17 @@ public class PSEmpleados extends javax.swing.JFrame {
         }
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            con.setAutoCommit(false); // Para iniciar transacción
-            
-            try {
-                String sqlEmpleado = "INSERT INTO empleados (nombre, ap_paterno, ap_materno, puesto) VALUES (?, ?, ?, ?)";
-                int nuevoIdEmpleado;
-                try (java.sql.PreparedStatement pst1 = con.prepareStatement(sqlEmpleado, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-                    pst1.setString(1, nombre);
-                    pst1.setString(2, aPaterno);
-                    pst1.setString(3, aMaterno);
-                    pst1.setString(4, puesto);
-                    pst1.executeUpdate();
-
-                    try (java.sql.ResultSet rsKeys = pst1.getGeneratedKeys()) {
-                        if (!rsKeys.next()) {
-                            throw new java.sql.SQLException("No fue posible obtener el ID del empleado recién creado.");
-                        }
-                        nuevoIdEmpleado = rsKeys.getInt(1);
-                    }
-
-                    String sqlUsuario = "INSERT INTO usuarios (usuario, contrasena, id_empleado) VALUES (?, SHA2(?, 256), ?)";
-                    try (java.sql.PreparedStatement pst2 = con.prepareStatement(sqlUsuario)) {
-                        pst2.setString(1, usuario);
-                        pst2.setString(2, contrasena);
-                        pst2.setInt(3, nuevoIdEmpleado);
-                        pst2.executeUpdate();
-                    }
-                }
-                
-                con.commit();
-                javax.swing.JOptionPane.showMessageDialog(this, "Empleado y usuario registrados con éxito.");
-                limpiarCampos();
-            } catch (Exception ex) {
-                con.rollback();
-                javax.swing.JOptionPane.showMessageDialog(this, "Error al registrar: " + ex.getMessage());
-                logger.log(java.util.logging.Level.SEVERE, "Error al registrar empleado", ex);
+            String sqlEmpleado = "INSERT INTO empleados (nombre, puesto, usuario, contrasena, estado_empleado) VALUES (?, ?, ?, ?, TRUE)";
+            try (java.sql.PreparedStatement pst = con.prepareStatement(sqlEmpleado)) {
+                pst.setString(1, nombreCompleto);
+                pst.setString(2, puesto);
+                pst.setString(3, usuario);
+                pst.setString(4, contrasena);
+                pst.executeUpdate();
             }
+
+            javax.swing.JOptionPane.showMessageDialog(this, "Empleado y usuario registrados con éxito.");
+            limpiarCampos();
         } catch (java.sql.SQLException ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Error de conexión: " + ex.getMessage());
             logger.log(java.util.logging.Level.SEVERE, "Error de conexión", ex);
@@ -338,15 +314,16 @@ public class PSEmpleados extends javax.swing.JFrame {
     private void cargarEmpleados() {
         modeloTabla.setRowCount(0);
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sql = "SELECT e.id_empleado, e.nombre, e.ap_paterno, e.ap_materno, e.puesto, u.usuario FROM empleados e LEFT JOIN usuarios u ON e.id_empleado = u.id_empleado ORDER BY e.id_empleado ASC";
+            String sql = "SELECT id_empleado, nombre, puesto, usuario FROM empleados ORDER BY id_empleado ASC";
             try (java.sql.PreparedStatement pst = con.prepareStatement(sql);
                  java.sql.ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
+                    String[] partesNombre = descomponerNombre(rs.getString("nombre"));
                     modeloTabla.addRow(new Object[]{
                         rs.getInt("id_empleado"),
-                        rs.getString("nombre"),
-                        rs.getString("ap_paterno"),
-                        rs.getString("ap_materno"),
+                        partesNombre[0],
+                        partesNombre[1],
+                        partesNombre[2],
                         rs.getString("puesto"),
                         rs.getString("usuario")
                     });
@@ -392,8 +369,9 @@ public class PSEmpleados extends javax.swing.JFrame {
         String usuario = jTUsuario.getText().trim();
         String contrasena = new String(jPContrasena.getPassword());
         String cContrasena = new String(jPCContrasena.getPassword());
+        String nombreCompleto = construirNombreCompleto(nombre, aPaterno, aMaterno);
 
-        if (nombre.isEmpty() || aPaterno.isEmpty() || puesto.isEmpty() || usuario.isEmpty()) {
+        if (nombreCompleto.isEmpty() || puesto.isEmpty() || usuario.isEmpty()) {
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena los campos obligatorios (nombre, apellido, puesto, usuario).");
             return;
         }
@@ -404,40 +382,31 @@ public class PSEmpleados extends javax.swing.JFrame {
         }
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            con.setAutoCommit(false);
             try {
-                String sqlUpdateEmp = "UPDATE empleados SET nombre=?, ap_paterno=?, ap_materno=?, puesto=? WHERE id_empleado=?";
-                try (java.sql.PreparedStatement pst = con.prepareStatement(sqlUpdateEmp)) {
-                    pst.setString(1, nombre);
-                    pst.setString(2, aPaterno);
-                    pst.setString(3, aMaterno);
-                    pst.setString(4, puesto);
-                    pst.setInt(5, idEmpleadoActual);
-                    pst.executeUpdate();
-                }
-                
                 if (!contrasena.isEmpty()) {
-                    String sqlUpdateUsu = "UPDATE usuarios SET usuario=?, contrasena=SHA2(?, 256) WHERE id_empleado=?";
-                    try (java.sql.PreparedStatement pst = con.prepareStatement(sqlUpdateUsu)) {
-                        pst.setString(1, usuario);
-                        pst.setString(2, contrasena);
-                        pst.setInt(3, idEmpleadoActual);
+                    String sql = "UPDATE empleados SET nombre=?, puesto=?, usuario=?, contrasena=? WHERE id_empleado=?";
+                    try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                        pst.setString(1, nombreCompleto);
+                        pst.setString(2, puesto);
+                        pst.setString(3, usuario);
+                        pst.setString(4, contrasena);
+                        pst.setInt(5, idEmpleadoActual);
                         pst.executeUpdate();
                     }
                 } else {
-                    String sqlUpdateUsu = "UPDATE usuarios SET usuario=? WHERE id_empleado=?";
-                    try (java.sql.PreparedStatement pst = con.prepareStatement(sqlUpdateUsu)) {
-                        pst.setString(1, usuario);
-                        pst.setInt(2, idEmpleadoActual);
+                    String sql = "UPDATE empleados SET nombre=?, puesto=?, usuario=? WHERE id_empleado=?";
+                    try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
+                        pst.setString(1, nombreCompleto);
+                        pst.setString(2, puesto);
+                        pst.setString(3, usuario);
+                        pst.setInt(4, idEmpleadoActual);
                         pst.executeUpdate();
                     }
                 }
-                
-                con.commit();
+
                 javax.swing.JOptionPane.showMessageDialog(this, "Empleado actualizado con éxito.");
                 limpiarCampos();
             } catch (Exception ex) {
-                con.rollback();
                 javax.swing.JOptionPane.showMessageDialog(this, "Error al actualizar: " + ex.getMessage());
             }
         } catch (Exception ex) {
@@ -455,34 +424,61 @@ public class PSEmpleados extends javax.swing.JFrame {
         if (confirm != javax.swing.JOptionPane.YES_OPTION) return;
         
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            con.setAutoCommit(false);
-            try {
-                String sqlDelUsu = "DELETE FROM usuarios WHERE id_empleado=?";
-                try (java.sql.PreparedStatement pst = con.prepareStatement(sqlDelUsu)) {
-                    pst.setInt(1, idEmpleadoActual);
-                    pst.executeUpdate();
-                }
-                
-                String sqlDelEmp = "DELETE FROM empleados WHERE id_empleado=?";
-                try (java.sql.PreparedStatement pst = con.prepareStatement(sqlDelEmp)) {
-                    pst.setInt(1, idEmpleadoActual);
-                    pst.executeUpdate();
-                }
-                
-                con.commit();
-                javax.swing.JOptionPane.showMessageDialog(this, "Empleado dado de baja con éxito.");
-                limpiarCampos();
-            } catch (Exception ex) {
-                con.rollback();
-                if (ex.getMessage().contains("foreign key") || ex.getMessage().contains("constraint")) {
-                    javax.swing.JOptionPane.showMessageDialog(this, "No se puede eliminar el empleado porque tiene registros asociados (ej. órdenes).");
-                } else {
-                    javax.swing.JOptionPane.showMessageDialog(this, "Error al dar de baja: " + ex.getMessage());
-                }
+            String sqlBaja = "UPDATE empleados SET estado_empleado = FALSE WHERE id_empleado=?";
+            try (java.sql.PreparedStatement pst = con.prepareStatement(sqlBaja)) {
+                pst.setInt(1, idEmpleadoActual);
+                pst.executeUpdate();
             }
+            javax.swing.JOptionPane.showMessageDialog(this, "Empleado dado de baja con éxito.");
+            limpiarCampos();
         } catch (Exception ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Error de conexión: " + ex.getMessage());
         }
+    }
+
+    private String construirNombreCompleto(String nombre, String aPaterno, String aMaterno) {
+        StringBuilder completo = new StringBuilder();
+        if (nombre != null && !nombre.isBlank()) {
+            completo.append(nombre.trim());
+        }
+        if (aPaterno != null && !aPaterno.isBlank()) {
+            if (completo.length() > 0) completo.append(' ');
+            completo.append(aPaterno.trim());
+        }
+        if (aMaterno != null && !aMaterno.isBlank()) {
+            if (completo.length() > 0) completo.append(' ');
+            completo.append(aMaterno.trim());
+        }
+        return completo.toString();
+    }
+
+    private String[] descomponerNombre(String nombreCompleto) {
+        String[] partes = new String[]{"", "", ""};
+        if (nombreCompleto == null || nombreCompleto.isBlank()) {
+            return partes;
+        }
+
+        String[] tokens = nombreCompleto.trim().split("\\s+");
+        if (tokens.length == 1) {
+            partes[0] = tokens[0];
+            return partes;
+        }
+
+        if (tokens.length == 2) {
+            partes[0] = tokens[0];
+            partes[1] = tokens[1];
+            return partes;
+        }
+
+        partes[0] = tokens[0];
+        partes[1] = tokens[1];
+        StringBuilder restante = new StringBuilder();
+        for (int i = 2; i < tokens.length; i++) {
+            if (restante.length() > 0) restante.append(' ');
+            restante.append(tokens[i]);
+        }
+        partes[2] = restante.toString();
+        return partes;
     }
 
     private void limpiarCampos() {

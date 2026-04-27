@@ -1,8 +1,5 @@
 package com.mycompany.perfectstrangers;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /*
@@ -362,33 +359,21 @@ public class PSInicio extends javax.swing.JFrame {
             jLAccesoIncorrecto.setText("Usuario y contraseña son obligatorios.");
             return;
         }
+        try {
+            Empleado empleado = ServicioSesion.autenticar(usuario, password);
 
-        String sql = "SELECT u.id_empleado, e.nombre, e.ap_paterno, e.puesto " +
-                     "FROM usuarios u " +
-                     "JOIN empleados e ON u.id_empleado = e.id_empleado " +
-                     "WHERE u.usuario = ? AND u.contrasena = SHA2(?, 256)";
+            // Compatibilidad temporal con pantallas que aun usan Sesion.
+            Sesion.idEmpleado = empleado.getIdEmpleado();
+            Sesion.nombreEmpleado = empleado.getNombre() != null ? empleado.getNombre().trim() : "";
+            Sesion.puestoEmpleado = empleado.getPuesto() != null ? empleado.getPuesto().trim() : "Empleado";
 
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, usuario);
-            statement.setString(2, password);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    Sesion.idEmpleado = resultSet.getInt("id_empleado");
-                    String nombre = resultSet.getString("nombre");
-                    String ap = resultSet.getString("ap_paterno");
-                    Sesion.nombreEmpleado = (nombre != null ? nombre.trim() : "") + 
-                                            (ap != null ? " " + ap.trim() : "");
-                    Sesion.puestoEmpleado = resultSet.getString("puesto") != null ? resultSet.getString("puesto").trim() : "Empleado";
-
-                    jLAccesoIncorrecto.setText("");
-                    java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
-                    dispose();
-                } else {
-                    jLAccesoIncorrecto.setText("Usuario o contraseña incorrectos.");
-                }
-            }
+            jLAccesoIncorrecto.setText("");
+            jPFContraseña.setText("");
+            java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+            dispose();
+        } catch (IllegalArgumentException ex) {
+            jPFContraseña.setText("");
+            jLAccesoIncorrecto.setText(ex.getMessage());
         } catch (SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al validar credenciales", ex);
             jLAccesoIncorrecto.setText("No fue posible conectar con la base de datos.");

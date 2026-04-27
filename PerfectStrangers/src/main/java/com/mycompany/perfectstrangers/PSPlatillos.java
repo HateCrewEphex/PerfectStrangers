@@ -289,7 +289,7 @@ public class PSPlatillos extends javax.swing.JFrame {
     private void cargarProductos() {
         modeloTabla.setRowCount(0);
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sql = "SELECT id_producto, categoria, nombre, precio, es_combo FROM productos ORDER BY id_producto ASC";
+            String sql = "SELECT id_producto, categoria, nombre, precio, disponible FROM productos ORDER BY id_producto ASC";
             try (java.sql.PreparedStatement pst = con.prepareStatement(sql);
                  java.sql.ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
@@ -298,7 +298,7 @@ public class PSPlatillos extends javax.swing.JFrame {
                         rs.getString("categoria"),
                         rs.getString("nombre"),
                         rs.getDouble("precio"),
-                        rs.getBoolean("es_combo") ? "Sí" : "No"
+                        rs.getBoolean("disponible") ? "Sí" : "No"
                     });
                 }
             }
@@ -327,7 +327,7 @@ public class PSPlatillos extends javax.swing.JFrame {
         String nombre = jTNomPlatillo.getText().trim();
         String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillos";
         String precioStr = jTPrecio.getText().trim();
-        boolean esCombo = "Sí".equals(jComboBox1.getSelectedItem());
+        boolean disponible = "Sí".equals(jComboBox1.getSelectedItem());
 
         if (nombre.isEmpty() || precioStr.isEmpty()) {
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos.");
@@ -343,12 +343,12 @@ public class PSPlatillos extends javax.swing.JFrame {
         }
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sql = "INSERT INTO productos (categoria, nombre, precio, es_combo) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO productos (categoria, nombre, precio, disponible) VALUES (?, ?, ?, ?)";
             try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
                 pst.setString(1, categoria);
                 pst.setString(2, nombre);
                 pst.setDouble(3, precio);
-                pst.setBoolean(4, esCombo);
+                pst.setBoolean(4, disponible);
                 pst.executeUpdate();
             }
             javax.swing.JOptionPane.showMessageDialog(this, "Producto registrado con éxito.");
@@ -367,7 +367,7 @@ public class PSPlatillos extends javax.swing.JFrame {
         String nombre = jTNomPlatillo.getText().trim();
         String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillos";
         String precioStr = jTPrecio.getText().trim();
-        boolean esCombo = "Sí".equals(jComboBox1.getSelectedItem());
+        boolean disponible = "Sí".equals(jComboBox1.getSelectedItem());
 
         if (nombre.isEmpty() || precioStr.isEmpty()) {
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor llena todos los campos.");
@@ -383,12 +383,12 @@ public class PSPlatillos extends javax.swing.JFrame {
         }
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sql = "UPDATE productos SET categoria=?, nombre=?, precio=?, es_combo=? WHERE id_producto=?";
+            String sql = "UPDATE productos SET categoria=?, nombre=?, precio=?, disponible=? WHERE id_producto=?";
             try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
                 pst.setString(1, categoria);
                 pst.setString(2, nombre);
                 pst.setDouble(3, precio);
-                pst.setBoolean(4, esCombo);
+                pst.setBoolean(4, disponible);
                 pst.setInt(5, idProductoActual);
                 pst.executeUpdate();
             }

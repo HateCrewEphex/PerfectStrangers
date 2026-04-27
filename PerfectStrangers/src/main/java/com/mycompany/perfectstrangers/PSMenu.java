@@ -40,12 +40,22 @@ public class PSMenu extends javax.swing.JFrame {
     }
 
     private void configurarSesionDatos() {
-        // Cargar datos de la sesión guardada del login
-        if (Sesion.nombreEmpleado != null && !Sesion.nombreEmpleado.isEmpty()) {
-            jUsuario.setText(Sesion.nombreEmpleado);
+        // Priorizar la nueva sesion centralizada y mantener fallback temporal.
+        String nombreSesion = ServicioSesion.getNombreEmpleadoActual();
+        String puestoSesion = ServicioSesion.getPuestoEmpleadoActual();
+
+        if (nombreSesion == null || nombreSesion.isBlank()) {
+            nombreSesion = Sesion.nombreEmpleado;
         }
-        if (Sesion.puestoEmpleado != null && !Sesion.puestoEmpleado.isEmpty()) {
-            jPuesto.setText(Sesion.puestoEmpleado);
+        if (puestoSesion == null || puestoSesion.isBlank()) {
+            puestoSesion = Sesion.puestoEmpleado;
+        }
+
+        if (nombreSesion != null && !nombreSesion.isBlank()) {
+            jUsuario.setText(nombreSesion);
+        }
+        if (puestoSesion != null && !puestoSesion.isBlank()) {
+            jPuesto.setText(puestoSesion);
         }
 
         // Configurar reloj / timer
@@ -256,7 +266,7 @@ public class PSMenu extends javax.swing.JFrame {
             public void mousePressed(java.awt.event.MouseEvent e) {
                 if (javax.swing.SwingUtilities.isLeftMouseButton(e)) {
                     javax.swing.MenuSelectionManager.defaultManager().clearSelectedPath();
-                    abrirVentana(new PSInventario());
+                    abrirVentanaConPermiso("gestionar_inventario", new PSInventario());
                 }
             }
         };
@@ -266,7 +276,7 @@ public class PSMenu extends javax.swing.JFrame {
             public void mousePressed(java.awt.event.MouseEvent e) {
                 if (javax.swing.SwingUtilities.isLeftMouseButton(e)) {
                     javax.swing.MenuSelectionManager.defaultManager().clearSelectedPath();
-                    abrirVentana(new PSHistorial());
+                    abrirVentanaConPermiso("ver_reportes", new PSHistorial());
                 }
             }
         };
@@ -292,32 +302,48 @@ public class PSMenu extends javax.swing.JFrame {
 
         // Configurar menú de Empleados dentro de la pestaña "Menú"
         javax.swing.JMenuItem jItemEmpleados = new javax.swing.JMenuItem("Alta de Empleados");
-        jItemEmpleados.addActionListener(evt -> abrirVentana(new PSEmpleados()));
+        jItemEmpleados.addActionListener(evt -> abrirVentanaConPermiso("gestionar_empleados", new PSEmpleados()));
         jMenu.add(jItemEmpleados);
         
         // Configurar menú de Platillos dentro de la pestaña "Menú"
         javax.swing.JMenuItem jItemPlatillos = new javax.swing.JMenuItem("Control de Platillos");
-        jItemPlatillos.addActionListener(evt -> abrirVentana(new PSPlatillos()));
+        jItemPlatillos.addActionListener(evt -> abrirVentanaConPermiso("gestionar_inventario", new PSPlatillos()));
         jMenu.add(jItemPlatillos);
 
         // Configurar menú de Combos dentro de la pestaña "Menú"
         javax.swing.JMenuItem jItemCombos = new javax.swing.JMenuItem("Control de Combos");
-        jItemCombos.addActionListener(evt -> abrirVentana(new PSCombos()));
+        jItemCombos.addActionListener(evt -> abrirVentanaConPermiso("gestionar_inventario", new PSCombos()));
         jMenu.add(jItemCombos);
 
-        // Validar que solo un administrador pueda ver la pestaña "Menú"
-        if (Sesion.puestoEmpleado != null && (Sesion.puestoEmpleado.equalsIgnoreCase("Administrador") || Sesion.puestoEmpleado.equalsIgnoreCase("Administrativo"))) {
-            jMenu.setVisible(true);
-        } else {
-            jMenu.setVisible(false);
-        }
+        // Aplicar visibilidad por permisos del nuevo modelo de roles.
+        jMenu.setVisible(ServicioSesion.tienePermiso("gestionar_empleados") || ServicioSesion.tienePermiso("gestionar_inventario"));
+        JInventario.setVisible(ServicioSesion.tienePermiso("gestionar_inventario"));
+        jMenu1.setVisible(ServicioSesion.tienePermiso("ver_reportes"));
 
-        jMOTomar.addActionListener(evt -> abrirVentana(new PSTOrden()));
-        jMOConsultar.addActionListener(evt -> abrirVentana(new PSConOrder()));
-        jMOCobrar.addActionListener(evt -> abrirVentana(new PSCobOrden()));
+        jMOTomar.setVisible(ServicioSesion.tienePermiso("crear_orden"));
+        jMOConsultar.setVisible(ServicioSesion.tienePermiso("ver_ordenes"));
+        jMOCobrar.setVisible(ServicioSesion.tienePermiso("cobrar"));
+        jMOrdenes.setVisible(jMOTomar.isVisible() || jMOConsultar.isVisible() || jMOCobrar.isVisible());
+
+        jMOTomar.addActionListener(evt -> abrirVentanaConPermiso("crear_orden", new PSTOrden()));
+        jMOConsultar.addActionListener(evt -> abrirVentanaConPermiso("ver_ordenes", new PSConOrder()));
+        jMOCobrar.addActionListener(evt -> abrirVentanaConPermiso("cobrar", new PSCobOrden()));
     }
 
     private boolean isAperturaEnProgreso = false;
+
+    private void abrirVentanaConPermiso(String permiso, javax.swing.JFrame ventana) {
+        if (!ServicioSesion.tienePermiso(permiso)) {
+            javax.swing.JOptionPane.showMessageDialog(
+                this,
+                "No tienes permiso para acceder a esta sección.",
+                "Acceso denegado",
+                javax.swing.JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+        abrirVentana(ventana);
+    }
 
     private void abrirVentana(javax.swing.JFrame ventana) {
         if (isAperturaEnProgreso) return;

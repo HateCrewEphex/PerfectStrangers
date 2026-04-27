@@ -8,7 +8,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
+import javax.swing.JFileChooser;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -18,6 +22,14 @@ import javax.swing.table.DefaultTableModel;
 public class PSHistorial extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSHistorial.class.getName());
+    private javax.swing.JComboBox<String> cbMetodoPagoFiltro;
+    private javax.swing.JComboBox<String> cbMeseroFiltro;
+    private javax.swing.JComboBox<String> cbPeriodoFiltro;
+    private com.toedter.calendar.JDateChooser dcFechaInicio;
+    private com.toedter.calendar.JDateChooser dcFechaFin;
+    private javax.swing.JButton btnAplicarFiltros;
+    private javax.swing.JButton btnLimpiarFiltros;
+    private javax.swing.JButton btnGenerarPdf;
 
     /**
      * Creates new form PSHistorial
@@ -100,18 +112,150 @@ public class PSHistorial extends javax.swing.JFrame {
 
         javax.swing.JPanel filterPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
         filterPanel.setOpaque(false);
-        jLOrdenar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
-        jLOrdenar.setForeground(tonoOro);
-        jCFiltro.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 18));
-        jCFiltro.setPreferredSize(new java.awt.Dimension(250, 40));
-        jCFiltro.setBackground(new java.awt.Color(35, 35, 40));
-        jCFiltro.setForeground(java.awt.Color.WHITE);
-        jCFiltro.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+        javax.swing.JLabel lblRango = new javax.swing.JLabel("Rango");
+        lblRango.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        lblRango.setForeground(tonoOro);
+
+        javax.swing.JLabel lblPeriodo = new javax.swing.JLabel("Periodo");
+        lblPeriodo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        lblPeriodo.setForeground(tonoOro);
+
+        cbPeriodoFiltro = new javax.swing.JComboBox<>(new String[]{
+            "Rango personalizado",
+            "Dia actual",
+            "Semana actual",
+            "Mes actual",
+            "Anio actual"
+        });
+        cbPeriodoFiltro.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        cbPeriodoFiltro.setPreferredSize(new java.awt.Dimension(170, 36));
+        cbPeriodoFiltro.setBackground(new java.awt.Color(35, 35, 40));
+        cbPeriodoFiltro.setForeground(java.awt.Color.WHITE);
+        cbPeriodoFiltro.setBorder(javax.swing.BorderFactory.createCompoundBorder(
             javax.swing.BorderFactory.createLineBorder(new java.awt.Color(90, 90, 95), 1),
             javax.swing.BorderFactory.createEmptyBorder(4, 8, 4, 8)
         ));
-        filterPanel.add(jLOrdenar);
-        filterPanel.add(jCFiltro);
+
+        dcFechaInicio = new com.toedter.calendar.JDateChooser();
+        dcFechaFin = new com.toedter.calendar.JDateChooser();
+        dcFechaInicio.setDateFormatString("dd/MM/yyyy");
+        dcFechaFin.setDateFormatString("dd/MM/yyyy");
+
+        Calendar cal = Calendar.getInstance();
+        java.util.Date fin = cal.getTime();
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        java.util.Date inicio = cal.getTime();
+        dcFechaInicio.setDate(inicio);
+        dcFechaFin.setDate(fin);
+
+        for (com.toedter.calendar.JDateChooser dateChooser : new com.toedter.calendar.JDateChooser[]{dcFechaInicio, dcFechaFin}) {
+            dateChooser.setPreferredSize(new java.awt.Dimension(140, 36));
+            dateChooser.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+            dateChooser.setForeground(java.awt.Color.WHITE);
+            dateChooser.setBackground(new java.awt.Color(35, 35, 40));
+            dateChooser.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(90, 90, 95), 1),
+                javax.swing.BorderFactory.createEmptyBorder(2, 6, 2, 6)
+            ));
+
+            javax.swing.JTextField editor = (javax.swing.JTextField) dateChooser.getDateEditor().getUiComponent();
+            editor.setBackground(new java.awt.Color(35, 35, 40));
+            editor.setForeground(java.awt.Color.WHITE);
+            editor.setCaretColor(java.awt.Color.WHITE);
+            editor.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 6, 0, 6));
+
+            // Evitar que JDateChooser cambie el color de texto a negro u otro oscuro
+            editor.addPropertyChangeListener("foreground", evt -> {
+                if (!java.awt.Color.WHITE.equals(evt.getNewValue())) {
+                    editor.setForeground(java.awt.Color.WHITE);
+                }
+            });
+
+            // Customizar el calendario desplegable (JCalendar)
+            com.toedter.calendar.JCalendar calendar = dateChooser.getJCalendar();
+            calendar.setBackground(new java.awt.Color(35, 35, 40));
+            calendar.setForeground(java.awt.Color.WHITE);
+            if (calendar.getDayChooser() != null) {
+                calendar.getDayChooser().setBackground(new java.awt.Color(35, 35, 40));
+                calendar.getDayChooser().setForeground(java.awt.Color.WHITE);
+                calendar.getDayChooser().setDecorationBackgroundColor(new java.awt.Color(18, 18, 20));
+                calendar.getDayChooser().setSundayForeground(tonoOro);
+                calendar.getDayChooser().setWeekdayForeground(java.awt.Color.WHITE);
+                
+                javax.swing.JPanel dayPanel = calendar.getDayChooser().getDayPanel();
+                if (dayPanel != null) {
+                    dayPanel.setBackground(new java.awt.Color(35, 35, 40));
+                    for (java.awt.Component c : dayPanel.getComponents()) {
+                        if (c instanceof javax.swing.JButton btn) {
+                            btn.setBackground(new java.awt.Color(35, 35, 40));
+                            btn.setForeground(java.awt.Color.WHITE);
+                            btn.setFocusPainted(false);
+                        }
+                    }
+                }
+            }
+        }
+
+        javax.swing.JLabel lblMetodo = new javax.swing.JLabel("Método");
+        lblMetodo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        lblMetodo.setForeground(tonoOro);
+
+        cbMetodoPagoFiltro = new javax.swing.JComboBox<>();
+        cbMetodoPagoFiltro.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        cbMetodoPagoFiltro.setPreferredSize(new java.awt.Dimension(160, 36));
+        cbMetodoPagoFiltro.setBackground(new java.awt.Color(35, 35, 40));
+        cbMetodoPagoFiltro.setForeground(java.awt.Color.WHITE);
+        cbMetodoPagoFiltro.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(90, 90, 95), 1),
+            javax.swing.BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+
+        javax.swing.JLabel lblMesero = new javax.swing.JLabel("Mesero");
+        lblMesero.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        lblMesero.setForeground(tonoOro);
+
+        cbMeseroFiltro = new javax.swing.JComboBox<>();
+        cbMeseroFiltro.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        cbMeseroFiltro.setPreferredSize(new java.awt.Dimension(180, 36));
+        cbMeseroFiltro.setBackground(new java.awt.Color(35, 35, 40));
+        cbMeseroFiltro.setForeground(java.awt.Color.WHITE);
+        cbMeseroFiltro.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(90, 90, 95), 1),
+            javax.swing.BorderFactory.createEmptyBorder(4, 8, 4, 8)
+        ));
+
+        btnAplicarFiltros = new javax.swing.JButton("Aplicar");
+        btnAplicarFiltros.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        btnAplicarFiltros.setBackground(new java.awt.Color(44, 44, 48));
+        btnAplicarFiltros.setForeground(tonoOro);
+        btnAplicarFiltros.setFocusPainted(false);
+        btnAplicarFiltros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
+
+        btnLimpiarFiltros = new javax.swing.JButton("Limpiar");
+        btnLimpiarFiltros.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        btnLimpiarFiltros.setBackground(new java.awt.Color(44, 44, 48));
+        btnLimpiarFiltros.setForeground(tonoOro);
+        btnLimpiarFiltros.setFocusPainted(false);
+        btnLimpiarFiltros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
+
+        filterPanel.add(lblRango);
+        filterPanel.add(dcFechaInicio);
+        filterPanel.add(new javax.swing.JLabel("a"));
+        filterPanel.add(dcFechaFin);
+        filterPanel.add(lblPeriodo);
+        filterPanel.add(cbPeriodoFiltro);
+        filterPanel.add(lblMetodo);
+        filterPanel.add(cbMetodoPagoFiltro);
+        filterPanel.add(lblMesero);
+        filterPanel.add(cbMeseroFiltro);
+        filterPanel.add(btnAplicarFiltros);
+        filterPanel.add(btnLimpiarFiltros);
         
         topPanel.add(filterPanel, java.awt.BorderLayout.SOUTH);
 
@@ -159,7 +303,19 @@ public class PSHistorial extends javax.swing.JFrame {
             javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20)
         ));
 
+        btnGenerarPdf = new javax.swing.JButton("GENERAR REPORTE PDF");
+        btnGenerarPdf.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        btnGenerarPdf.setPreferredSize(new java.awt.Dimension(280, 50));
+        btnGenerarPdf.setBackground(new java.awt.Color(44, 44, 48));
+        btnGenerarPdf.setForeground(tonoOro);
+        btnGenerarPdf.setFocusPainted(false);
+        btnGenerarPdf.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+
         bottomPanel.add(jBImprimirTicket, java.awt.BorderLayout.WEST);
+        bottomPanel.add(btnGenerarPdf, java.awt.BorderLayout.CENTER);
         bottomPanel.add(jBRegresar, java.awt.BorderLayout.EAST);
 
         panelContenido.add(topPanel, java.awt.BorderLayout.NORTH);
@@ -173,8 +329,10 @@ public class PSHistorial extends javax.swing.JFrame {
         jPPrincipal.repaint();
 
         cargarFiltros();
-        for (java.awt.event.ActionListener al : jCFiltro.getActionListeners()) jCFiltro.removeActionListener(al);
-        jCFiltro.addActionListener(e -> cargarHistorial());
+        cbPeriodoFiltro.addActionListener(e -> aplicarPeriodoSeleccionado());
+        btnAplicarFiltros.addActionListener(e -> cargarHistorial());
+        btnLimpiarFiltros.addActionListener(e -> reiniciarFiltros());
+        btnGenerarPdf.addActionListener(e -> generarReportePdf());
         cargarHistorial();
         
         // Agregar doble clic a la tabla
@@ -188,21 +346,33 @@ public class PSHistorial extends javax.swing.JFrame {
     }
 
     private void cargarFiltros() {
-        jCFiltro.removeAllItems();
-        jCFiltro.addItem("Mostrar Todo");
-        jCFiltro.addItem("Dia de Hoy");
-        jCFiltro.addItem("Esta Semana");
-        jCFiltro.addItem("Este Mes");
+        cbMetodoPagoFiltro.removeAllItems();
+        cbMetodoPagoFiltro.addItem("Todos");
+        String sqlMetodos = "SELECT DISTINCT metodo_pago FROM pagos ORDER BY metodo_pago";
 
-        String sql = "SELECT DISTINCT e.nombre FROM pagos p JOIN ordenes o ON p.id_orden = o.id_orden JOIN empleados e ON o.id_empleado = e.id_empleado";
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement pst = con.prepareStatement(sql);
+             PreparedStatement pst = con.prepareStatement(sqlMetodos);
              ResultSet rs = pst.executeQuery()) {
-             
+            while(rs.next()) {
+                String metodo = rs.getString("metodo_pago");
+                if(metodo != null) {
+                    cbMetodoPagoFiltro.addItem(metodo);
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar métodos de pago", ex);
+        }
+
+        cbMeseroFiltro.removeAllItems();
+        cbMeseroFiltro.addItem("Todos");
+        String sqlMeseros = "SELECT DISTINCT e.nombre FROM pagos p JOIN ordenes o ON p.id_orden = o.id_orden JOIN empleados e ON o.id_empleado = e.id_empleado ORDER BY e.nombre";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement pst = con.prepareStatement(sqlMeseros);
+             ResultSet rs = pst.executeQuery()) {
             while(rs.next()) {
                 String nom = rs.getString("nombre");
                 if(nom != null) {
-                    jCFiltro.addItem("Mesero: " + nom);
+                    cbMeseroFiltro.addItem(nom);
                 }
             }
         } catch (SQLException ex) {
@@ -211,11 +381,26 @@ public class PSHistorial extends javax.swing.JFrame {
     }
 
     private void cargarHistorial() {
-        String seleccion = (String) jCFiltro.getSelectedItem();
-        if (seleccion == null) return;
+        if (dcFechaInicio == null || dcFechaFin == null) return;
+
+        java.util.Date fechaInicio = dcFechaInicio.getDate();
+        java.util.Date fechaFin = dcFechaFin.getDate();
+        if (fechaInicio == null || fechaFin == null) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Selecciona una fecha inicial y una fecha final.");
+            return;
+        }
+        if (fechaInicio.after(fechaFin)) {
+            javax.swing.JOptionPane.showMessageDialog(this, "La fecha inicial no puede ser mayor que la fecha final.");
+            return;
+        }
+
+        String metodoSeleccionado = cbMetodoPagoFiltro != null && cbMetodoPagoFiltro.getSelectedItem() != null
+            ? cbMetodoPagoFiltro.getSelectedItem().toString() : "Todos";
+        String meseroSeleccionado = cbMeseroFiltro != null && cbMeseroFiltro.getSelectedItem() != null
+            ? cbMeseroFiltro.getSelectedItem().toString() : "Todos";
 
         DefaultTableModel modelo = new DefaultTableModel(
-            new Object[]{"ID Pago", "ID Orden", "Mesa", "Mesero", "Método", "Monto Abonado", "Cambio", "Fecha", "Hora"}, 0
+            new Object[]{"ID Pago", "ID Orden", "Mesa", "Mesero", "Método", "Monto Abonado", "Fecha", "Hora"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -235,32 +420,37 @@ public class PSHistorial extends javax.swing.JFrame {
         jTHistorial.getColumnModel().getColumn(1).setPreferredWidth(60);
         jTHistorial.getColumnModel().getColumn(2).setPreferredWidth(70);
 
-        String sql = "SELECT p.id_pago, o.id_orden, o.mesa, CONCAT(e.nombre, ' ', e.ap_paterno, IFNULL(CONCAT(' ', e.ap_materno), '')) AS nombre_mesero, " +
-             "p.metodo_pago, p.monto_pagado, p.cambio, DATE(p.fecha_hora_pago) AS fecha, TIME(p.fecha_hora_pago) AS hora " +
+           String sql = "SELECT p.id_pago, o.id_orden, o.mesa, e.nombre AS nombre_mesero, " +
+               "p.metodo_pago, p.monto_pagado, DATE(p.fecha_pago) AS fecha, TIME(p.fecha_pago) AS hora " +
                  "FROM pagos p " +
                  "JOIN ordenes o ON p.id_orden = o.id_orden " +
                  "JOIN empleados e ON o.id_empleado = e.id_empleado " +
                  "WHERE 1=1 ";
-                     
-        if (seleccion.equals("Dia de Hoy")) {
-            sql += "AND DATE(p.fecha_hora_pago) = CURDATE() ";
-        } else if (seleccion.equals("Esta Semana")) {
-            sql += "AND YEARWEEK(p.fecha_hora_pago, 1) = YEARWEEK(CURDATE(), 1) ";
-        } else if (seleccion.equals("Este Mes")) {
-            sql += "AND MONTH(p.fecha_hora_pago) = MONTH(CURDATE()) AND YEAR(p.fecha_hora_pago) = YEAR(CURDATE()) ";
-        } else if (seleccion.startsWith("Mesero: ")) {
-            sql += "AND CONCAT(e.nombre, ' ', e.ap_paterno, IFNULL(CONCAT(' ', e.ap_materno), '')) = ? ";
+
+        List<Object> params = new ArrayList<>();
+        sql += "AND DATE(p.fecha_pago) BETWEEN ? AND ? ";
+        params.add(new java.sql.Date(fechaInicio.getTime()));
+        params.add(new java.sql.Date(fechaFin.getTime()));
+
+        if (!"Todos".equalsIgnoreCase(metodoSeleccionado)) {
+            sql += "AND p.metodo_pago = ? ";
+            params.add(metodoSeleccionado);
         }
 
-        sql += "ORDER BY p.fecha_hora_pago DESC";
+        if (!"Todos".equalsIgnoreCase(meseroSeleccionado)) {
+            sql += "AND e.nombre = ? ";
+            params.add(meseroSeleccionado);
+        }
+
+        sql += "ORDER BY p.fecha_pago DESC";
 
         double granTotal = 0.0;
         
         try (Connection con = DBConnection.getConnection();
              PreparedStatement pst = con.prepareStatement(sql)) {
-             
-            if (seleccion.startsWith("Mesero: ")) {
-                 pst.setString(1, seleccion.substring(8));
+
+              for (int i = 0; i < params.size(); i++) {
+                 pst.setObject(i + 1, params.get(i));
             }
 
             try (ResultSet rs = pst.executeQuery()) {
@@ -271,7 +461,6 @@ public class PSHistorial extends javax.swing.JFrame {
                     String empleado = rs.getString("nombre_mesero");
                     String metodo = rs.getString("metodo_pago");
                     double monto = rs.getDouble("monto_pagado");
-                    double cambio = rs.getDouble("cambio");
                     java.sql.Date fecha = rs.getDate("fecha");
                     java.sql.Time hora = rs.getTime("hora");
                     
@@ -284,7 +473,6 @@ public class PSHistorial extends javax.swing.JFrame {
                         empleado != null ? empleado : "N/A", 
                         metodo,
                         String.format("$%.2f", monto),
-                        String.format("$%.2f", cambio),
                         fecha, 
                         hora
                     });
@@ -292,13 +480,159 @@ public class PSHistorial extends javax.swing.JFrame {
             }
             
             // Fila vacía de separación
-            modelo.addRow(new Object[]{"", "", "", "", "", "", "", "", ""});
+            modelo.addRow(new Object[]{"", "", "", "", "", "", "", ""});
             // Fila de TOTAL
-            modelo.addRow(new Object[]{"", "", "", "", "TOTAL PAGOS:", String.format("$%.2f", granTotal), "", "", ""});
+            modelo.addRow(new Object[]{"", "", "", "", "TOTAL PAGOS:", String.format("$%.2f", granTotal), "", ""});
             
         } catch (SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al cargar historial", ex);
         }
+    }
+
+    private void aplicarPeriodoSeleccionado() {
+        if (cbPeriodoFiltro == null || cbPeriodoFiltro.getSelectedItem() == null) {
+            return;
+        }
+
+        String periodo = cbPeriodoFiltro.getSelectedItem().toString();
+        Calendar cal = Calendar.getInstance();
+        java.util.Date fin = cal.getTime();
+        java.util.Date inicio = dcFechaInicio.getDate() != null ? dcFechaInicio.getDate() : fin;
+
+        switch (periodo) {
+            case "Dia actual" -> {
+                inicio = fin;
+            }
+            case "Semana actual" -> {
+                cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                inicio = cal.getTime();
+            }
+            case "Mes actual" -> {
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                inicio = cal.getTime();
+            }
+            case "Anio actual" -> {
+                cal.set(Calendar.DAY_OF_YEAR, 1);
+                inicio = cal.getTime();
+            }
+            default -> {
+                // Rango personalizado: respetar fechas seleccionadas manualmente.
+            }
+        }
+
+        if (!"Rango personalizado".equals(periodo)) {
+            dcFechaInicio.setDate(inicio);
+            dcFechaFin.setDate(fin);
+        }
+    }
+
+    private ReporteVentasPDFService.FiltroReporte construirFiltroReporte() {
+        java.util.Date fechaInicio = dcFechaInicio.getDate();
+        java.util.Date fechaFin = dcFechaFin.getDate();
+        if (fechaInicio == null || fechaFin == null) {
+            throw new IllegalArgumentException("Selecciona una fecha inicial y una fecha final.");
+        }
+        if (fechaInicio.after(fechaFin)) {
+            throw new IllegalArgumentException("La fecha inicial no puede ser mayor que la fecha final.");
+        }
+
+        String metodoSeleccionado = cbMetodoPagoFiltro != null && cbMetodoPagoFiltro.getSelectedItem() != null
+            ? cbMetodoPagoFiltro.getSelectedItem().toString() : "Todos";
+        String meseroSeleccionado = cbMeseroFiltro != null && cbMeseroFiltro.getSelectedItem() != null
+            ? cbMeseroFiltro.getSelectedItem().toString() : "Todos";
+
+        String metodo = "Todos".equalsIgnoreCase(metodoSeleccionado) ? null : metodoSeleccionado;
+        String mesero = "Todos".equalsIgnoreCase(meseroSeleccionado) ? null : meseroSeleccionado;
+
+        return new ReporteVentasPDFService.FiltroReporte(
+            new java.sql.Date(fechaInicio.getTime()),
+            new java.sql.Date(fechaFin.getTime()),
+            metodo,
+            mesero
+        );
+    }
+
+    private String etiquetaPeriodoActual() {
+        String periodo = cbPeriodoFiltro != null && cbPeriodoFiltro.getSelectedItem() != null
+            ? cbPeriodoFiltro.getSelectedItem().toString() : "Rango personalizado";
+
+        if (dcFechaInicio.getDate() == null || dcFechaFin.getDate() == null) {
+            return periodo;
+        }
+
+        java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        String ini = df.format(dcFechaInicio.getDate());
+        String fin = df.format(dcFechaFin.getDate());
+        return periodo + " (" + ini + " - " + fin + ")";
+    }
+
+    private void generarReportePdf() {
+        try {
+            ReporteVentasPDFService.FiltroReporte filtro = construirFiltroReporte();
+
+            String[] opciones = {
+                "General",
+                "Resumen platillos y bebidas",
+                "Detalle por producto"
+            };
+
+            int seleccion = javax.swing.JOptionPane.showOptionDialog(
+                this,
+                "Selecciona el tipo de reporte PDF",
+                "Generar reporte",
+                javax.swing.JOptionPane.DEFAULT_OPTION,
+                javax.swing.JOptionPane.QUESTION_MESSAGE,
+                null,
+                opciones,
+                opciones[0]
+            );
+
+            if (seleccion < 0) {
+                return;
+            }
+
+            ReporteVentasPDFService.TipoReporte tipo = switch (seleccion) {
+                case 0 -> ReporteVentasPDFService.TipoReporte.GENERAL;
+                case 1 -> ReporteVentasPDFService.TipoReporte.RESUMEN_CATEGORIAS;
+                case 2 -> ReporteVentasPDFService.TipoReporte.DETALLE_PRODUCTOS;
+                default -> throw new IllegalStateException("Tipo de reporte no valido");
+            };
+
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Guardar reporte PDF");
+            chooser.setSelectedFile(new java.io.File("reporte_ventas_" + System.currentTimeMillis() + ".pdf"));
+            int result = chooser.showSaveDialog(this);
+            if (result != JFileChooser.APPROVE_OPTION) {
+                return;
+            }
+
+            java.io.File destino = chooser.getSelectedFile();
+            if (!destino.getName().toLowerCase().endsWith(".pdf")) {
+                destino = new java.io.File(destino.getAbsolutePath() + ".pdf");
+            }
+
+            ReporteVentasPDFService.generarReporte(destino, filtro, tipo, etiquetaPeriodoActual());
+            javax.swing.JOptionPane.showMessageDialog(this, "Reporte PDF generado correctamente en:\n" + destino.getAbsolutePath());
+        } catch (IllegalArgumentException ex) {
+            javax.swing.JOptionPane.showMessageDialog(this, ex.getMessage(), "Validacion", javax.swing.JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al generar reporte PDF", ex);
+            javax.swing.JOptionPane.showMessageDialog(this, "No fue posible generar el PDF: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void reiniciarFiltros() {
+        Calendar cal = Calendar.getInstance();
+        java.util.Date fin = cal.getTime();
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        java.util.Date inicio = cal.getTime();
+
+        dcFechaInicio.setDate(inicio);
+        dcFechaFin.setDate(fin);
+        if (cbPeriodoFiltro.getItemCount() > 0) cbPeriodoFiltro.setSelectedIndex(3);
+        if (cbMetodoPagoFiltro.getItemCount() > 0) cbMetodoPagoFiltro.setSelectedIndex(0);
+        if (cbMeseroFiltro.getItemCount() > 0) cbMeseroFiltro.setSelectedIndex(0);
+        cargarHistorial();
     }
 
     private void verDetallesSeleccionado() {
@@ -318,7 +652,7 @@ public class PSHistorial extends javax.swing.JFrame {
     }
 
     private void mostrarDetalleTicket(int idOrden, int idPago) {
-        String sqlPago = "SELECT metodo_pago, monto_pagado, monto_recibido, cambio, fecha_hora_pago FROM pagos WHERE id_pago = ?";
+        String sqlPago = "SELECT metodo_pago, monto_pagado, estado_pago, fecha_pago, referencia_externa FROM pagos WHERE id_pago = ?";
         String sqlOrden = "SELECT o.mesa, e.nombre AS nomEmp, p.nombre AS nomProd, p.precio AS costoP, d.cantidad AS cant, d.notas_especiales AS nota, o.total_calculado " +
                  "FROM ordenes o " +
                  "INNER JOIN empleados e ON o.id_empleado = e.id_empleado " +
@@ -332,15 +666,17 @@ public class PSHistorial extends javax.swing.JFrame {
              
             pstPago.setInt(1, idPago);
             String metodo = "";
-            double montoPagado = 0, montoRecibido = 0, cambio = 0;
+            double montoPagado = 0;
+            String estadoPago = "";
             String fechaHora = "";
+            String referencia = "";
             try (ResultSet rsPago = pstPago.executeQuery()) {
                 if (rsPago.next()) {
                     metodo = rsPago.getString("metodo_pago");
                     montoPagado = rsPago.getDouble("monto_pagado");
-                    montoRecibido = rsPago.getDouble("monto_recibido");
-                    cambio = rsPago.getDouble("cambio");
-                    fechaHora = rsPago.getString("fecha_hora_pago");
+                    estadoPago = rsPago.getString("estado_pago");
+                    fechaHora = rsPago.getString("fecha_pago");
+                    referencia = rsPago.getString("referencia_externa");
                 }
             }
 
@@ -394,10 +730,10 @@ public class PSHistorial extends javax.swing.JFrame {
                 
                 html.append("<div style='margin-top: 10px; border-top: 1px solid #EEEEEE; padding-top: 10px;'></div>");
                 html.append("<div style='margin-bottom: 4px;'>Método de Pago: &nbsp;&nbsp;&nbsp; <b>").append(metodo).append("</b></div>");
-                html.append("<div style='margin-bottom: 4px;'>Monto Entregado: &nbsp;&nbsp;&nbsp; <b>$").append(String.format("%.2f", montoRecibido)).append("</b></div>");
-                html.append("<div style='margin-bottom: 4px;'>Monto Abonado (Cobrado): &nbsp;&nbsp;&nbsp; <b>$").append(String.format("%.2f", montoPagado)).append("</b></div>");
-                if(cambio > 0) {
-                    html.append("<div style='margin-bottom: 4px; color: #27ae60; font-weight: bold;'>Cambio Regresado: &nbsp;&nbsp;&nbsp; $").append(String.format("%.2f", cambio)).append("</div>");
+                html.append("<div style='margin-bottom: 4px;'>Estado del Pago: &nbsp;&nbsp;&nbsp; <b>").append(estadoPago).append("</b></div>");
+                html.append("<div style='margin-bottom: 4px;'>Monto Pagado: &nbsp;&nbsp;&nbsp; <b>$").append(String.format("%.2f", montoPagado)).append("</b></div>");
+                if (referencia != null && !referencia.isBlank()) {
+                    html.append("<div style='margin-bottom: 4px;'>Referencia: &nbsp;&nbsp;&nbsp; <b>").append(referencia).append("</b></div>");
                 }
                 
                 html.append("</div></div></html>");

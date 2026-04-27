@@ -11,6 +11,14 @@ package com.mycompany.perfectstrangers;
 public class PSInventario extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSInventario.class.getName());
+    private final javax.swing.table.DefaultTableModel modeloInventario = new javax.swing.table.DefaultTableModel(
+        new Object[]{"ID", "Nombre", "Descripción", "Tipo", "Ubicación", "Medición", "Código", "Stock", "Alerta", "Crítico", "Estado"}, 0
+    ) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
 
     /**
      * Creates new form PSInventario
@@ -30,29 +38,128 @@ public class PSInventario extends javax.swing.JFrame {
         this.setTitle("PerfectStrangers - Inventario");
 
         configurarInterfaz();
-        mostrarInventarioPendiente();
+        configurarAcciones();
+        cargarFiltros();
+        cargarInventario();
         jBRegresar.addActionListener(evt -> {
             java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
             dispose();
         });
     }
 
-    private void mostrarInventarioPendiente() {
-        javax.swing.table.DefaultTableModel modelo = new javax.swing.table.DefaultTableModel(
-            new Object[]{"Estado", "Detalle"}, 0
-        ) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        modelo.addRow(new Object[]{"Pendiente", "La tabla de inventario aún no está definida. Aquí no se muestran productos."});
+    private void configurarAcciones() {
+        jCFiltro.addActionListener(evt -> cargarInventario());
+    }
 
-        jTInventario.setModel(modelo);
+    private void abrirDialogoAltaEntrada() {
+        String[] opciones = {"Nuevo insumo", "Entrada a existente", "Cancelar"};
+        int seleccion = javax.swing.JOptionPane.showOptionDialog(
+            this,
+            "¿Qué tipo de alta deseas realizar?",
+            "Alta / Entrada",
+            javax.swing.JOptionPane.DEFAULT_OPTION,
+            javax.swing.JOptionPane.QUESTION_MESSAGE,
+            null,
+            opciones,
+            opciones[0]
+        );
+
+        if (seleccion == 0) {
+            registrarNuevoInsumoConEmpaque();
+        } else if (seleccion == 1) {
+            registrarEntradaInsumoExistente();
+        }
+    }
+
+    private void registrarNuevoInsumoConEmpaque() {
+        if (DialogoInventarioMovimiento.mostrarNuevoInsumo(this)) {
+            cargarInventario();
+        }
+    }
+
+    private void registrarEntradaInsumoExistente() {
+        if (DialogoInventarioMovimiento.mostrarEntradaExistente(this)) {
+            cargarInventario();
+        }
+    }
+
+    private void cargarFiltros() {
+        jCFiltro.removeAllItems();
+        jCFiltro.addItem("Todos");
+        jCFiltro.addItem("Bajo stock");
+        jCFiltro.addItem("Con alerta");
+        jCFiltro.addItem("Crítico");
+        jCFiltro.setSelectedIndex(0);
+    }
+
+    private void cargarInventario() {
+        modeloInventario.setRowCount(0);
+        String filtro = jCFiltro.getSelectedItem() != null ? jCFiltro.getSelectedItem().toString() : "Todos";
+
+        try {
+            java.util.List<Insumo> insumos = obtenerInsumosSegunFiltro(filtro);
+            for (Insumo insumo : insumos) {
+                modeloInventario.addRow(new Object[]{
+                    insumo.getIdIngrediente(),
+                    insumo.getNombreInsumo(),
+                    insumo.getDescripcion(),
+                    insumo.getTipoProducto(),
+                    insumo.getUbicacion(),
+                    insumo.getUnidadMedida(),
+                    insumo.getCodBarras(),
+                    insumo.getStock(),
+                    insumo.getAlertStock(),
+                    insumo.getCritStock(),
+                    calcularEstado(insumo)
+                });
+            }
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar inventario", ex);
+            modeloInventario.addRow(new Object[]{"Error", "No fue posible cargar el inventario.", ex.getMessage(), "", "", "", "", "", "", "", ""});
+        }
+
+        jTInventario.setModel(modeloInventario);
         javax.swing.table.DefaultTableCellRenderer centerRender = new javax.swing.table.DefaultTableCellRenderer();
         centerRender.setHorizontalAlignment(javax.swing.JLabel.CENTER);
         for (int i = 0; i < jTInventario.getColumnCount(); i++) {
             jTInventario.getColumnModel().getColumn(i).setCellRenderer(centerRender);
+        }
+        ajustarAnchosTabla();
+    }
+
+    private java.util.List<Insumo> obtenerInsumosSegunFiltro(String filtro) throws java.sql.SQLException {
+        return switch (filtro) {
+            case "Bajo stock" -> ServicioInventario.obtenerInsumosBajoStock();
+            case "Con alerta" -> ServicioInventario.obtenerInsumosConAlerta();
+            case "Crítico" -> filtrarCriticos(InsumoDAO.obtenerTodosInsumos());
+            default -> InsumoDAO.obtenerTodosInsumos();
+        };
+    }
+
+    private java.util.List<Insumo> filtrarCriticos(java.util.List<Insumo> insumos) {
+        java.util.List<Insumo> criticos = new java.util.ArrayList<>();
+        for (Insumo insumo : insumos) {
+            if (insumo.estaEnCritico()) {
+                criticos.add(insumo);
+            }
+        }
+        return criticos;
+    }
+
+    private String calcularEstado(Insumo insumo) {
+        if (insumo.estaEnCritico()) {
+            return "Crítico";
+        }
+        if (insumo.necesitaReorden()) {
+            return "Bajo";
+        }
+        return "Normal";
+    }
+
+    private void ajustarAnchosTabla() {
+        int[] anchos = {70, 180, 220, 110, 120, 90, 120, 80, 80, 80, 90};
+        for (int i = 0; i < Math.min(anchos.length, jTInventario.getColumnCount()); i++) {
+            jTInventario.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
         }
     }
 
@@ -146,6 +253,17 @@ public class PSInventario extends javax.swing.JFrame {
         // Bottom Panel
         javax.swing.JPanel bottomPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
         bottomPanel.setOpaque(false);
+        javax.swing.JButton jBAltaEntrada = new javax.swing.JButton("ALTA / ENTRADA");
+        jBAltaEntrada.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 17));
+        jBAltaEntrada.setBackground(new java.awt.Color(44, 44, 48));
+        jBAltaEntrada.setForeground(tonoOro);
+        jBAltaEntrada.setFocusPainted(false);
+        jBAltaEntrada.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+            javax.swing.BorderFactory.createEmptyBorder(10, 24, 10, 24)
+        ));
+        jBAltaEntrada.addActionListener(evt -> abrirDialogoAltaEntrada());
+
         jBRegresar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 17));
         jBRegresar.setBackground(new java.awt.Color(44, 44, 48));
         jBRegresar.setForeground(tonoOro);
@@ -154,6 +272,7 @@ public class PSInventario extends javax.swing.JFrame {
             javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
             javax.swing.BorderFactory.createEmptyBorder(10, 24, 10, 24)
         ));
+        bottomPanel.add(jBAltaEntrada);
         bottomPanel.add(jBRegresar);
 
         panelContenido.add(topPanel, java.awt.BorderLayout.NORTH);

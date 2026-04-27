@@ -4,21 +4,12 @@
  */
 package com.mycompany.perfectstrangers;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -136,15 +127,7 @@ public class PSTOrden extends javax.swing.JFrame {
      * Creates new form PSTOrden
      */
     public PSTOrden() {
-        initComponents();
-
-        try {
-            DBConnection.asegurarEstadoDetalleOrden();
-        } catch (SQLException ex) {
-            logger.log(java.util.logging.Level.SEVERE, "No fue posible preparar el esquema de detalle de órdenes", ex);
-        }
-        
-        jBAgregar.setBackground(null);
+        initComponents();jBAgregar.setBackground(null);
         jBRegistrar.setBackground(null);
         jBRegresar.setBackground(null);
         jBCombos.setBackground(null);
@@ -635,32 +618,27 @@ public class PSTOrden extends javax.swing.JFrame {
     private void cargarProductos(String categoria) {
         jPCont.removeAll();
         java.util.List<ProductoItem> tempList = new ArrayList<>();
-        
-        String query = "";
-        boolean esCombo = false;
-        // Adaptamos a las columnas de la nueva bd
-        if (categoria.equals("Platillos")) {
-            query = "SELECT id_producto AS id, nombre, precio AS costo FROM productos WHERE es_combo = 0 AND categoria NOT IN ('Bebidas', 'Combos') ORDER BY nombre";
-        } else if (categoria.equals("Bebidas")) {
-            query = "SELECT id_producto AS id, nombre, precio AS costo FROM productos WHERE es_combo = 0 AND categoria = 'Bebidas' ORDER BY nombre";
-        } else if (categoria.equals("Combos")) {
-            query = "SELECT id_producto AS id, nombre, precio AS costo FROM productos WHERE es_combo = 1 ORDER BY nombre";
-            esCombo = true;
-        }
+        boolean esCombo = "Combos".equals(categoria);
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement pst = con.prepareStatement(query);
-             ResultSet rs = pst.executeQuery()) {
-             
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String nombre = rs.getString("nombre");
-                double costo = rs.getDouble("costo");
-                
-                ProductoItem item = new ProductoItem(id, nombre, costo, esCombo);
+        try {
+            List<Producto> productos;
+            if ("Platillos".equals(categoria)) {
+                productos = ProductoDAO.obtenerProductosPorCategoria("Platillo");
+            } else if ("Bebidas".equals(categoria)) {
+                productos = ProductoDAO.obtenerProductosPorCategoria("Bebidas");
+            } else {
+                // En el nuevo esquema, este tab se mapea a Complementos.
+                productos = ProductoDAO.obtenerProductosPorCategoria("Complementos");
+            }
+
+            for (Producto producto : productos) {
+                ProductoItem item = new ProductoItem(
+                    producto.getIdProducto(),
+                    producto.getNombre(),
+                    producto.getPrecio(),
+                    esCombo
+                );
                 tempList.add(item);
-                
-                // Agregar el panel con checkBox y Spinner directo a jPCont
                 jPCont.add(item.panel);
             }
         } catch (SQLException ex) {
@@ -721,14 +699,23 @@ public class PSTOrden extends javax.swing.JFrame {
         int numMesa = 1;
         try { numMesa = Integer.parseInt(mesaStr.replace("Mesa ", "").trim()); } catch (Exception e){}
 
-        int idEmpleado = 1; 
-        if (Sesion.idEmpleado > 0) idEmpleado = Sesion.idEmpleado;
+        Integer idEmpleadoSesion = ServicioSesion.getIdEmpleadoActual();
+        int idEmpleado = (idEmpleadoSesion != null && idEmpleadoSesion > 0)
+            ? idEmpleadoSesion
+            : (Sesion.idEmpleado > 0 ? Sesion.idEmpleado : 1);
 
-        try (Connection con = DBConnection.getConnection()) {
-            con.setAutoCommit(false);
-            
-            double totalOrden = 0.0;
+        try {
+            int idOrden;
+            List<Orden> abiertasMesa = ServicioOrden.obtenerOrdenesMesa(numMesa);
+            if (!abiertasMesa.isEmpty()) {
+                idOrden = abiertasMesa.get(0).getIdOrden();
+            } else {
+                idOrden = ServicioOrden.crearOrden(idEmpleado, numMesa).getIdOrden();
+            }
+
             for (int i = 0; i < modeloOrden.getRowCount(); i++) {
+                int idItem = (int) modeloOrden.getValueAt(i, 0);
+
                 int cantidad = 1;
                 Object cantObj = modeloOrden.getValueAt(i, 2);
                 if (cantObj instanceof Integer) {
@@ -745,86 +732,18 @@ public class PSTOrden extends javax.swing.JFrame {
                     try { precio = Double.parseDouble(precioObj.toString()); } catch (Exception e) { }
                 }
 
-                totalOrden += (precio * cantidad);
-            }
-
-            int idOrden;
-            double totalBase = 0.0;
-            String sqlOrdenAbierta = "SELECT id_orden, COALESCE(total_calculado, 0) AS total_actual FROM ordenes WHERE mesa = ? AND estado_pago IN ('Pendiente', 'Parcial') ORDER BY fecha_hora DESC, id_orden DESC LIMIT 1";
-            try (PreparedStatement pstAbierta = con.prepareStatement(sqlOrdenAbierta)) {
-                pstAbierta.setInt(1, numMesa);
-                try (ResultSet rsAbierta = pstAbierta.executeQuery()) {
-                    if (rsAbierta.next()) {
-                        idOrden = rsAbierta.getInt("id_orden");
-                        totalBase = rsAbierta.getDouble("total_actual");
-                    } else {
-                        String sqlOrden = "INSERT INTO ordenes (id_empleado, mesa, fecha_hora, estado_preparacion, estado_pago, total_calculado) VALUES (?, ?, CURRENT_TIMESTAMP, 'Pendiente', 'Pendiente', ?)";
-                        try (PreparedStatement pstO = con.prepareStatement(sqlOrden, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-                            pstO.setInt(1, idEmpleado);
-                            pstO.setInt(2, numMesa);
-                            pstO.setDouble(3, totalOrden);
-                            pstO.executeUpdate();
-
-                            try (ResultSet rsId = pstO.getGeneratedKeys()) {
-                                if (!rsId.next()) {
-                                    throw new SQLException("No fue posible obtener el ID de la orden recién creada.");
-                                }
-                                idOrden = rsId.getInt(1);
-                            }
-                        }
-                    }
+                String notas = "";
+                Object notasObj = modeloOrden.getValueAt(i, 5);
+                if (notasObj != null) {
+                    notas = notasObj.toString();
                 }
+
+                ServicioOrden.agregarProductoAOrden(idOrden, idItem, cantidad, precio, notas);
             }
 
-            if (totalBase > 0.0) {
-                try (PreparedStatement pstActualizar = con.prepareStatement("UPDATE ordenes SET total_calculado = ?, estado_preparacion = 'Pendiente' WHERE id_orden = ?")) {
-                    pstActualizar.setDouble(1, totalBase + totalOrden);
-                    pstActualizar.setInt(2, idOrden);
-                    pstActualizar.executeUpdate();
-                }
-            }
-
-            String sqlDetalle = "INSERT INTO detalle_orden (id_orden, id_producto, cantidad, precio_unitario, notas_especiales, estado_detalle) VALUES (?, ?, ?, ?, ?, 'Pendiente')";
-            try (PreparedStatement pstD = con.prepareStatement(sqlDetalle)) {
-                for (int i = 0; i < modeloOrden.getRowCount(); i++) {
-                    int idItem = (int) modeloOrden.getValueAt(i, 0);
-
-                    int cantidad = 1;
-                    Object cantObj = modeloOrden.getValueAt(i, 2);
-                    if (cantObj instanceof Integer) {
-                        cantidad = (Integer) cantObj;
-                    } else if (cantObj instanceof String) {
-                        try { cantidad = Integer.parseInt((String) cantObj); } catch (Exception e) { }
-                    }
-
-                    double precio = 0.0;
-                    Object precioObj = modeloOrden.getValueAt(i, 3);
-                    if (precioObj instanceof Number) {
-                        precio = ((Number) precioObj).doubleValue();
-                    } else if (precioObj != null) {
-                        try { precio = Double.parseDouble(precioObj.toString()); } catch (Exception e) { }
-                    }
-
-                    String notas = "";
-                    Object notasObj = modeloOrden.getValueAt(i, 5);
-                    if (notasObj != null) {
-                        notas = notasObj.toString();
-                    }
-
-                    pstD.setInt(1, idOrden);
-                    pstD.setInt(2, idItem);
-                    pstD.setInt(3, cantidad);
-                    pstD.setDouble(4, precio);
-                    pstD.setString(5, notas.isBlank() ? null : notas);
-                    pstD.addBatch();
-                }
-                pstD.executeBatch();
-            }
-            
-            con.commit();
-            javax.swing.JOptionPane.showMessageDialog(this, totalBase > 0.0
-                ? "¡Se agregaron productos a la cuenta abierta de la " + mesaStr + " y se enviaron a preparación!"
-                : "¡Orden " + idOrden + " registrada con éxito para la " + mesaStr + " y enviada a preparación!");
+            javax.swing.JOptionPane.showMessageDialog(this, abiertasMesa.isEmpty()
+                ? "¡Orden " + idOrden + " registrada con éxito para la " + mesaStr + " y enviada a preparación!"
+                : "¡Se agregaron productos a la cuenta abierta de la " + mesaStr + " y se enviaron a preparación!");
             modeloOrden.setRowCount(0);
         } catch (SQLException ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Error al guardar en BD: " + ex.getMessage());

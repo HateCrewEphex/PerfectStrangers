@@ -271,7 +271,9 @@ public class PSCombos extends javax.swing.JFrame {
     private void cargarIdsPlatillos() {
         jCIDPlatillo.removeAllItems();
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            java.sql.PreparedStatement ps = con.prepareStatement("SELECT id_producto, nombre FROM productos WHERE es_combo = FALSE ORDER BY nombre");
+            java.sql.PreparedStatement ps = con.prepareStatement(
+                "SELECT id_producto, nombre FROM productos WHERE disponible = TRUE AND es_combo = FALSE ORDER BY nombre"
+            );
             java.sql.ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 jCIDPlatillo.addItem(rs.getInt("id_producto") + " - " + rs.getString("nombre"));
@@ -492,6 +494,16 @@ public class PSCombos extends javax.swing.JFrame {
             String[] parts = platilloSel.split(" - ");
             int idPlatillo = Integer.parseInt(parts[0]);
             String nombrePlatillo = parts[1];
+
+            if (esProductoCombo(idPlatillo)) {
+                javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    "No se puede agregar un combo dentro de otro combo.",
+                    "Selección no válida",
+                    javax.swing.JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
             
             platillosSeleccionados.add(idPlatillo);
             String platillosActuales = jLPlatillosCombo.getText();
@@ -506,25 +518,19 @@ public class PSCombos extends javax.swing.JFrame {
     private void cargarCombos() {
         modeloTabla.setRowCount(0);
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sql = "SELECT id_producto, categoria, nombre, precio FROM productos WHERE es_combo = TRUE ORDER BY id_producto ASC";
+            String sql = "SELECT c.id_producto, c.categoria, c.nombre, c.precio, " +
+                         "COALESCE(GROUP_CONCAT(CONCAT(p.nombre, IF(cd.cantidad > 1, CONCAT(' x', cd.cantidad), '')) ORDER BY p.nombre SEPARATOR ', '), '') AS productos_incluidos " +
+                         "FROM productos c " +
+                         "LEFT JOIN combo_detalles cd ON c.id_producto = cd.id_combo " +
+                         "LEFT JOIN productos p ON cd.id_producto_incluido = p.id_producto " +
+                         "WHERE c.es_combo = TRUE AND c.disponible = TRUE " +
+                         "GROUP BY c.id_producto, c.categoria, c.nombre, c.precio " +
+                         "ORDER BY c.id_producto ASC";
             try (java.sql.PreparedStatement pst = con.prepareStatement(sql);
                  java.sql.ResultSet rs = pst.executeQuery()) {
                 while (rs.next()) {
                     int idCombo = rs.getInt("id_producto");
-                    String productosNombres = "";
-                    
-                    // Fetch productos incluidos
-                    String sqlDetalles = "SELECT dc.cantidad, p.nombre FROM detalles_combo dc JOIN productos p ON dc.id_producto_incluido = p.id_producto WHERE dc.id_combo = ?";
-                    try (java.sql.PreparedStatement psDet = con.prepareStatement(sqlDetalles)) {
-                        psDet.setInt(1, idCombo);
-                        try (java.sql.ResultSet rsDet = psDet.executeQuery()) {
-                            java.util.List<String> prodList = new java.util.ArrayList<>();
-                            while (rsDet.next()) {
-                                prodList.add(rsDet.getInt("cantidad") + "x " + rsDet.getString("nombre"));
-                            }
-                            productosNombres = String.join(", ", prodList);
-                        }
-                    }
+                    String productosNombres = rs.getString("productos_incluidos");
                     
                     modeloTabla.addRow(new Object[]{
                         idCombo,
@@ -550,34 +556,8 @@ public class PSCombos extends javax.swing.JFrame {
         jCTipoCombo.setSelectedItem((String) modeloTabla.getValueAt(fila, 1));
         jTNomPlatillo.setText((String) modeloTabla.getValueAt(fila, 2));
         jTPrecio.setText(String.valueOf(modeloTabla.getValueAt(fila, 3)));
-        
-        // Cargar detalles a la variable platillosSeleccionados y al Label
-        platillosSeleccionados.clear();
-        try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sqlDet = "SELECT dc.id_producto_incluido, dc.cantidad, p.nombre FROM detalles_combo dc JOIN productos p ON dc.id_producto_incluido = p.id_producto WHERE dc.id_combo = ?";
-            try (java.sql.PreparedStatement psDet = con.prepareStatement(sqlDet)) {
-                psDet.setInt(1, idComboActual);
-                try (java.sql.ResultSet rsDet = psDet.executeQuery()) {
-                    java.util.List<String> prodList = new java.util.ArrayList<>();
-                    while (rsDet.next()) {
-                        int cant = rsDet.getInt("cantidad");
-                        int idPlatillo = rsDet.getInt("id_producto_incluido");
-                        String nombre = rsDet.getString("nombre");
-                        for (int i = 0; i < cant; i++) {
-                            platillosSeleccionados.add(idPlatillo);
-                        }
-                        prodList.add(cant + "x " + nombre);
-                    }
-                    if (prodList.isEmpty()) {
-                        jLPlatillosCombo.setText("-");
-                    } else {
-                        jLPlatillosCombo.setText(String.join(", ", prodList));
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            logger.log(java.util.logging.Level.SEVERE, "Error al cargar detalles del combo seleccionado", ex);
-        }
+
+        cargarDetalleCombo(idComboActual);
         
         jLCombos.setText("EDITANDO ID: " + idComboActual);
         jBGuardar.setEnabled(false);
@@ -586,6 +566,7 @@ public class PSCombos extends javax.swing.JFrame {
     private void registrarCombo() {
         String nombreCombo = jTNomPlatillo.getText().trim();
         String tipoCombo = jCTipoCombo.getSelectedItem() != null ? jCTipoCombo.getSelectedItem().toString() : "Combo";
+        String categoriaCombo = categoriaDesdeTipoCombo(tipoCombo);
         String precioStr = jTPrecio.getText().trim();
         
         if (nombreCombo.isEmpty() || precioStr.isEmpty() || platillosSeleccionados.isEmpty()) {
@@ -604,10 +585,10 @@ public class PSCombos extends javax.swing.JFrame {
         try (java.sql.Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
-                String sql = "INSERT INTO productos (categoria, nombre, precio, es_combo) VALUES (?, ?, ?, TRUE)";
+                String sql = "INSERT INTO productos (categoria, nombre, precio, es_combo, disponible) VALUES (?, ?, ?, TRUE, TRUE)";
                 int idNuevoCombo;
                 try (java.sql.PreparedStatement ps = con.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-                    ps.setString(1, tipoCombo);
+                    ps.setString(1, categoriaCombo);
                     ps.setString(2, nombreCombo);
                     ps.setDouble(3, precio);
                     ps.executeUpdate();
@@ -619,6 +600,7 @@ public class PSCombos extends javax.swing.JFrame {
                         idNuevoCombo = rsKeys.getInt(1);
                     }
                 }
+
                 guardarPlatillosPaquete(con, idNuevoCombo);
                 con.commit();
                 javax.swing.JOptionPane.showMessageDialog(this, "Combo registrado correctamente.");
@@ -641,6 +623,7 @@ public class PSCombos extends javax.swing.JFrame {
         
         String nombreCombo = jTNomPlatillo.getText().trim();
         String tipoCombo = jCTipoCombo.getSelectedItem() != null ? jCTipoCombo.getSelectedItem().toString() : "Combo";
+        String categoriaCombo = categoriaDesdeTipoCombo(tipoCombo);
         String precioStr = jTPrecio.getText().trim();
         
         if (nombreCombo.isEmpty() || precioStr.isEmpty() || platillosSeleccionados.isEmpty()) {
@@ -661,20 +644,19 @@ public class PSCombos extends javax.swing.JFrame {
             try {
                 String sql = "UPDATE productos SET categoria = ?, nombre = ?, precio = ? WHERE id_producto = ? AND es_combo = TRUE";
                 try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
-                    ps.setString(1, tipoCombo);
+                    ps.setString(1, categoriaCombo);
                     ps.setString(2, nombreCombo);
                     ps.setDouble(3, precio);
                     ps.setInt(4, idComboActual);
                     ps.executeUpdate();
                 }
-                
-                String sqlDel = "DELETE FROM detalles_combo WHERE id_combo = ?";
-                try (java.sql.PreparedStatement psDel = con.prepareStatement(sqlDel)) {
-                    psDel.setInt(1, idComboActual);
-                    psDel.executeUpdate();
+
+                try (java.sql.PreparedStatement psDelete = con.prepareStatement("DELETE FROM combo_detalles WHERE id_combo = ?")) {
+                    psDelete.setInt(1, idComboActual);
+                    psDelete.executeUpdate();
                 }
-                
                 guardarPlatillosPaquete(con, idComboActual);
+
                 con.commit();
                 javax.swing.JOptionPane.showMessageDialog(this, "Combo actualizado correctamente.");
                 limpiarCampos();
@@ -700,12 +682,6 @@ public class PSCombos extends javax.swing.JFrame {
         try (java.sql.Connection con = DBConnection.getConnection()) {
             con.setAutoCommit(false);
             try {
-                String sqlDel = "DELETE FROM detalles_combo WHERE id_combo = ?";
-                try (java.sql.PreparedStatement psDel = con.prepareStatement(sqlDel)) {
-                    psDel.setInt(1, idComboActual);
-                    psDel.executeUpdate();
-                }
-                
                 String sql = "DELETE FROM productos WHERE id_producto = ? AND es_combo = TRUE";
                 try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
                     ps.setInt(1, idComboActual);
@@ -725,13 +701,14 @@ public class PSCombos extends javax.swing.JFrame {
     }
 
     private void guardarPlatillosPaquete(java.sql.Connection con, int idPaquete) throws java.sql.SQLException {
-        String sql = "INSERT INTO detalles_combo (id_combo, id_producto_incluido, cantidad) VALUES (?, ?, ?)";
+        java.util.Map<Integer, Integer> conteo = new java.util.LinkedHashMap<>();
+        for (Integer idPlatillo : platillosSeleccionados) {
+            conteo.put(idPlatillo, conteo.getOrDefault(idPlatillo, 0) + 1);
+        }
+
+        String sql = "INSERT INTO combo_detalles (id_combo, id_producto_incluido, cantidad) VALUES (?, ?, ?)";
         try (java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
-            java.util.Map<Integer, Integer> conteoPlatillos = new java.util.HashMap<>();
-            for (int idPlatillo : platillosSeleccionados) {
-                conteoPlatillos.put(idPlatillo, conteoPlatillos.getOrDefault(idPlatillo, 0) + 1);
-            }
-            for (java.util.Map.Entry<Integer, Integer> entry : conteoPlatillos.entrySet()) {
+            for (java.util.Map.Entry<Integer, Integer> entry : conteo.entrySet()) {
                 ps.setInt(1, idPaquete);
                 ps.setInt(2, entry.getKey());
                 ps.setInt(3, entry.getValue());
@@ -739,6 +716,66 @@ public class PSCombos extends javax.swing.JFrame {
             }
             ps.executeBatch();
         }
+    }
+
+    private void cargarDetalleCombo(int idCombo) {
+        platillosSeleccionados.clear();
+        StringBuilder nombres = new StringBuilder();
+
+        String sql = "SELECT cd.id_producto_incluido, cd.cantidad, p.nombre " +
+                     "FROM combo_detalles cd " +
+                     "JOIN productos p ON cd.id_producto_incluido = p.id_producto " +
+                     "WHERE cd.id_combo = ? ORDER BY p.nombre";
+        try (java.sql.Connection con = DBConnection.getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idCombo);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int idProductoIncluido = rs.getInt("id_producto_incluido");
+                    int cantidad = rs.getInt("cantidad");
+                    String nombre = rs.getString("nombre");
+
+                    for (int i = 0; i < cantidad; i++) {
+                        platillosSeleccionados.add(idProductoIncluido);
+                    }
+
+                    if (nombres.length() > 0) {
+                        nombres.append(", ");
+                    }
+                    nombres.append(nombre);
+                    if (cantidad > 1) {
+                        nombres.append(" x").append(cantidad);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar detalle del combo", ex);
+        }
+
+        jLPlatillosCombo.setText(nombres.length() == 0 ? "-" : nombres.toString());
+    }
+
+    private String categoriaDesdeTipoCombo(String tipoCombo) {
+        if ("Promo".equalsIgnoreCase(tipoCombo)) {
+            return "Complementos";
+        }
+        return "Combo";
+    }
+
+    private boolean esProductoCombo(int idProducto) {
+        String sql = "SELECT es_combo FROM productos WHERE id_producto = ?";
+        try (java.sql.Connection con = DBConnection.getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idProducto);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("es_combo");
+                }
+            }
+        } catch (Exception ex) {
+            logger.log(java.util.logging.Level.WARNING, "No fue posible validar tipo de producto", ex);
+        }
+        return false;
     }
 
     private void limpiarCampos() {
