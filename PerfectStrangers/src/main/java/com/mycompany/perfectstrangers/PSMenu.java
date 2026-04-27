@@ -315,6 +315,11 @@ public class PSMenu extends javax.swing.JFrame {
         jItemCombos.addActionListener(evt -> abrirVentanaConPermiso("gestionar_inventario", new PSCombos()));
         jMenu.add(jItemCombos);
 
+        // Configurar menú de Promociones dentro de la pestaña "Menú"
+        javax.swing.JMenuItem jItemPromociones = new javax.swing.JMenuItem("Control de Promociones");
+        jItemPromociones.addActionListener(evt -> abrirVentanaConPermiso("gestionar_inventario", new PSPromociones()));
+        jMenu.add(jItemPromociones);
+
         // Aplicar visibilidad por permisos del nuevo modelo de roles.
         jMenu.setVisible(ServicioSesion.tienePermiso("gestionar_empleados") || ServicioSesion.tienePermiso("gestionar_inventario"));
         JInventario.setVisible(ServicioSesion.tienePermiso("gestionar_inventario"));

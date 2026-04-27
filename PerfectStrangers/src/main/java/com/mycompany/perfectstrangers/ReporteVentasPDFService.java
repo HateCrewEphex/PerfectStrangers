@@ -50,24 +50,26 @@ public class ReporteVentasPDFService {
             PdfWriter.getInstance(doc, fos);
             doc.open();
 
-            Font titulo = new Font(Font.HELVETICA, 18, Font.BOLD);
-            Font subtitulo = new Font(Font.HELVETICA, 11, Font.NORMAL);
-            doc.add(new Paragraph("PerfectStrangers - Reporte de Ventas", titulo));
-            doc.add(new Paragraph("Tipo: " + tipoToTexto(tipo), subtitulo));
-            doc.add(new Paragraph("Periodo: " + etiquetaPeriodo, subtitulo));
-            doc.add(new Paragraph("Metodo: " + (filtro.metodoPago == null ? "Todos" : filtro.metodoPago), subtitulo));
-            doc.add(new Paragraph("Mesero: " + (filtro.mesero == null ? "Todos" : filtro.mesero), subtitulo));
-            doc.add(new Paragraph(" "));
+            try {
+                Font titulo = new Font(Font.HELVETICA, 18, Font.BOLD);
+                Font subtitulo = new Font(Font.HELVETICA, 11, Font.NORMAL);
+                doc.add(new Paragraph("PerfectStrangers - Reporte de Ventas", titulo));
+                doc.add(new Paragraph("Tipo: " + tipoToTexto(tipo), subtitulo));
+                doc.add(new Paragraph("Periodo: " + etiquetaPeriodo, subtitulo));
+                doc.add(new Paragraph("Metodo: " + (filtro.metodoPago == null ? "Todos" : filtro.metodoPago), subtitulo));
+                doc.add(new Paragraph("Mesero: " + (filtro.mesero == null ? "Todos" : filtro.mesero), subtitulo));
+                doc.add(new Paragraph(" "));
 
-            switch (tipo) {
-                case GENERAL -> agregarReporteGeneral(doc, filtro);
-                case RESUMEN_CATEGORIAS -> agregarReporteCategorias(doc, filtro);
-                case DETALLE_PRODUCTOS -> agregarReporteProductos(doc, filtro);
-                default -> throw new IllegalArgumentException("Tipo de reporte no soportado");
-            }
-        } finally {
-            if (doc.isOpen()) {
-                doc.close();
+                switch (tipo) {
+                    case GENERAL -> agregarReporteGeneral(doc, filtro);
+                    case RESUMEN_CATEGORIAS -> agregarReporteCategorias(doc, filtro);
+                    case DETALLE_PRODUCTOS -> agregarReporteProductos(doc, filtro);
+                    default -> throw new IllegalArgumentException("Tipo de reporte no soportado");
+                }
+            } finally {
+                if (doc.isOpen()) {
+                    doc.close();
+                }
             }
         }
     }

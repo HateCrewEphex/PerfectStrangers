@@ -12,8 +12,10 @@ public class PromocionDAO {
 
     public static void crearPromocion(Promocion promo) throws SQLException {
         String sql = "INSERT INTO promociones (nombre_promo, tipo_descuento, valor_descuento, " +
-                     "fecha_inicio, fecha_fin, id_producto_afectado, estado_promo) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                     "fecha_inicio, fecha_fin, hora_inicio, hora_fin, " +
+                     "aplica_lunes, aplica_martes, aplica_miercoles, aplica_jueves, aplica_viernes, aplica_sabado, aplica_domingo, " +
+                     "id_producto_afectado, estado_promo) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection con = DBConnection.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
@@ -22,12 +24,21 @@ public class PromocionDAO {
             stmt.setDouble(3, promo.getValorDescuento());
             stmt.setString(4, promo.getFechaInicio());
             stmt.setString(5, promo.getFechaFin());
+            stmt.setString(6, promo.getHoraInicio());
+            stmt.setString(7, promo.getHoraFin());
+            stmt.setBoolean(8, promo.isAplicaLunes());
+            stmt.setBoolean(9, promo.isAplicaMartes());
+            stmt.setBoolean(10, promo.isAplicaMiercoles());
+            stmt.setBoolean(11, promo.isAplicaJueves());
+            stmt.setBoolean(12, promo.isAplicaViernes());
+            stmt.setBoolean(13, promo.isAplicaSabado());
+            stmt.setBoolean(14, promo.isAplicaDomingo());
             if (promo.getIdProductoAfectado() != null) {
-                stmt.setInt(6, promo.getIdProductoAfectado());
+                stmt.setInt(15, promo.getIdProductoAfectado());
             } else {
-                stmt.setNull(6, Types.INTEGER);
+                stmt.setNull(15, Types.INTEGER);
             }
-            stmt.setBoolean(7, promo.isEstadoPromo());
+            stmt.setBoolean(16, promo.isEstadoPromo());
             stmt.executeUpdate();
         }
     }
@@ -70,7 +81,8 @@ public class PromocionDAO {
         String sql = "SELECT p.*, pr.nombre AS nombre_producto FROM promociones p " +
                      "LEFT JOIN productos pr ON p.id_producto_afectado = pr.id_producto " +
                      "WHERE p.estado_promo = TRUE " +
-                     "AND NOW() BETWEEN p.fecha_inicio AND p.fecha_fin " +
+                     "AND CURRENT_DATE BETWEEN p.fecha_inicio AND p.fecha_fin " +
+                     "AND CURRENT_TIME BETWEEN p.hora_inicio AND p.hora_fin " +
                      "ORDER BY p.nombre_promo";
         
         List<Promocion> promociones = new ArrayList<>();
@@ -79,7 +91,10 @@ public class PromocionDAO {
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {
-                promociones.add(mapResultSetToPromocion(rs));
+                Promocion p = mapResultSetToPromocion(rs);
+                if (p.esValidaAhora()) {
+                    promociones.add(p);
+                }
             }
         }
         return promociones;
@@ -89,7 +104,8 @@ public class PromocionDAO {
         String sql = "SELECT p.*, pr.nombre AS nombre_producto FROM promociones p " +
                      "LEFT JOIN productos pr ON p.id_producto_afectado = pr.id_producto " +
                      "WHERE p.estado_promo = TRUE " +
-                     "AND NOW() BETWEEN p.fecha_inicio AND p.fecha_fin " +
+                     "AND CURRENT_DATE BETWEEN p.fecha_inicio AND p.fecha_fin " +
+                     "AND CURRENT_TIME BETWEEN p.hora_inicio AND p.hora_fin " +
                      "AND (p.id_producto_afectado = ? OR p.id_producto_afectado IS NULL) " +
                      "ORDER BY p.nombre_promo";
         
@@ -100,7 +116,10 @@ public class PromocionDAO {
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {
-                promociones.add(mapResultSetToPromocion(rs));
+                Promocion p = mapResultSetToPromocion(rs);
+                if (p.esValidaAhora()) {
+                    promociones.add(p);
+                }
             }
         }
         return promociones;
@@ -109,6 +128,8 @@ public class PromocionDAO {
     public static void actualizarPromocion(Promocion promo) throws SQLException {
         String sql = "UPDATE promociones SET nombre_promo = ?, tipo_descuento = ?, " +
                      "valor_descuento = ?, fecha_inicio = ?, fecha_fin = ?, " +
+                     "hora_inicio = ?, hora_fin = ?, " +
+                     "aplica_lunes = ?, aplica_martes = ?, aplica_miercoles = ?, aplica_jueves = ?, aplica_viernes = ?, aplica_sabado = ?, aplica_domingo = ?, " +
                      "id_producto_afectado = ?, estado_promo = ? WHERE id_promocion = ?";
         
         try (Connection con = DBConnection.getConnection();
@@ -118,13 +139,22 @@ public class PromocionDAO {
             stmt.setDouble(3, promo.getValorDescuento());
             stmt.setString(4, promo.getFechaInicio());
             stmt.setString(5, promo.getFechaFin());
+            stmt.setString(6, promo.getHoraInicio());
+            stmt.setString(7, promo.getHoraFin());
+            stmt.setBoolean(8, promo.isAplicaLunes());
+            stmt.setBoolean(9, promo.isAplicaMartes());
+            stmt.setBoolean(10, promo.isAplicaMiercoles());
+            stmt.setBoolean(11, promo.isAplicaJueves());
+            stmt.setBoolean(12, promo.isAplicaViernes());
+            stmt.setBoolean(13, promo.isAplicaSabado());
+            stmt.setBoolean(14, promo.isAplicaDomingo());
             if (promo.getIdProductoAfectado() != null) {
-                stmt.setInt(6, promo.getIdProductoAfectado());
+                stmt.setInt(15, promo.getIdProductoAfectado());
             } else {
-                stmt.setNull(6, Types.INTEGER);
+                stmt.setNull(15, Types.INTEGER);
             }
-            stmt.setBoolean(7, promo.isEstadoPromo());
-            stmt.setInt(8, promo.getIdPromocion());
+            stmt.setBoolean(16, promo.isEstadoPromo());
+            stmt.setInt(17, promo.getIdPromocion());
             stmt.executeUpdate();
         }
     }
@@ -157,6 +187,15 @@ public class PromocionDAO {
         promo.setValorDescuento(rs.getDouble("valor_descuento"));
         promo.setFechaInicio(rs.getString("fecha_inicio"));
         promo.setFechaFin(rs.getString("fecha_fin"));
+        promo.setHoraInicio(rs.getString("hora_inicio"));
+        promo.setHoraFin(rs.getString("hora_fin"));
+        promo.setAplicaLunes(rs.getBoolean("aplica_lunes"));
+        promo.setAplicaMartes(rs.getBoolean("aplica_martes"));
+        promo.setAplicaMiercoles(rs.getBoolean("aplica_miercoles"));
+        promo.setAplicaJueves(rs.getBoolean("aplica_jueves"));
+        promo.setAplicaViernes(rs.getBoolean("aplica_viernes"));
+        promo.setAplicaSabado(rs.getBoolean("aplica_sabado"));
+        promo.setAplicaDomingo(rs.getBoolean("aplica_domingo"));
         int idProd = rs.getInt("id_producto_afectado");
         promo.setIdProductoAfectado(rs.wasNull() ? null : idProd);
         promo.setEstadoPromo(rs.getBoolean("estado_promo"));
