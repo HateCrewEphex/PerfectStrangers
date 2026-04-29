@@ -28,6 +28,14 @@ public class ServicioOrden {
      */
     public static void agregarProductoAOrden(int idOrden, int idProducto, int cantidad, 
                                              double precioUnitario, String notas) throws SQLException {
+        agregarProductoAOrden(idOrden, idProducto, cantidad, precioUnitario, notas, null);
+    }
+    
+    /**
+     * Agrega un producto a una orden con validación de inventario y promoción opcional
+     */
+    public static void agregarProductoAOrden(int idOrden, int idProducto, int cantidad, 
+                                             double precioUnitario, String notas, Integer idPromocion) throws SQLException {
         Orden orden = OrdenDAO.obtenerOrdenById(idOrden);
         if (orden == null) {
             throw new IllegalArgumentException("Orden no encontrada: " + idOrden);
@@ -46,6 +54,9 @@ public class ServicioOrden {
         // Crear detalle de orden
         DetalleOrden detalle = new DetalleOrden(idOrden, idProducto, cantidad, precioUnitario);
         detalle.setNotasEspeciales(notas);
+        if (idPromocion != null && idPromocion > 0) {
+            detalle.setIdPromocionAplicada(idPromocion);
+        }
         DetalleOrdenDAO.crearDetalleOrden(detalle);
         
         // Actualizar total

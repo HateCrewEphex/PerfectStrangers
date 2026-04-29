@@ -127,12 +127,15 @@ public class PSTOrden extends javax.swing.JFrame {
      * Creates new form PSTOrden
      */
     public PSTOrden() {
-        initComponents();jBAgregar.setBackground(null);
+        initComponents();
+        jBComplementos = new javax.swing.JButton(); // Prevent NullPointerException
+        jBAgregar.setBackground(null);
         jBRegistrar.setBackground(null);
         jBRegresar.setBackground(null);
         jBCombos.setBackground(null);
         jBPlatillos.setBackground(null);
         jBBebidas.setBackground(null);
+        jBComplementos.setBackground(null);
         
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         try {
@@ -374,6 +377,40 @@ public class PSTOrden extends javax.swing.JFrame {
         jLNVentana.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 22));
         jLNVentana.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         
+        // Panel Norte para Título y Banner de Promos
+        javax.swing.JPanel pNorte = new javax.swing.JPanel(new java.awt.BorderLayout(0, 5));
+        pNorte.setOpaque(false);
+        pNorte.add(jLNVentana, java.awt.BorderLayout.NORTH);
+        
+        javax.swing.JLabel lPromos = new javax.swing.JLabel();
+        lPromos.setFont(new java.awt.Font("Segoe UI", java.awt.Font.ITALIC, 14));
+        lPromos.setForeground(new java.awt.Color(0, 255, 60)); // Verde neón suave
+        lPromos.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        
+        try {
+            java.util.List<Promocion> activas = PromocionDAO.obtenerPromcionesActivas();
+            if (!activas.isEmpty()) {
+                StringBuilder txt = new StringBuilder("🔥 Promociones Activas: ");
+                for (int i = 0; i < activas.size(); i++) {
+                    Promocion p = activas.get(i);
+                    txt.append(p.getNombrePromo());
+                    if (p.getIdProductoAfectado() == null) {
+                        txt.append(" (General)");
+                    } else {
+                        txt.append(" (").append(p.getNombreProducto() != null ? p.getNombreProducto() : "Prod").append(")");
+                    }
+                    if (i < activas.size() - 1) txt.append("  |  ");
+                }
+                lPromos.setText(txt.toString());
+            } else {
+                lPromos.setText("Sin promociones activas en este momento.");
+                lPromos.setForeground(new java.awt.Color(150, 150, 150));
+            }
+        } catch (SQLException ex) {
+            lPromos.setText("");
+        }
+        pNorte.add(lPromos, java.awt.BorderLayout.CENTER);
+        
         // CONTENEDOR PRINCIPAL DIVIDIDO EN 2 COLUMNAS (Izquierda: Resumen | Derecha: Categorías y Productos)
         javax.swing.JPanel panelSplit = new javax.swing.JPanel(new java.awt.BorderLayout(20, 0));
         panelSplit.setOpaque(false);
@@ -409,7 +446,7 @@ public class PSTOrden extends javax.swing.JFrame {
         for (int i = 1; i <= 15; i++) { jCNoMesa.addItem("Mesa " + i); }
 
         // ÁREA VISUAL DEL TICKET (JTable en lugar de Label)
-        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "C", "P", "IsCombo", "Notas", "X"}, 0) {
+        modeloOrden = new DefaultTableModel(new Object[]{"ID", "Nombre", "C", "P", "IsCombo", "Notas", "X", "Promo"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; } // Nada es editable directo desde click en celda
         };
@@ -419,6 +456,7 @@ public class PSTOrden extends javax.swing.JFrame {
         tablaOrden.getColumnModel().getColumn(0).setMinWidth(0); tablaOrden.getColumnModel().getColumn(0).setMaxWidth(0); tablaOrden.getColumnModel().getColumn(0).setWidth(0);
         tablaOrden.getColumnModel().getColumn(4).setMinWidth(0); tablaOrden.getColumnModel().getColumn(4).setMaxWidth(0); tablaOrden.getColumnModel().getColumn(4).setWidth(0);
         tablaOrden.getColumnModel().getColumn(5).setMinWidth(0); tablaOrden.getColumnModel().getColumn(5).setMaxWidth(0); tablaOrden.getColumnModel().getColumn(5).setWidth(0);
+        tablaOrden.getColumnModel().getColumn(7).setMinWidth(0); tablaOrden.getColumnModel().getColumn(7).setMaxWidth(0); tablaOrden.getColumnModel().getColumn(7).setWidth(0);
         
         // Ajuste de proporciones (Nombre muy largo, Cantidad (C) y Precio (P) breves)
         tablaOrden.getColumnModel().getColumn(1).setPreferredWidth(170);
@@ -488,14 +526,15 @@ public class PSTOrden extends javax.swing.JFrame {
         panelDerecho.setOpaque(false);
 
         // PESTAÑAS / BOTONES DE CATEGORÍA
-        javax.swing.JPanel panelCategorias = new javax.swing.JPanel(new java.awt.GridLayout(1, 3, 10, 0));
+        javax.swing.JPanel panelCategorias = new javax.swing.JPanel(new java.awt.GridLayout(1, 4, 10, 0));
         panelCategorias.setOpaque(false);
 
         // Reestilizar pestañas basado en el wireframe (Plomo con hover y outline)
-        javax.swing.JButton[] botonesCat = {jBPlatillos, jBCombos, jBBebidas};
+        javax.swing.JButton[] botonesCat = {jBPlatillos, jBCombos, jBBebidas, jBComplementos};
         jBPlatillos.setText("Platillos");
         jBCombos.setText("Combos");
         jBBebidas.setText("Bebidas");
+        jBComplementos.setText("Complementos");
         for (javax.swing.JButton btn : botonesCat) {
             btn.setBackground(new java.awt.Color(40, 40, 42)); // Tono Gris plomo
             btn.setForeground(tonoOro);
@@ -512,6 +551,7 @@ public class PSTOrden extends javax.swing.JFrame {
         panelCategorias.add(jBPlatillos);
         panelCategorias.add(jBCombos);
         panelCategorias.add(jBBebidas);
+        panelCategorias.add(jBComplementos);
 
         // ÁREA DE "CARDS" O BLOQUES DE PRODUCTO
         jPCont.removeAll();
@@ -582,12 +622,14 @@ public class PSTOrden extends javax.swing.JFrame {
         for (java.awt.event.ActionListener al : jBPlatillos.getActionListeners()) jBPlatillos.removeActionListener(al);
         for (java.awt.event.ActionListener al : jBCombos.getActionListeners()) jBCombos.removeActionListener(al);
         for (java.awt.event.ActionListener al : jBBebidas.getActionListeners()) jBBebidas.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBComplementos.getActionListeners()) jBComplementos.removeActionListener(al);
         for (java.awt.event.ActionListener al : jBAgregar.getActionListeners()) jBAgregar.removeActionListener(al);
         for (java.awt.event.ActionListener al : jBRegistrar.getActionListeners()) jBRegistrar.removeActionListener(al);
 
         jBPlatillos.addActionListener(e -> { resaltarPestaña(botonesCat, jBPlatillos); cargarProductos("Platillos"); });
         jBCombos.addActionListener(e -> { resaltarPestaña(botonesCat, jBCombos); cargarProductos("Combos"); });
         jBBebidas.addActionListener(e -> { resaltarPestaña(botonesCat, jBBebidas); cargarProductos("Bebidas"); });
+        jBComplementos.addActionListener(e -> { resaltarPestaña(botonesCat, jBComplementos); cargarProductos("Complementos"); });
         jBAgregar.addActionListener(e -> agregarAOrden());
         jBRegistrar.addActionListener(e -> registrarOrden());
 
@@ -621,17 +663,30 @@ public class PSTOrden extends javax.swing.JFrame {
         boolean esCombo = "Combos".equals(categoria);
 
         try {
-            List<Producto> productos;
+            System.out.println("=== DEBUG: Cargando categoría: " + categoria);
+            List<Producto> productos = new ArrayList<>();
+            
             if ("Platillos".equals(categoria)) {
+                System.out.println("DEBUG: Buscando 'Platillo'");
                 productos = ProductoDAO.obtenerProductosPorCategoria("Platillo");
             } else if ("Bebidas".equals(categoria)) {
+                System.out.println("DEBUG: Buscando 'Bebidas'");
                 productos = ProductoDAO.obtenerProductosPorCategoria("Bebidas");
-            } else {
-                // En el nuevo esquema, este tab se mapea a Complementos.
+            } else if ("Combos".equals(categoria)) {
+                System.out.println("DEBUG: Buscando 'Combo'");
+                productos = ProductoDAO.obtenerProductosPorCategoria("Combo");
+            } else if ("Complementos".equals(categoria)) {
+                System.out.println("DEBUG: Buscando 'Complementos'");
                 productos = ProductoDAO.obtenerProductosPorCategoria("Complementos");
+            } else {
+                System.out.println("DEBUG: Categoría desconocida, usando fallback");
+                productos = new ArrayList<>();
             }
 
+            System.out.println("DEBUG: Encontrados " + productos.size() + " productos");
+            
             for (Producto producto : productos) {
+                System.out.println("DEBUG: Agregando: " + producto.getNombre() + " ($" + producto.getPrecio() + ")");
                 ProductoItem item = new ProductoItem(
                     producto.getIdProducto(),
                     producto.getNombre(),
@@ -642,7 +697,10 @@ public class PSTOrden extends javax.swing.JFrame {
                 jPCont.add(item.panel);
             }
         } catch (SQLException ex) {
-            System.err.println("Error base de datos: " + ex.getMessage());
+            System.err.println("ERROR base de datos: " + ex.getMessage());
+            System.err.println("SQL State: " + ex.getSQLState());
+            System.err.println("Error Code: " + ex.getErrorCode());
+            ex.printStackTrace();
             // Llenado falso para que puedas ver el diseño aunque la base de datos falte o falle
             for (int i = 1; i <= 6; i++) {
                 ProductoItem item = new ProductoItem(i, categoria + " " + i, 50.0 + (i * 10.5), esCombo);
@@ -669,17 +727,38 @@ public class PSTOrden extends javax.swing.JFrame {
 
     private void agregarAOrden() {
         if (productosActuales == null) return;
+        StringBuilder promosAplicadas = new StringBuilder();
         for (ProductoItem item : productosActuales) {
             if (item.checkBox.isSelected()) {
                 int cantidad = (int) item.spinnerCantidad.getValue();
                 String notas = item.notaEspecial != null ? item.notaEspecial.getText().trim() : "";
-                modeloOrden.addRow(new Object[]{ item.id, item.nombre, cantidad, item.precio, item.esCombo, notas, "❌" });
+                
+                // AUTO-APLICAR PROMOCIONES ESPECÍFICAS DE PRODUCTO
+                Integer idPromocionAplicada = null;
+                try {
+                    Promocion promoAuto = ServicioPromocion.obtenerMejorPromo(item.id);
+                    if (promoAuto != null) {
+                        idPromocionAplicada = promoAuto.getIdPromocion();
+                        notas += (notas.isEmpty() ? "" : " | ") + "✓ Promo: " + promoAuto.getNombrePromo();
+                        promosAplicadas.append("- ").append(item.nombre).append(": ").append(promoAuto.getNombrePromo()).append("\n");
+                    }
+                } catch (SQLException ex) {
+                    System.err.println("Error al detectar promos: " + ex.getMessage());
+                }
+                
+                modeloOrden.addRow(new Object[]{ item.id, item.nombre, cantidad, item.precio, item.esCombo, notas, "❌", idPromocionAplicada });
                 item.checkBox.setSelected(false);
-                item.spinnerCantidad.setValue(1); // Resetear spinner
+                item.spinnerCantidad.setValue(1);
                 if (item.notaEspecial != null) {
                     item.notaEspecial.setText("");
                 }
             }
+        }
+        
+        if (promosAplicadas.length() > 0) {
+            javax.swing.JOptionPane.showMessageDialog(this, 
+                "Se aplicaron promociones automáticamente a los siguientes productos:\n" + promosAplicadas.toString(), 
+                "Promociones Aplicadas", javax.swing.JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -713,6 +792,23 @@ public class PSTOrden extends javax.swing.JFrame {
                 idOrden = ServicioOrden.crearOrden(idEmpleado, numMesa).getIdOrden();
             }
 
+            List<Promocion> promosGenericas = new ArrayList<>();
+            try {
+                promosGenericas = ServicioPromocion.obtenerPromosGenericas();
+            } catch (SQLException ex) {
+                System.err.println("Error al detectar promos genéricas: " + ex.getMessage());
+            }
+
+            Promocion promoSugeridaElegida = null;
+            if (!promosGenericas.isEmpty()) {
+                DialogoSeleccionarPromocion dialogo = new DialogoSeleccionarPromocion(this, 
+                    new java.util.ArrayList<>(promosGenericas));
+                dialogo.setVisible(true);
+                if (dialogo.fueConfirmado() && dialogo.getPromoSeleccionada() != null) {
+                    promoSugeridaElegida = dialogo.getPromoSeleccionada();
+                }
+            }
+
             for (int i = 0; i < modeloOrden.getRowCount(); i++) {
                 int idItem = (int) modeloOrden.getValueAt(i, 0);
 
@@ -738,7 +834,24 @@ public class PSTOrden extends javax.swing.JFrame {
                     notas = notasObj.toString();
                 }
 
-                ServicioOrden.agregarProductoAOrden(idOrden, idItem, cantidad, precio, notas);
+                Integer idPromocionAplicada = null;
+                try {
+                    Object promoObj = modeloOrden.getValueAt(i, 7);
+                    if (promoObj instanceof Integer) {
+                        idPromocionAplicada = (Integer) promoObj;
+                    }
+                } catch (Exception e) { }
+
+                if (i == 0 && promoSugeridaElegida != null) {
+                    notas += (notas.isEmpty() ? "" : " | ") + "✓ Promo General: " + promoSugeridaElegida.getNombrePromo();
+                }
+
+                ServicioOrden.agregarProductoAOrden(idOrden, idItem, cantidad, precio, notas, idPromocionAplicada);
+            }
+
+            if (promoSugeridaElegida != null) {
+                javax.swing.JOptionPane.showMessageDialog(this, 
+                    "Promoción " + promoSugeridaElegida.getNombrePromo() + " aplicada a la orden.");
             }
 
             javax.swing.JOptionPane.showMessageDialog(this, abiertasMesa.isEmpty()
@@ -777,6 +890,7 @@ public class PSTOrden extends javax.swing.JFrame {
     private javax.swing.JButton jBAgregar;
     private javax.swing.JButton jBBebidas;
     private javax.swing.JButton jBCombos;
+    private javax.swing.JButton jBComplementos;
     private javax.swing.JButton jBPlatillos;
     private javax.swing.JButton jBRegistrar;
     private javax.swing.JButton jBRegresar;

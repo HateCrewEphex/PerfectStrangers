@@ -7,6 +7,7 @@ public class DetalleOrden {
     private int cantidad;
     private double precioUnitario;
     private String notasEspeciales;
+    private Integer idPromocionAplicada;
 
     // Datos adicionales (no almacenados en BD)
     private String nombreProducto;
@@ -68,6 +69,14 @@ public class DetalleOrden {
 
     public void setNotasEspeciales(String notasEspeciales) {
         this.notasEspeciales = notasEspeciales;
+    }
+
+    public Integer getIdPromocionAplicada() {
+        return idPromocionAplicada;
+    }
+
+    public void setIdPromocionAplicada(Integer idPromocionAplicada) {
+        this.idPromocionAplicada = idPromocionAplicada;
     }
 
     public String getNombreProducto() {

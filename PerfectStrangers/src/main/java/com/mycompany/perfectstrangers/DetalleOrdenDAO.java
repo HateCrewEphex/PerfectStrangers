@@ -127,6 +127,7 @@ public class DetalleOrdenDAO {
         detalle.setPrecioUnitario(rs.getDouble("precio_unitario"));
         detalle.setNotasEspeciales(rs.getString("notas_especiales"));
         detalle.setNombreProducto(rs.getString("nombre"));
+        
         return detalle;
     }
 }

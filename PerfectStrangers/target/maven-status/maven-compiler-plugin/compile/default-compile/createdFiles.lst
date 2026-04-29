@@ -4,7 +4,6 @@ com\mycompany\perfectstrangers\PerfectStrangers.class
 com\mycompany\perfectstrangers\Insumo.class
 com\mycompany\perfectstrangers\DetalleOrdenDAO.class
 com\mycompany\perfectstrangers\ServicioPrecio.class
-BuscadorTerminal.class
 com\mycompany\perfectstrangers\PSHistorial$2.class
 com\mycompany\perfectstrangers\PSPlatillos$2.class
 com\mycompany\perfectstrangers\PSCobOrden$1.class
@@ -14,6 +13,9 @@ com\mycompany\perfectstrangers\MercadoPagoAPI.class
 com\mycompany\perfectstrangers\PSConOrder$OrdenPendiente.class
 com\mycompany\perfectstrangers\ServicioOrden$EstadisticasOrden.class
 com\mycompany\perfectstrangers\PSTOrden$3.class
+com\mycompany\perfectstrangers\PSPromociones.class
+com\mycompany\perfectstrangers\PSPromociones$ProductoItem.class
+com\mycompany\perfectstrangers\PSPromociones$1.class
 com\mycompany\perfectstrangers\PSEmpleados$2.class
 com\mycompany\perfectstrangers\EmpaqueInsumo.class
 com\mycompany\perfectstrangers\PromocionDAO.class
@@ -33,6 +35,7 @@ com\mycompany\perfectstrangers\Orden.class
 com\mycompany\perfectstrangers\PSEmpleados$4.class
 com\mycompany\perfectstrangers\PSMenu$6.class
 com\mycompany\perfectstrangers\PSInicio.class
+com\mycompany\perfectstrangers\Promocion$1.class
 com\mycompany\perfectstrangers\Pago.class
 com\mycompany\perfectstrangers\PSInicio$2.class
 com\mycompany\perfectstrangers\PSHistorial$1.class
@@ -59,6 +62,7 @@ com\mycompany\perfectstrangers\PSCobOrden$2.class
 com\mycompany\perfectstrangers\OrdenDAO.class
 com\mycompany\perfectstrangers\Producto.class
 com\mycompany\perfectstrangers\PSPlatillos$1.class
+com\mycompany\perfectstrangers\DialogoSeleccionarPromocion.class
 com\mycompany\perfectstrangers\PagoDAO.class
 com\mycompany\perfectstrangers\ProductoDAO.class
 com\mycompany\perfectstrangers\PSMenu$5.class
@@ -74,6 +78,7 @@ com\mycompany\perfectstrangers\PSMenu$2.class
 com\mycompany\perfectstrangers\ServicioPrecio$DetallesPrecio.class
 com\mycompany\perfectstrangers\ReporteVentasPDFService.class
 com\mycompany\perfectstrangers\PSCombos$3.class
+com\mycompany\perfectstrangers\ServicioPromocion.class
 com\mycompany\perfectstrangers\Sesion.class
 com\mycompany\perfectstrangers\PSCobOrden$3.class
 com\mycompany\perfectstrangers\PSEmpleados.class

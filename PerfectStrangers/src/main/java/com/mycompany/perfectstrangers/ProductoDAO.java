@@ -10,7 +10,7 @@ import java.util.List;
 public class ProductoDAO {
 
     public static void crearProducto(Producto producto) throws SQLException {
-        String sql = "INSERT INTO productos (nombre, descripcion, precio, categoria, ruta_imagen, disponible) " +
+        String sql = "INSERT INTO productos (nombre, descripcion, precio, categoria, imagen, disponible) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection con = DBConnection.getConnection();
@@ -19,7 +19,7 @@ public class ProductoDAO {
             stmt.setString(2, producto.getDescripcion());
             stmt.setDouble(3, producto.getPrecio());
             stmt.setString(4, producto.getCategoria());
-            stmt.setString(5, producto.getRutaImagen());
+            stmt.setString(5, producto.getRutaImagen());  // Por ahora guardamos como string
             stmt.setBoolean(6, producto.isDisponible());
             stmt.executeUpdate();
         }
@@ -100,7 +100,7 @@ public class ProductoDAO {
 
     public static void actualizarProducto(Producto producto) throws SQLException {
         String sql = "UPDATE productos SET nombre = ?, descripcion = ?, precio = ?, categoria = ?, " +
-                     "ruta_imagen = ?, disponible = ? WHERE id_producto = ?";
+                     "imagen = ?, disponible = ? WHERE id_producto = ?";
         
         try (Connection con = DBConnection.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
@@ -108,7 +108,7 @@ public class ProductoDAO {
             stmt.setString(2, producto.getDescripcion());
             stmt.setDouble(3, producto.getPrecio());
             stmt.setString(4, producto.getCategoria());
-            stmt.setString(5, producto.getRutaImagen());
+            stmt.setString(5, producto.getRutaImagen());  // Por ahora guardamos como string
             stmt.setBoolean(6, producto.isDisponible());
             stmt.setInt(7, producto.getIdProducto());
             stmt.executeUpdate();
@@ -142,7 +142,18 @@ public class ProductoDAO {
         producto.setDescripcion(rs.getString("descripcion"));
         producto.setPrecio(rs.getDouble("precio"));
         producto.setCategoria(rs.getString("categoria"));
-        producto.setRutaImagen(rs.getString("ruta_imagen"));
+        
+        // Intentar leer imagen como string (compatibilidad)
+        try {
+            byte[] imagenBlob = rs.getBytes("imagen");
+            if (imagenBlob != null && imagenBlob.length > 0) {
+                producto.setRutaImagen("blob");  // Flag para indicar que hay imagen
+            }
+        } catch (SQLException e) {
+            // Si la columna no existe o hay error, ignorar
+            producto.setRutaImagen(null);
+        }
+        
         producto.setDisponible(rs.getBoolean("disponible"));
         return producto;
     }

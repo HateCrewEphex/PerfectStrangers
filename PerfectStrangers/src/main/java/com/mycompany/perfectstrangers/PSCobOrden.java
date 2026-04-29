@@ -405,15 +405,13 @@ public class PSCobOrden extends javax.swing.JFrame {
                     }
                     
                     if (existeOrden) {
-                        // Generar subtotal ficticio de puro adorno para que se vea completo como en la imagen
-                        double tax = total * 0.16; // Suponemos 16% de tax para el adorno
-                        double tip = total * 0.15; // Suponemos 15% de tip para adorno
-                        double subtotalBase = total - tax - tip;
-                        if(subtotalBase < 0) subtotalBase = total;
+                        double descuentoGlobal = Math.max(total - totalBruto, 0.0);
 
                         html.append("<div style='text-align: right; margin-top: 25px; font-size: 20px; border-top: 2px solid #555555; padding-top: 10px;'>");
-                        html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Subtotal: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", subtotalBase)).append("</span></div>");
-                        html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>IVA: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", tax)).append("</span></div>");
+                        html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Subtotal: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", total)).append("</span></div>");
+                        if (descuentoGlobal > 0) {
+                            html.append("<div style='margin-bottom: 4px; color: #00ff3c;'>Descuento Promos: &nbsp;&nbsp;&nbsp; <span style='color: #00ff3c'>-$").append(String.format("%.2f", descuentoGlobal)).append("</span></div>");
+                        }
                         html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Total cuenta: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", totalBruto)).append("</span></div>");
                         html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Abonado: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", totalPagado)).append("</span></div>");
                         html.append("<div style='color: #cca95a; font-weight: bold; margin-top: 10px; font-size: 24px;'>PENDIENTE: &nbsp;&nbsp;&nbsp; $").append(String.format("%.2f", totalPendiente)).append("</div>");

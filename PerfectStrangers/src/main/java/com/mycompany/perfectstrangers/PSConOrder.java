@@ -210,7 +210,7 @@ public class PSConOrder extends javax.swing.JFrame {
                  "FROM ordenes o " +
                  "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
                  "INNER JOIN productos p ON d.id_producto = p.id_producto " +
-                 "WHERE o.estado_pago IN ('Pendiente', 'Parcial') AND d.estado_detalle = 'Pendiente' " +
+                 "WHERE o.estado_pago IN ('Pendiente', 'Parcial') AND o.estado_preparacion IN ('Pendiente', 'En Preparacion') " +
                  "ORDER BY o.fecha_hora ASC, o.id_orden ASC";
 
         try (Connection con = DBConnection.getConnection();
@@ -388,18 +388,12 @@ public class PSConOrder extends javax.swing.JFrame {
         if (listaOrdenes.isEmpty()) return;
         OrdenPendiente o = listaOrdenes.get(0);
 
-        String sqlDetalle = "UPDATE detalle_orden SET estado_detalle = 'Entregada' WHERE id_orden = ? AND estado_detalle = 'Pendiente'";
-        String sqlOrden = "UPDATE ordenes SET estado_preparacion = 'Entregada' WHERE id_orden = ? AND NOT EXISTS (SELECT 1 FROM detalle_orden WHERE id_orden = ? AND estado_detalle = 'Pendiente')";
+        String sqlOrden = "UPDATE ordenes SET estado_preparacion = 'Entregado' WHERE id_orden = ?";
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement pstDetalle = con.prepareStatement(sqlDetalle);
              PreparedStatement pstOrden = con.prepareStatement(sqlOrden)) {
             con.setAutoCommit(false);
 
-            pstDetalle.setInt(1, o.idOrden);
-            pstDetalle.executeUpdate();
-
             pstOrden.setInt(1, o.idOrden);
-            pstOrden.setInt(2, o.idOrden);
             pstOrden.executeUpdate();
 
             con.commit();

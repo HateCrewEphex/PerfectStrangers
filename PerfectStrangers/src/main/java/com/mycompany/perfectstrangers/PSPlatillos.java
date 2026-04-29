@@ -49,7 +49,7 @@ public class PSPlatillos extends javax.swing.JFrame {
         jBEliPlatillo.setFont(fontLabels);
         
         // Configurar ComboBox de categoría real en el nuevo esquema
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Platillos", "Bebidas" }));
+        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Platillo", "Bebidas", "Complementos", "Combo" }));
         
         jBGuardar.setText("REGISTRAR");
         jBGuardar.setBackground(new java.awt.Color(33, 122, 79));
@@ -325,7 +325,7 @@ public class PSPlatillos extends javax.swing.JFrame {
 
     private void registrarProducto() {
         String nombre = jTNomPlatillo.getText().trim();
-        String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillos";
+        String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillo";
         String precioStr = jTPrecio.getText().trim();
         boolean disponible = "Sí".equals(jComboBox1.getSelectedItem());
 
@@ -365,7 +365,7 @@ public class PSPlatillos extends javax.swing.JFrame {
         }
         
         String nombre = jTNomPlatillo.getText().trim();
-        String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillos";
+        String categoria = jComboBox2.getSelectedItem() != null ? jComboBox2.getSelectedItem().toString() : "Platillo";
         String precioStr = jTPrecio.getText().trim();
         boolean disponible = "Sí".equals(jComboBox1.getSelectedItem());
 
