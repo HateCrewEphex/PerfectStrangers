@@ -63,6 +63,7 @@ public class PSTOrden extends javax.swing.JFrame {
             checkBox.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
             checkBox.setBackground(new java.awt.Color(30, 30, 32));
             checkBox.setForeground(new java.awt.Color(230, 230, 220));
+            // No se usa un icono específico para deshabilitado, el estilo visual es suficiente.
             checkBox.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 15));
             checkBox.setFocusPainted(false);
             
@@ -80,6 +81,12 @@ public class PSTOrden extends javax.swing.JFrame {
                     ));
                     panel.setBackground(new java.awt.Color(40, 40, 42));
                     checkBox.setBackground(new java.awt.Color(40, 40, 42));
+                } else if (!checkBox.isEnabled()) { // If disabled, keep the unavailable style
+                    panel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                        javax.swing.BorderFactory.createLineBorder(new java.awt.Color(100, 0, 0), 2), // Red border for unavailable
+                        javax.swing.BorderFactory.createEmptyBorder(15, 10, 15, 10)
+                    ));
+                    panel.setBackground(new java.awt.Color(20, 20, 22));
                 } else {
                     panel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
                         javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2), // Borde negro inactivo

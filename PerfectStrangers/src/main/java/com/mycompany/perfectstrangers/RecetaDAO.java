@@ -10,33 +10,6 @@ import java.util.List;
 
 public class RecetaDAO {
 
-    public static void crearReceta(Receta receta) throws SQLException {
-        String sqlReceta = "INSERT INTO recetas (id_producto, descripcion) VALUES (?, ?)";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sqlReceta, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, receta.getIdProducto());
-            stmt.setString(2, receta.getDescripcionReceta() != null ? receta.getDescripcionReceta() : "");
-            stmt.executeUpdate();
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    receta.setIdReceta(rs.getInt(1));
-                }
-            }
-        }
-
-        if (receta.getIdInsumo() > 0 && receta.getCantidadRequerida() > 0) {
-            String sqlDetalle = "INSERT INTO detalles_receta (id_receta, id_ingrediente, cantidad) VALUES (?, ?, ?)";
-            try (Connection con = DBConnection.getConnection();
-                 PreparedStatement stmt = con.prepareStatement(sqlDetalle)) {
-                stmt.setInt(1, receta.getIdReceta());
-                stmt.setInt(2, receta.getIdInsumo());
-                stmt.setDouble(3, receta.getCantidadRequerida());
-                stmt.executeUpdate();
-            }
-        }
-    }
-
     public static Receta obtenerRecetaById(int idReceta) throws SQLException {
         String sql = "SELECT r.id_receta, r.id_producto, r.descripcion AS descripcion_receta, " +
                      "d.id_ingrediente, d.cantidad, p.nombre AS nombre_producto, i.nombre AS nombre_insumo, i.medicion " +
@@ -163,13 +136,99 @@ public class RecetaDAO {
         }
     }
 
+    /**
+     * Guarda o actualiza la receta completa de un producto de forma transaccional.
+     * Primero elimina la receta anterior y luego inserta la nueva.
+     * @param idProducto El ID del producto.
+     * @param descripcion La descripción de la receta.
+     * @param ingredientes La lista de ingredientes para la nueva receta.
+     * @throws SQLException Si ocurre un error en la base de datos.
+     */
+    public static void guardarRecetaCompleta(int idProducto, String descripcion, List<Receta> ingredientes) throws SQLException {
+        String sqlDeleteDetails = "DELETE FROM detalles_receta WHERE id_receta IN (SELECT id_receta FROM recetas WHERE id_producto = ?)";
+        String sqlDeleteRecetaHeader = "DELETE FROM recetas WHERE id_producto = ?";
+        String sqlInsertRecetaHeader = "INSERT INTO recetas (id_producto, descripcion) VALUES (?, ?)";
+        String sqlInsertDetalle = "INSERT INTO detalles_receta (id_receta, id_ingrediente, cantidad) VALUES (?, ?, ?)";
+
+        Connection con = null;
+        try {
+            con = DBConnection.getConnection();
+            con.setAutoCommit(false);
+
+            // 1. Eliminar la receta anterior completa (detalles y cabecera)
+            try (PreparedStatement stmt = con.prepareStatement(sqlDeleteDetails)) {
+                stmt.setInt(1, idProducto);
+                stmt.executeUpdate();
+            }
+            try (PreparedStatement stmt = con.prepareStatement(sqlDeleteRecetaHeader)) {
+                stmt.setInt(1, idProducto);
+                stmt.executeUpdate();
+            }
+
+            // 2. Si hay nuevos ingredientes, crear la nueva receta
+            if (ingredientes != null && !ingredientes.isEmpty()) {
+                int idRecetaGenerado;
+                try (PreparedStatement stmt = con.prepareStatement(sqlInsertRecetaHeader, Statement.RETURN_GENERATED_KEYS)) {
+                    stmt.setInt(1, idProducto);
+                    stmt.setString(2, descripcion);
+                    stmt.executeUpdate();
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            idRecetaGenerado = rs.getInt(1);
+                        } else {
+                            throw new SQLException("No se pudo obtener el ID de la receta creada.");
+                        }
+                    }
+                }
+
+                try (PreparedStatement stmt = con.prepareStatement(sqlInsertDetalle)) {
+                    for (Receta ingrediente : ingredientes) {
+                        stmt.setInt(1, idRecetaGenerado);
+                        stmt.setInt(2, ingrediente.getIdInsumo());
+                        stmt.setDouble(3, ingrediente.getCantidadRequerida());
+                        stmt.addBatch();
+                    }
+                    stmt.executeBatch();
+                }
+            }
+
+            con.commit();
+
+        } catch (SQLException e) {
+            if (con != null) con.rollback();
+            throw e;
+        } finally {
+            if (con != null) {
+                con.setAutoCommit(true);
+                con.close();
+            }
+        }
+    }
+
     public static void eliminarRecetasPorProducto(int idProducto) throws SQLException {
-        String sql = "DELETE FROM recetas WHERE id_producto = ?";
-        
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-            stmt.setInt(1, idProducto);
-            stmt.executeUpdate();
+        String sqlDeleteDetails = "DELETE FROM detalles_receta WHERE id_receta IN (SELECT id_receta FROM recetas WHERE id_producto = ?)";
+        String sqlDeleteRecetas = "DELETE FROM recetas WHERE id_producto = ?";
+
+        try (Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                // First delete details to avoid foreign key constraint violations
+                try (PreparedStatement stmt = con.prepareStatement(sqlDeleteDetails)) {
+                    stmt.setInt(1, idProducto);
+                    stmt.executeUpdate();
+                }
+                // Then delete the recipes themselves
+                try (PreparedStatement stmt = con.prepareStatement(sqlDeleteRecetas)) {
+                    stmt.setInt(1, idProducto);
+                    stmt.executeUpdate();
+                }
+                con.commit();
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
         }
     }
 

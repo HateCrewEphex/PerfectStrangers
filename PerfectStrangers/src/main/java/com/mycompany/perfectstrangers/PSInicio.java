@@ -30,7 +30,7 @@ public class PSInicio extends javax.swing.JFrame {
             System.err.println("No se pudo cargar el icono de la ventana.");
         }
         
-        this.setTitle("PerfectStrangers - VENTA Y ORDENES");
+        this.setTitle("PerfectStrangers - Venta y Órdenes");
                 jPFContraseña.setEchoChar('*');
         jPFContraseña.setText("");
         jLAccesoIncorrecto.setText("");
@@ -44,8 +44,12 @@ public class PSInicio extends javax.swing.JFrame {
         java.awt.Color tonoOro = new java.awt.Color(204, 169, 90);
         java.awt.Color casiNegro = new java.awt.Color(25, 25, 25);
         java.awt.Font fuenteTitulos = new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 15);
-        
-        jPPrincipal.setVisible(false); // Ocultar el diseño por defecto de NetBeans
+
+        // 1. Remover todos los componentes de jPPrincipal (el panel principal generado por NetBeans)
+        // para poder reestructurar la interfaz y aplicar nuestro fondo personalizado.
+        jPPrincipal.removeAll();
+        // 2. Establecer GridBagLayout en jPPrincipal para centrar la tarjeta de login.
+        jPPrincipal.setLayout(new java.awt.GridBagLayout());
         
         // Panel interior (tarjeta central translúcida)
         javax.swing.JPanel tarjetaLogin = new javax.swing.JPanel() {
@@ -137,7 +141,7 @@ public class PSInicio extends javax.swing.JFrame {
         tarjetaLogin.add(javax.swing.Box.createVerticalGlue());
         
         // Panel Fondo Maestro simulando la plancha de acero exterior
-        javax.swing.JPanel fondoCentrado = new javax.swing.JPanel(new java.awt.GridBagLayout()) {
+        jPPrincipal = new javax.swing.JPanel(new java.awt.GridBagLayout()) { // Aplicamos el paintComponent directamente a jPPrincipal
             private java.awt.Image bgImage;
             {
                 try {
@@ -221,9 +225,9 @@ public class PSInicio extends javax.swing.JFrame {
                 g2.dispose();
             }
         };
-        fondoCentrado.setBackground(new java.awt.Color(0, 0, 0));
-        fondoCentrado.add(tarjetaLogin);
-        this.setContentPane(fondoCentrado);
+        // 3. Añadir tarjetaLogin a jPPrincipal (que ahora tiene el fondo personalizado)
+        jPPrincipal.add(tarjetaLogin);
+        setContentPane(jPPrincipal);
         
         try {
             java.net.URL logoURL = getClass().getResource("/com/mycompany/perfectstrangers/icon.png");
@@ -231,6 +235,7 @@ public class PSInicio extends javax.swing.JFrame {
                 javax.swing.ImageIcon logoOriginal = new javax.swing.ImageIcon(logoURL);
                 java.awt.Image imagenOriginal = logoOriginal.getImage();
                 java.awt.Image redimensionada = imagenOriginal.getScaledInstance(250, 250, java.awt.Image.SCALE_SMOOTH);
+                // jLLogo.setIcon(new javax.swing.ImageIcon(redimensionada)); // 'logo' es el nombre real del componente
                 jLLogo.setIcon(new javax.swing.ImageIcon(redimensionada));
             }
         } catch (Exception e) {}    }

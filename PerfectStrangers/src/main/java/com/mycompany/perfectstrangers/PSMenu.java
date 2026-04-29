@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import javax.swing.Timer;
 
@@ -18,6 +19,10 @@ import javax.swing.Timer;
 public class PSMenu extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSMenu.class.getName());
+    // NEW: Split pane and toggle button for alerts
+    private javax.swing.JSplitPane mainSplitPane;
+    private javax.swing.JToggleButton toggleAlertsButton;
+    private javax.swing.JEditorPane alertasEditorPane;
 
     /**
      * Creates new form PSMenu
@@ -37,6 +42,7 @@ public class PSMenu extends javax.swing.JFrame {
         configurarNavegacionMenu();
         configurarFondo();
         configurarSesionDatos();
+        cargarAlertasInventario();
     }
 
     private void configurarSesionDatos() {
@@ -144,6 +150,75 @@ public class PSMenu extends javax.swing.JFrame {
                 }
             };
             
+            // --- PANEL DE ALERTAS (DERECHA) ---
+            javax.swing.JPanel panelAlertas = new javax.swing.JPanel(new java.awt.BorderLayout(10, 10));
+            panelAlertas.setOpaque(false);
+            panelAlertas.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createMatteBorder(0, 2, 0, 0, tonoOro), // Línea separadora dorada
+                javax.swing.BorderFactory.createEmptyBorder(25, 15, 25, 25)
+            ));
+            panelAlertas.setPreferredSize(new java.awt.Dimension(350, 0));
+
+            javax.swing.JLabel lblTituloAlertas = new javax.swing.JLabel("ALERTAS DE INVENTARIO");
+            lblTituloAlertas.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 18));
+            lblTituloAlertas.setForeground(tonoOro);
+            lblTituloAlertas.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            // panelAlertas.add(lblTituloAlertas, java.awt.BorderLayout.NORTH); // Moved to new header panel
+
+            alertasEditorPane = new javax.swing.JEditorPane();
+            alertasEditorPane.setContentType("text/html");
+            alertasEditorPane.setEditable(false);
+            alertasEditorPane.setOpaque(false);
+            
+            javax.swing.text.html.HTMLEditorKit kit = new javax.swing.text.html.HTMLEditorKit();
+            alertasEditorPane.setEditorKit(kit);
+            javax.swing.text.html.StyleSheet styleSheet = kit.getStyleSheet(); // Corrected import in previous step
+            styleSheet.addRule("body { color: #E0E0E0; font-family: Segoe UI, sans-serif; font-size: 11pt; }");
+            styleSheet.addRule("h2 { color: #FF6B6B; font-size: 13pt; margin-bottom: 5px; }");
+            styleSheet.addRule("h3 { color: #FFD166; font-size: 12pt; margin-bottom: 5px; }");
+            styleSheet.addRule("ul { margin: 0; padding: 0; list-style-type: none; }");
+            styleSheet.addRule("li { margin-bottom: 4px; }");
+
+            // NEW: Toggle button for alerts panel (Moved to bottom bar)
+            toggleAlertsButton = new javax.swing.JToggleButton("Ocultar Alertas");
+            toggleAlertsButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+            toggleAlertsButton.setForeground(new java.awt.Color(230, 230, 220));
+            toggleAlertsButton.setBackground(new java.awt.Color(64, 66, 64));
+            toggleAlertsButton.setFocusPainted(false);
+            toggleAlertsButton.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(tonoOro, 1),
+                javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15)
+            ));
+            toggleAlertsButton.setSelected(true); // Start visible
+            toggleAlertsButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            
+            // Efecto Hover para el botón
+            toggleAlertsButton.addChangeListener(new javax.swing.event.ChangeListener() {
+                @Override
+                public void stateChanged(javax.swing.event.ChangeEvent e) {
+                    if (toggleAlertsButton.getModel().isRollover()) {
+                        toggleAlertsButton.setBackground(casiNegro);
+                        toggleAlertsButton.setForeground(tonoOro);
+                    } else {
+                        toggleAlertsButton.setBackground(new java.awt.Color(64, 66, 64));
+                        toggleAlertsButton.setForeground(new java.awt.Color(230, 230, 220));
+                    }
+                }
+            });
+            
+            // NEW: Header panel for alerts to hold title
+            javax.swing.JPanel alertsHeaderPanel = new javax.swing.JPanel(new java.awt.BorderLayout(0, 5));
+            alertsHeaderPanel.setOpaque(false);
+            alertsHeaderPanel.add(lblTituloAlertas, java.awt.BorderLayout.NORTH);
+            
+            panelAlertas.add(alertsHeaderPanel, java.awt.BorderLayout.NORTH); // Add the header panel
+
+            javax.swing.JScrollPane scrollAlertas = new javax.swing.JScrollPane(alertasEditorPane);
+            scrollAlertas.setOpaque(false);
+            scrollAlertas.getViewport().setOpaque(false);
+            scrollAlertas.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(60, 60, 65)));
+            panelAlertas.add(scrollAlertas, java.awt.BorderLayout.CENTER);
+
             // Reestilizar la barra inferior (jMenuInf)
             // Cambiamos a FlowLayout y quitamos tamaños fijos para evitar que los textos largos se recorten
             jMenuInf.removeAll();
@@ -180,6 +255,8 @@ public class PSMenu extends javax.swing.JFrame {
             jMenuInf.add(new javax.swing.JLabel("  |  "));
             jMenuInf.add(jLTiempo);
             jMenuInf.add(jTiempo);
+            jMenuInf.add(new javax.swing.JLabel("  |  "));
+            jMenuInf.add(toggleAlertsButton);
             
             // Ajustar el color de los separadores
             for(java.awt.Component c : jMenuInf.getComponents()) {
@@ -246,12 +323,38 @@ public class PSMenu extends javax.swing.JFrame {
             }
 
             // Reagregamos los componentes maestos
-            panelFondoAcero.add(jMenuSup, java.awt.BorderLayout.NORTH); // El menú pegado arriba, incrustado en nuestra chapa
-            jPPrincipal.add(panelFondoAcero, java.awt.BorderLayout.CENTER);
+            panelFondoAcero.add(jMenuSup, java.awt.BorderLayout.NORTH); // The menu is still part of panelFondoAcero
+
+            // NEW: Create the JSplitPane
+            mainSplitPane = new javax.swing.JSplitPane(javax.swing.JSplitPane.HORIZONTAL_SPLIT, panelFondoAcero, panelAlertas);
+            mainSplitPane.setDividerSize(10);
+            mainSplitPane.setResizeWeight(1.0); // Main content (left) gets all extra space
+            mainSplitPane.setContinuousLayout(true);
+            mainSplitPane.setBorder(null); // Remove default border
+            
+            // NEW: Add action listener for the toggle button
+            toggleAlertsButton.addActionListener(e -> {
+                if (toggleAlertsButton.isSelected()) {
+                    panelAlertas.setVisible(true);
+                    mainSplitPane.setDividerSize(10);
+                    mainSplitPane.setDividerLocation(mainSplitPane.getWidth() - 350);
+                    toggleAlertsButton.setText("Ocultar Alertas");
+                } else {
+                    panelAlertas.setVisible(false);
+                    mainSplitPane.setDividerSize(0); 
+                    toggleAlertsButton.setText("Mostrar Alertas");
+                }
+            });
+            jPPrincipal.add(mainSplitPane, java.awt.BorderLayout.CENTER); // Add the split pane to the center
             jPPrincipal.add(jMenuInf, java.awt.BorderLayout.SOUTH);
 
             jPPrincipal.revalidate();
             jPPrincipal.repaint();
+            java.awt.EventQueue.invokeLater(() -> {
+                if (mainSplitPane != null && panelAlertas != null && toggleAlertsButton.isSelected()) {
+                    mainSplitPane.setDividerLocation(mainSplitPane.getWidth() - 350);
+                }
+            });
         } catch (Exception e) {
             logger.log(java.util.logging.Level.WARNING, "Error al configurar fondo.", e);
         }
@@ -320,6 +423,11 @@ public class PSMenu extends javax.swing.JFrame {
         jItemPromociones.addActionListener(evt -> abrirVentanaConPermiso("gestionar_inventario", new PSPromociones()));
         jMenu.add(jItemPromociones);
 
+        // Configurar menú de Recetas dentro de la pestaña "Menú"
+        javax.swing.JMenuItem jItemRecetas = new javax.swing.JMenuItem("Control de Recetas");
+        jItemRecetas.addActionListener(evt -> abrirVentanaConPermiso("gestionar_inventario", new PSRecetas()));
+        jMenu.add(jItemRecetas);
+
         // Aplicar visibilidad por permisos del nuevo modelo de roles.
         jMenu.setVisible(ServicioSesion.tienePermiso("gestionar_empleados") || ServicioSesion.tienePermiso("gestionar_inventario"));
         JInventario.setVisible(ServicioSesion.tienePermiso("gestionar_inventario"));
@@ -355,6 +463,83 @@ public class PSMenu extends javax.swing.JFrame {
         isAperturaEnProgreso = true;
         java.awt.EventQueue.invokeLater(() -> ventana.setVisible(true));
         dispose();
+    }
+
+    /**
+     * Carga y muestra las alertas de inventario en el panel lateral derecho.
+     * Las alertas varían según el rol del usuario (Gerente vs. Mesero/Cocinero).
+     * Gerentes ven stock crítico/alerta, otros ven productos no disponibles.
+     */
+    private void cargarAlertasInventario() {
+        if (alertasEditorPane == null) return;
+
+        // Solo los gerentes o quienes tengan el permiso pueden ver las alertas
+        if (!ServicioSesion.tienePermiso("gestionar_inventario")) {
+            alertasEditorPane.setText("<html><body><div style='text-align:center; padding-top: 50px; color: #666;'>Acceso restringido.</div></body></html>");
+            return;
+        }
+
+        StringBuilder html = new StringBuilder("<html><body>");
+        boolean hayAlertas = false;
+
+        try {
+            List<Insumo> criticos = ServicioInventario.obtenerInsumosBajoStock();
+            if (!criticos.isEmpty()) {
+                hayAlertas = true; // Set to true if any alert is found
+                html.append("<h2>Stock Crítico</h2><ul>");
+                for (Insumo insumo : criticos) {
+                    html.append(String.format("<li><b>%s:</b> %.2f %s</li>",
+                        insumo.getNombreInsumo(),
+                        insumo.getCantidadActual(),
+                        insumo.getUnidadMedida()
+                    ));
+                }
+                html.append("</ul><br>");
+            }
+
+            List<Insumo> alertas = ServicioInventario.obtenerInsumosConAlerta();
+            if (!alertas.isEmpty()) {
+                hayAlertas = true; // Set to true if any alert is found
+                html.append("<h3>Alerta de Reorden</h3><ul>");
+                for (Insumo insumo : alertas) {
+                    html.append(String.format("<li><b>%s:</b> %.2f %s</li>",
+                        insumo.getNombreInsumo(),
+                        insumo.getCantidadActual(),
+                        insumo.getUnidadMedida()
+                    ));
+                }
+                html.append("</ul>");
+            }
+
+            // Alerts for Meseros and Cocineros (products that cannot be prepared)
+            if (ServicioSesion.tienePermiso("crear_orden") || ServicioSesion.tienePermiso("preparar_orden")) {
+                List<Producto> productosNoDisponibles = ServicioInventario.obtenerProductosNoDisponiblesPorInventario();
+                if (!productosNoDisponibles.isEmpty()) {
+                    if (hayAlertas) { // Add a separator if there were previous alerts (e.g., for managers)
+                        html.append("<br><hr style='border-color:#555;'><br>");
+                    }
+                    hayAlertas = true;
+                    html.append("<h2 style='color:#FFD166;'>Productos No Disponibles</h2><ul>"); // Yellow for product unavailability
+                    for (Producto producto : productosNoDisponibles) {
+                        html.append(String.format("<li><b>%s</b></li>", producto.getNombre()));
+                    }
+                    html.append("</ul>");
+                }
+            }
+
+        } catch (java.sql.SQLException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar alertas de inventario", ex);
+            html.append("<p style='color:red;'>Error al conectar con la base de datos.</p>");
+            hayAlertas = true;
+        }
+
+        if (!hayAlertas) {
+            html.append("<div style='text-align:center; padding-top: 50px; color: #00ff3c;'>Inventario en orden. Sin alertas.</div>");
+        }
+
+        html.append("</body></html>");
+        alertasEditorPane.setText(html.toString());
+        alertasEditorPane.setCaretPosition(0); // Para que el scroll inicie arriba
     }
 
     /**

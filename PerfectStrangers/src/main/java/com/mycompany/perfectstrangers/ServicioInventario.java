@@ -104,6 +104,26 @@ public class ServicioInventario {
     }
     
     /**
+     * Obtiene una lista de productos que no se pueden preparar debido a la falta de insumos.
+     * @return Lista de productos no disponibles.
+     * @throws SQLException si ocurre un error en la base de datos.
+     */
+    public static List<Producto> obtenerProductosNoDisponiblesPorInventario() throws SQLException {
+        List<Producto> noDisponibles = new ArrayList<>();
+        // We should check products that have recipes, typically 'Platillo' and 'Bebidas'
+        List<Producto> productosConReceta = new ArrayList<>();
+        productosConReceta.addAll(ProductoDAO.obtenerProductosPorCategoria("Platillo"));
+        productosConReceta.addAll(ProductoDAO.obtenerProductosPorCategoria("Bebidas"));
+
+        for (Producto producto : productosConReceta) {
+            if (!puedePrepararse(producto.getIdProducto(), 1)) {
+                noDisponibles.add(producto);
+            }
+        }
+        return noDisponibles;
+    }
+    
+    /**
      * Verifica si un producto puede prepararse en la cantidad solicitada
      * @return true si hay suficientes insumos, false si no
      */
