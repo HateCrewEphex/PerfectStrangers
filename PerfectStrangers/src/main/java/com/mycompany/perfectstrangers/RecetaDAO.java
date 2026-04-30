@@ -37,7 +37,7 @@ public class RecetaDAO {
                      "FROM recetas r " +
                      "JOIN detalles_receta d ON r.id_receta = d.id_receta " +
                      "JOIN productos p ON r.id_producto = p.id_producto " +
-                     "JOIN inventario i ON d.id_ingrediente = i.id_ingrediente " +
+                     "LEFT JOIN inventario i ON d.id_ingrediente = i.id_ingrediente " +
                      "WHERE r.id_producto = ?";
         
         List<Receta> recetas = new ArrayList<>();
@@ -79,8 +79,15 @@ public class RecetaDAO {
      */
     public static boolean verificarDisponibilidad(int idProducto, int cantidad) throws SQLException {
         List<Receta> recetas = obtenerRecetasPorProducto(idProducto);
+
+        if (recetas.isEmpty()) {
+            return true;
+        }
         
         for (Receta receta : recetas) {
+            if (receta.getNombreInsumo() == null || receta.getUnidadMedida() == null) {
+                return true;
+            }
             Insumo insumo = InsumoDAO.obtenerInsumoById(receta.getIdInsumo());
             if (insumo == null || insumo.getCantidadActual() < (receta.getCantidadRequerida() * cantidad)) {
                 return false;

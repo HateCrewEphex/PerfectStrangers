@@ -19,7 +19,7 @@ public class ProductoDAO {
             stmt.setString(2, producto.getDescripcion());
             stmt.setDouble(3, producto.getPrecio());
             stmt.setString(4, producto.getCategoria());
-            stmt.setString(5, producto.getRutaImagen());  // Por ahora guardamos como string
+            stmt.setBytes(5, producto.getImagen());
             stmt.setBoolean(6, producto.isDisponible());
             stmt.executeUpdate();
         }
@@ -86,6 +86,22 @@ public class ProductoDAO {
         return productos;
     }
 
+    public static List<Producto> obtenerProductosPorCategoriaSinFiltroDisponibilidad(String categoria) throws SQLException {
+        String sql = "SELECT * FROM productos WHERE categoria = ? ORDER BY nombre";
+        List<Producto> productos = new ArrayList<>();
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, categoria);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                productos.add(mapResultSetToProducto(rs));
+            }
+        }
+        return productos;
+    }
+
     public static List<Producto> obtenerPlatillos() throws SQLException {
         return obtenerProductosPorCategoria("Platillo");
     }
@@ -108,7 +124,7 @@ public class ProductoDAO {
             stmt.setString(2, producto.getDescripcion());
             stmt.setDouble(3, producto.getPrecio());
             stmt.setString(4, producto.getCategoria());
-            stmt.setString(5, producto.getRutaImagen());  // Por ahora guardamos como string
+            stmt.setBytes(5, producto.getImagen());
             stmt.setBoolean(6, producto.isDisponible());
             stmt.setInt(7, producto.getIdProducto());
             stmt.executeUpdate();
@@ -143,16 +159,7 @@ public class ProductoDAO {
         producto.setPrecio(rs.getDouble("precio"));
         producto.setCategoria(rs.getString("categoria"));
         
-        // Intentar leer imagen como string (compatibilidad)
-        try {
-            byte[] imagenBlob = rs.getBytes("imagen");
-            if (imagenBlob != null && imagenBlob.length > 0) {
-                producto.setRutaImagen("blob");  // Flag para indicar que hay imagen
-            }
-        } catch (SQLException e) {
-            // Si la columna no existe o hay error, ignorar
-            producto.setRutaImagen(null);
-        }
+        producto.setImagen(rs.getBytes("imagen"));
         
         producto.setDisponible(rs.getBoolean("disponible"));
         return producto;

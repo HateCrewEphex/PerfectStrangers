@@ -1,4 +1,5 @@
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\BuscadorTerminal.java
+C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\CocinaTicketTemporalService.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\DBConnection.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\DetalleOrden.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\DetalleOrdenDAO.java
@@ -10,6 +11,7 @@ C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\ma
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\EmpleadoDAO.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\Insumo.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\InsumoDAO.java
+C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\InventarioAlertService.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\MercadoPagoAPI.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\MPModoPDVQuickRun.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\MPPointSetupTerminal.java
@@ -45,4 +47,6 @@ C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\ma
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\ServicioReceta.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\ServicioSesion.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\Sesion.java
+C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\SessionActivityMonitor.java
+C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\com\mycompany\perfectstrangers\SoundService.java
 C:\Users\LordN\Desktop\PerfectStrangers\PerfectStrangers\PerfectStrangers\src\main\java\PSInicio.java

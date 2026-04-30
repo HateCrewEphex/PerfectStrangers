@@ -6,6 +6,7 @@ package com.mycompany.perfectstrangers;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -23,6 +24,10 @@ public class PSMenu extends javax.swing.JFrame {
     private javax.swing.JSplitPane mainSplitPane;
     private javax.swing.JToggleButton toggleAlertsButton;
     private javax.swing.JEditorPane alertasEditorPane;
+    
+    // Servicios de alertas
+    private SessionActivityMonitor activityMonitor;
+    private InventarioAlertService inventarioAlertService;
 
     /**
      * Creates new form PSMenu
@@ -43,6 +48,9 @@ public class PSMenu extends javax.swing.JFrame {
         configurarFondo();
         configurarSesionDatos();
         cargarAlertasInventario();
+        
+        // Inicializar servicios de alertas
+        inicializarServiciosDeAlertas();
     }
 
     private void configurarSesionDatos() {
@@ -712,6 +720,69 @@ public class PSMenu extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new PSMenu().setVisible(true));
+    }
+    
+    /**
+     * Inicializa los servicios de alertas (monitor de inactividad, inventario)
+     */
+    private void inicializarServiciosDeAlertas() {
+        try {
+            // 1. Inicializar monitor de actividad (alerta de inactividad)
+            activityMonitor = new SessionActivityMonitor(this);
+            activityMonitor.iniciarMonitoreo();
+            System.out.println("[PSMenu] Monitor de actividad iniciado");
+            
+            // 2. Inicializar servicio de alertas de inventario
+            inventarioAlertService = new InventarioAlertService();
+            inventarioAlertService.iniciar();
+            
+            // Registrar insumos en el servicio
+            try {
+                List<Insumo> todosLosInsumos = ServicioInventario.obtenerTodosLosInsumos();
+                for (Insumo insumo : todosLosInsumos) {
+                    inventarioAlertService.registrarInsumo(
+                        insumo.getIdInsumo(),
+                        insumo.getNombreInsumo(),
+                        insumo.getCantidadActual(),
+                        insumo.getCantidadMinima(),
+                        insumo.getCantidadCritica()
+                    );
+                }
+                System.out.println("[PSMenu] Servicio de alertas de inventario iniciado con " + 
+                                 todosLosInsumos.size() + " insumos");
+            } catch (SQLException ex) {
+                System.err.println("[PSMenu] ⚠️ Error al cargar insumos para monitoreo: " + ex.getMessage());
+                ex.printStackTrace();
+                logger.log(java.util.logging.Level.WARNING, "Error al cargar insumos para monitoreo", ex);
+            }
+            
+            // 3. Agregar listener para limpiar recursos al cerrar
+            this.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    detenerServiciosDeAlertas();
+                }
+            });
+            
+        } catch (Exception ex) {
+            System.err.println("[PSMenu] ⚠️ Error inicializando servicios de alertas: " + ex.getMessage());
+            ex.printStackTrace();
+            logger.log(java.util.logging.Level.WARNING, "Error inicializando servicios de alertas", ex);
+        }
+    }
+    
+    /**
+     * Detiene los servicios de alertas
+     */
+    private void detenerServiciosDeAlertas() {
+        if (activityMonitor != null) {
+            activityMonitor.detenerMonitoreo();
+            System.out.println("[PSMenu] Monitor de actividad detenido");
+        }
+        if (inventarioAlertService != null) {
+            inventarioAlertService.detener();
+            System.out.println("[PSMenu] Servicio de alertas de inventario detenido");
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

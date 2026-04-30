@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,9 @@ public class PSConOrder extends javax.swing.JFrame {
      * Creates new form PSConOrder
      */
     public PSConOrder() {
-        initComponents();// Reset background so FlatLaf can apply its dark theme completely
+        initComponents();
+        
+        // Reset background so FlatLaf can apply its dark theme completely
         jBEntregarOrden.setBackground(null);
         jBRegresar.setBackground(null);
         
@@ -199,6 +202,7 @@ public class PSConOrder extends javax.swing.JFrame {
         int idOrden;
         String mesa;
         java.sql.Timestamp fechaHora;
+        Long idTicketTemporal;
         List<ItemOrden> items = new ArrayList<>();
     }
 
@@ -206,11 +210,28 @@ public class PSConOrder extends javax.swing.JFrame {
 
     private void cargarOrdenes() {
         listaOrdenes.clear();
+        java.util.Set<Integer> ordenesConTicketTemporal = new java.util.HashSet<>();
+
+        for (CocinaTicketTemporalService.TicketCocina ticket : CocinaTicketTemporalService.obtenerTicketsPendientes()) {
+            OrdenPendiente op = new OrdenPendiente();
+            op.idOrden = ticket.getIdOrden();
+            op.mesa = String.valueOf(ticket.getMesa());
+            op.fechaHora = ticket.getFechaHora();
+            op.idTicketTemporal = ticket.getIdTicket();
+
+            for (CocinaTicketTemporalService.TicketItem item : ticket.getItems()) {
+                op.items.add(new ItemOrden(item.getNombreProducto(), item.getCantidad(), item.getNotas()));
+            }
+
+            listaOrdenes.add(op);
+            ordenesConTicketTemporal.add(op.idOrden);
+        }
+
         String sql = "SELECT o.id_orden, o.mesa, o.fecha_hora, p.nombre AS nomProd, d.cantidad AS cant, d.notas_especiales AS nota " +
                  "FROM ordenes o " +
                  "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
                  "INNER JOIN productos p ON d.id_producto = p.id_producto " +
-                 "WHERE o.estado_pago IN ('Pendiente', 'Parcial') AND o.estado_preparacion IN ('Pendiente', 'En Preparacion') " +
+                 "WHERE o.estado_preparacion IN ('Pendiente', 'En Preparacion') " +
                  "ORDER BY o.fecha_hora ASC, o.id_orden ASC";
 
         try (Connection con = DBConnection.getConnection();
@@ -221,6 +242,11 @@ public class PSConOrder extends javax.swing.JFrame {
 
             while (rs.next()) {
                 int idOrden = rs.getInt("id_orden");
+
+                if (ordenesConTicketTemporal.contains(idOrden)) {
+                    continue;
+                }
+
                 String mesa = rs.getString("mesa");
                 java.sql.Timestamp fechaHora = rs.getTimestamp("fecha_hora");
                 String nombreItem = rs.getString("nomProd") != null ? rs.getString("nomProd") : "Desconocido";
@@ -240,6 +266,7 @@ public class PSConOrder extends javax.swing.JFrame {
                 op.items.add(new ItemOrden(nombreItem, cant, nota));
             }
 
+                listaOrdenes.sort(Comparator.comparing(o -> o.fechaHora, Comparator.nullsLast(Comparator.naturalOrder())));
             mostrarOrdenes();
 
         } catch (SQLException ex) {
@@ -387,17 +414,12 @@ public class PSConOrder extends javax.swing.JFrame {
     private void entregarOrdenPrimera() {
         if (listaOrdenes.isEmpty()) return;
         OrdenPendiente o = listaOrdenes.get(0);
-
-        String sqlOrden = "UPDATE ordenes SET estado_preparacion = 'Entregado' WHERE id_orden = ?";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement pstOrden = con.prepareStatement(sqlOrden)) {
-            con.setAutoCommit(false);
-
-            pstOrden.setInt(1, o.idOrden);
-            pstOrden.executeUpdate();
-
-            con.commit();
-            
+        try {
+            if (o.idTicketTemporal != null) {
+                CocinaTicketTemporalService.consumirTicket(o.idTicketTemporal);
+            } else {
+                ServicioOrden.entregarOrden(o.idOrden);
+            }
             cargarOrdenes(); 
         } catch (SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al entregar orden", ex);

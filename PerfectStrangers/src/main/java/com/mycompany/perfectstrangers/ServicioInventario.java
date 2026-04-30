@@ -104,6 +104,15 @@ public class ServicioInventario {
     }
     
     /**
+     * Obtiene todos los insumos del sistema
+     * @return Lista de todos los insumos
+     * @throws SQLException si ocurre un error en la base de datos
+     */
+    public static List<Insumo> obtenerTodosLosInsumos() throws SQLException {
+        return InsumoDAO.obtenerTodosInsumos();
+    }
+    
+    /**
      * Obtiene una lista de productos que no se pueden preparar debido a la falta de insumos.
      * @return Lista de productos no disponibles.
      * @throws SQLException si ocurre un error en la base de datos.

@@ -10,6 +10,8 @@ import java.util.List;
 
 public class DetalleOrdenDAO {
 
+    private static final String MARCADOR_ENVIO_COCINA = " [[SENT_TO_KITCHEN]]";
+
     public static void crearDetalleOrden(DetalleOrden detalle) throws SQLException {
         String sql = "INSERT INTO detalle_orden (id_orden, id_producto, cantidad, precio_unitario, notas_especiales) " +
                      "VALUES (?, ?, ?, ?, ?)";
@@ -114,6 +116,20 @@ public class DetalleOrdenDAO {
         try (Connection con = DBConnection.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setInt(1, idOrden);
+            stmt.executeUpdate();
+        }
+    }
+
+    public static void marcarDetallesComoEnviadosACocina(int idOrden) throws SQLException {
+        String sql = "UPDATE detalle_orden " +
+                     "SET notas_especiales = CONCAT(COALESCE(notas_especiales, ''), ?) " +
+                     "WHERE id_orden = ? AND (notas_especiales IS NULL OR notas_especiales NOT LIKE ? )";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setString(1, MARCADOR_ENVIO_COCINA);
+            stmt.setInt(2, idOrden);
+            stmt.setString(3, "%" + MARCADOR_ENVIO_COCINA.trim() + "%");
             stmt.executeUpdate();
         }
     }

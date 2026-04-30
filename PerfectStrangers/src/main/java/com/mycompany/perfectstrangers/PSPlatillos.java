@@ -14,6 +14,8 @@ public class PSPlatillos extends javax.swing.JFrame {
     private int idProductoActual = -1;
     private javax.swing.JTable jTableProductos;
     private javax.swing.table.DefaultTableModel modeloTabla;
+    private byte[] imagenSeleccionada = null;
+    private javax.swing.JLabel lblNomImagen;
 
     /**
      * Creates new form PSPlatillos
@@ -171,7 +173,24 @@ public class PSPlatillos extends javax.swing.JFrame {
             javax.swing.BorderFactory.createEmptyBorder(10, 24, 10, 24)
         ));
 
-        tarjeta.add(jPPrincipal, java.awt.BorderLayout.CENTER);
+        javax.swing.JPanel pnlCentroWrapped = new javax.swing.JPanel(new java.awt.BorderLayout());
+        pnlCentroWrapped.setOpaque(false);
+        pnlCentroWrapped.add(jPPrincipal, java.awt.BorderLayout.CENTER);
+
+        javax.swing.JPanel pnlImg = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
+        pnlImg.setOpaque(false);
+        javax.swing.JButton btnImg = new javax.swing.JButton("SELECCIONAR IMAGEN");
+        lblNomImagen = new javax.swing.JLabel("Sin imagen");
+        lblNomImagen.setForeground(tonoOro);
+        btnImg.setBackground(new java.awt.Color(44, 44, 48));
+        btnImg.setForeground(tonoOro);
+        btnImg.setFocusPainted(false);
+        btnImg.addActionListener(e -> seleccionarImagen());
+        pnlImg.add(btnImg);
+        pnlImg.add(lblNomImagen);
+
+        pnlCentroWrapped.add(pnlImg, java.awt.BorderLayout.SOUTH);
+        tarjeta.add(pnlCentroWrapped, java.awt.BorderLayout.CENTER);
         
         // --- BOTONES EXTRA PARA CRUD ---
         javax.swing.JPanel panelBotonesExtra = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 15, 10));
@@ -321,6 +340,8 @@ public class PSPlatillos extends javax.swing.JFrame {
         
         jLabel1.setText("EDITANDO ID: " + idProductoActual);
         jBGuardar.setEnabled(false);
+        imagenSeleccionada = null;
+        if (lblNomImagen != null) lblNomImagen.setText("Imagen de la BD");
     }
 
     private void registrarProducto() {
@@ -343,12 +364,13 @@ public class PSPlatillos extends javax.swing.JFrame {
         }
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sql = "INSERT INTO productos (categoria, nombre, precio, disponible) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO productos (categoria, nombre, precio, disponible, imagen) VALUES (?, ?, ?, ?, ?)";
             try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
                 pst.setString(1, categoria);
                 pst.setString(2, nombre);
                 pst.setDouble(3, precio);
                 pst.setBoolean(4, disponible);
+                pst.setBytes(5, imagenSeleccionada);
                 pst.executeUpdate();
             }
             javax.swing.JOptionPane.showMessageDialog(this, "Producto registrado con éxito.");
@@ -383,13 +405,23 @@ public class PSPlatillos extends javax.swing.JFrame {
         }
 
         try (java.sql.Connection con = DBConnection.getConnection()) {
-            String sql = "UPDATE productos SET categoria=?, nombre=?, precio=?, disponible=? WHERE id_producto=?";
+            String sql;
+            if (imagenSeleccionada != null) {
+                sql = "UPDATE productos SET categoria=?, nombre=?, precio=?, disponible=?, imagen=? WHERE id_producto=?";
+            } else {
+                sql = "UPDATE productos SET categoria=?, nombre=?, precio=?, disponible=? WHERE id_producto=?";
+            }
             try (java.sql.PreparedStatement pst = con.prepareStatement(sql)) {
                 pst.setString(1, categoria);
                 pst.setString(2, nombre);
                 pst.setDouble(3, precio);
                 pst.setBoolean(4, disponible);
-                pst.setInt(5, idProductoActual);
+                if (imagenSeleccionada != null) {
+                    pst.setBytes(5, imagenSeleccionada);
+                    pst.setInt(6, idProductoActual);
+                } else {
+                    pst.setInt(5, idProductoActual);
+                }
                 pst.executeUpdate();
             }
             javax.swing.JOptionPane.showMessageDialog(this, "Producto actualizado con éxito.");
@@ -425,6 +457,21 @@ public class PSPlatillos extends javax.swing.JFrame {
         }
     }
 
+    private void seleccionarImagen() {
+        javax.swing.JFileChooser jfc = new javax.swing.JFileChooser();
+        jfc.setDialogTitle("Selecciona la imagen del producto");
+        jfc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Imágenes (jpg, png, jpeg)", "jpg", "png", "jpeg"));
+        if(jfc.showOpenDialog(this) == javax.swing.JFileChooser.APPROVE_OPTION) {
+            try {
+                java.io.File file = jfc.getSelectedFile();
+                imagenSeleccionada = java.nio.file.Files.readAllBytes(file.toPath());
+                if (lblNomImagen != null) lblNomImagen.setText(file.getName());
+            } catch(Exception ex) {
+                javax.swing.JOptionPane.showMessageDialog(this, "Error al leer imagen: " + ex.getMessage());
+            }
+        }
+    }
+
     private void limpiarCampos() {
         jTNomPlatillo.setText("");
         if(jComboBox2.getItemCount() > 0) jComboBox2.setSelectedIndex(0);
@@ -432,6 +479,9 @@ public class PSPlatillos extends javax.swing.JFrame {
         jTPrecio.setText("");
         
         idProductoActual = -1;
+        imagenSeleccionada = null;
+        if (lblNomImagen != null) lblNomImagen.setText("Sin imagen");
+        
         jLabel1.setText("CONTROL DE PLATILLOS");
         jBGuardar.setEnabled(true);
         if (jTableProductos != null) {

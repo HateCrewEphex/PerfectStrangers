@@ -13,12 +13,18 @@ import java.util.List;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
+import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+
+//marca de agua
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfPageEventHelper;
+import com.lowagie.text.pdf.PdfGState;
 
 public class ReporteVentasPDFService {
 
@@ -47,7 +53,12 @@ public class ReporteVentasPDFService {
     public static void generarReporte(File destino, FiltroReporte filtro, TipoReporte tipo, String etiquetaPeriodo) throws Exception {
         Document doc = new Document(PageSize.A4.rotate(), 30, 30, 24, 24);
         try (FileOutputStream fos = new FileOutputStream(destino)) {
-            PdfWriter.getInstance(doc, fos);
+            PdfWriter writer = PdfWriter.getInstance(doc, fos);
+            writer.setPageEvent(new MarcaAguaImagen("logo.png"));
+            //writer.setPageEvent(new MarcaAguaImagen("C:/reportes/logo.png"));
+            /*writer.setPageEvent(new MarcaAguaImagen(
+                getClass().getResource("/img/logo.png")
+            ));*/
             doc.open();
 
             try {
@@ -61,10 +72,18 @@ public class ReporteVentasPDFService {
                 doc.add(new Paragraph(" "));
 
                 switch (tipo) {
-                    case GENERAL -> agregarReporteGeneral(doc, filtro);
-                    case RESUMEN_CATEGORIAS -> agregarReporteCategorias(doc, filtro);
-                    case DETALLE_PRODUCTOS -> agregarReporteProductos(doc, filtro);
-                    default -> throw new IllegalArgumentException("Tipo de reporte no soportado");
+                    case GENERAL -> {
+                        agregarReporteGeneral(doc, filtro);
+                        doc.newPage();
+                    }
+                    case RESUMEN_CATEGORIAS -> {
+                        agregarReporteCategorias(doc, filtro);
+                        doc.newPage();
+                    }
+                    case DETALLE_PRODUCTOS -> {
+                        agregarReporteProductos(doc, filtro);
+                        doc.newPage();
+                    }
                 }
             } finally {
                 if (doc.isOpen()) {
@@ -275,5 +294,50 @@ public class ReporteVentasPDFService {
             case RESUMEN_CATEGORIAS -> "Resumen platillos y bebidas";
             case DETALLE_PRODUCTOS -> "Detalle por producto";
         };
+    }
+    
+    static class MarcaAguaImagen extends PdfPageEventHelper {
+
+        private Image imagen;
+
+        public MarcaAguaImagen(String rutaImagen) {
+            try {
+                // Modificado para obtener la imagen desde los recursos del proyecto (jar)
+                java.net.URL url = getClass().getResource("/com/mycompany/perfectstrangers/logo150.png");
+                if (url != null) {
+                    imagen = Image.getInstance(url);
+                } else {
+                    // Fallback local file si no se encuentra en el classpath
+                    imagen = Image.getInstance(rutaImagen);
+                }
+                
+                imagen.scaleToFit(400, 400);
+                imagen.setAlignment(Image.UNDERLYING);
+
+            } catch (Exception e) {
+                logger.warning("No se pudo cargar la imagen para la marca de agua: " + e.getMessage());
+            }
+        }
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            if (imagen == null) return;
+            try {
+                PdfContentByte canvas = writer.getDirectContentUnder();
+
+                PdfGState gs1 = new PdfGState();
+                gs1.setFillOpacity(0.15f);
+                canvas.setGState(gs1);
+
+                float x = (document.getPageSize().getWidth() - imagen.getScaledWidth()) / 2;
+                float y = (document.getPageSize().getHeight() - imagen.getScaledHeight()) / 2;
+
+                imagen.setAbsolutePosition(x, y);
+                canvas.addImage(imagen);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -26,8 +26,13 @@ import javax.swing.SwingWorker;
 public class PSCobOrden extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSCobOrden.class.getName());
+    private static final double[] PROPINAS_DISPONIBLES = {0.10, 0.15, 0.20};
     private double totalActual = 0.0;
+    private double totalBasePendiente = 0.0;
+    private double propinaActualPorcentaje = 0.0;
+    private double propinaActualMonto = 0.0;
     private String ultimoTicketHtml = "";
+    private String ultimoTicketHtmlBase = "";
     private String ultimoMetodoPago = "Efectivo";
 
     /**
@@ -213,9 +218,38 @@ public class PSCobOrden extends javax.swing.JFrame {
         jLTotalCobrar.setText("$0.00");
         jLTotalCobrar.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 42));
         jLTotalCobrar.setForeground(tonoOro);
+
+        jLPropinaResumen.setText("Propina: $0.00");
+        jLPropinaResumen.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        jLPropinaResumen.setForeground(java.awt.Color.WHITE);
         
         panelTotalesTexto.add(jLTTotal, java.awt.BorderLayout.WEST);
         panelTotalesTexto.add(jLTotalCobrar, java.awt.BorderLayout.EAST);
+
+        javax.swing.JPanel panelPropina = new javax.swing.JPanel(new java.awt.BorderLayout(0, 6));
+        panelPropina.setOpaque(false);
+        panelPropina.add(jLPropinaResumen, java.awt.BorderLayout.NORTH);
+
+        javax.swing.JPanel panelBotonesPropina = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 8, 0));
+        panelBotonesPropina.setOpaque(false);
+
+        javax.swing.JButton[] botonesPropina = {jBPropina10, jBPropina15, jBPropina20, jBQuitarPropina};
+        String[] textosPropina = {"Propina 10%", "Propina 15%", "Propina 20%", "Sin propina"};
+        for (int i = 0; i < botonesPropina.length; i++) {
+            javax.swing.JButton btn = botonesPropina[i];
+            btn.setText(textosPropina[i]);
+            btn.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+            btn.setBackground(new java.awt.Color(40, 40, 45));
+            btn.setForeground(tonoOro);
+            btn.setFocusPainted(false);
+            btn.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(20, 20, 20), 2),
+                javax.swing.BorderFactory.createEmptyBorder(8, 14, 8, 14)
+            ));
+            panelBotonesPropina.add(btn);
+        }
+
+        panelPropina.add(panelBotonesPropina, java.awt.BorderLayout.CENTER);
 
         // Botones de Acción (Cobrar / Regresar)
         javax.swing.JPanel panelBotones = new javax.swing.JPanel(new java.awt.BorderLayout());
@@ -253,14 +287,17 @@ public class PSCobOrden extends javax.swing.JFrame {
         ));
 
         panelBotones.add(jBCobrar, java.awt.BorderLayout.WEST);
-    javax.swing.JPanel panelAccionesDerecha = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 10, 0));
-    panelAccionesDerecha.setOpaque(false);
-    panelAccionesDerecha.add(jBTicket);
-    panelAccionesDerecha.add(jBRegresar);
-    panelBotones.add(panelAccionesDerecha, java.awt.BorderLayout.EAST);
+
+        javax.swing.JPanel panelAccionesDerecha = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 10, 0));
+        panelAccionesDerecha.setOpaque(false);
+        panelAccionesDerecha.add(jBTicket);
+        panelAccionesDerecha.add(jBRegresar);
+        panelBotones.add(panelAccionesDerecha, java.awt.BorderLayout.EAST);
+
+        panelAbajo.add(panelPropina, java.awt.BorderLayout.CENTER);
+        panelAbajo.add(panelBotones, java.awt.BorderLayout.SOUTH);
 
         panelAbajo.add(panelTotalesTexto, java.awt.BorderLayout.NORTH);
-        panelAbajo.add(panelBotones, java.awt.BorderLayout.SOUTH);
 
         // Ensamblar la vista de facturación
         panelFacturacion.add(panelTop, java.awt.BorderLayout.NORTH);
@@ -277,6 +314,10 @@ public class PSCobOrden extends javax.swing.JFrame {
         for (java.awt.event.ActionListener al : jComboBox1.getActionListeners()) jComboBox1.removeActionListener(al);
         for (java.awt.event.ActionListener al : jBCobrar.getActionListeners()) jBCobrar.removeActionListener(al);
         for (java.awt.event.ActionListener al : jBTicket.getActionListeners()) jBTicket.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBPropina10.getActionListeners()) jBPropina10.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBPropina15.getActionListeners()) jBPropina15.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBPropina20.getActionListeners()) jBPropina20.removeActionListener(al);
+        for (java.awt.event.ActionListener al : jBQuitarPropina.getActionListeners()) jBQuitarPropina.removeActionListener(al);
 
         jComboBox1.removeAllItems();
         jComboBox1.addItem("Selecciona una mesa");
@@ -287,6 +328,10 @@ public class PSCobOrden extends javax.swing.JFrame {
         jComboBox1.addActionListener(evt -> cargarOrdenCobrar());
         jBCobrar.addActionListener(evt -> cobrarOrden());
         jBTicket.addActionListener(evt -> mostrarTicket(false));
+        jBPropina10.addActionListener(evt -> aplicarPropina(0.10));
+        jBPropina15.addActionListener(evt -> aplicarPropina(0.15));
+        jBPropina20.addActionListener(evt -> aplicarPropina(0.20));
+        jBQuitarPropina.addActionListener(evt -> aplicarPropina(0.0));
         
         limpiarPantalla();
     }
@@ -296,8 +341,13 @@ public class PSCobOrden extends javax.swing.JFrame {
         jLInsumos.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         jLNAtendio.setText("-");
         jLTotalCobrar.setText("$0.00");
+        jLPropinaResumen.setText("Propina: $0.00");
         totalActual = 0.0;
+        totalBasePendiente = 0.0;
+        propinaActualPorcentaje = 0.0;
+        propinaActualMonto = 0.0;
         ultimoTicketHtml = "";
+        ultimoTicketHtmlBase = "";
     }
 
     private String obtenerMetodoPagoSeleccionado() {
@@ -421,14 +471,12 @@ public class PSCobOrden extends javax.swing.JFrame {
                     html.append("</div></html>");
 
                     if (existeOrden) {
-                        totalActual = totalPendiente;
-                        ultimoTicketHtml = html.toString();
-                        jLInsumos.setText(html.toString());
+                        totalBasePendiente = totalPendiente;
+                        ultimoTicketHtmlBase = html.toString();
                         jLNAtendio.setText(empleado);
-                        jLTotalCobrar.setText("$" + String.format("%.2f", totalPendiente));
+                        actualizarVistaPropina();
                     } else {
-                        totalActual = 0.0;
-                        ultimoTicketHtml = "";
+                        limpiarPantalla();
                         jLInsumos.setText("<html><div style='padding:30px; font-size: 24px; color: #888888; text-align: center;'>No hay orden entregada para cobrar en esta mesa.</div></html>");
                         jLTotalCobrar.setText("$0.00");
                     }
@@ -573,6 +621,45 @@ public class PSCobOrden extends javax.swing.JFrame {
         dialogCargando.setVisible(true);
     }
 
+    private void aplicarPropina(double porcentaje) {
+        if (totalBasePendiente <= 0.0) {
+            JOptionPane.showMessageDialog(this, "No hay una cuenta pendiente para agregar propina.");
+            return;
+        }
+
+        propinaActualPorcentaje = porcentaje;
+        propinaActualMonto = redondearMoneda(totalBasePendiente * porcentaje);
+        actualizarVistaPropina();
+    }
+
+    private void actualizarVistaPropina() {
+        totalActual = redondearMoneda(totalBasePendiente + propinaActualMonto);
+        jLTotalCobrar.setText("$" + String.format("%.2f", totalActual));
+        jLPropinaResumen.setText(String.format("Propina: %.0f%% = $%.2f", propinaActualPorcentaje * 100.0, propinaActualMonto));
+
+        if (ultimoTicketHtmlBase == null || ultimoTicketHtmlBase.isBlank()) {
+            ultimoTicketHtml = "";
+            jLInsumos.setText("");
+            return;
+        }
+
+        String htmlConPropina = ultimoTicketHtmlBase;
+        if (propinaActualMonto > 0.0) {
+            String lineaPropina = "<div style='margin-bottom: 4px; color: #00ff3c;'>Propina (" + String.format("%.0f", propinaActualPorcentaje * 100.0) + "%): &nbsp;&nbsp;&nbsp; <span style='color: #00ff3c'>+$" + String.format("%.2f", propinaActualMonto) + "</span></div>";
+            htmlConPropina = htmlConPropina.replace(
+                "<div style='color: #cca95a; font-weight: bold; margin-top: 10px; font-size: 24px;'>PENDIENTE: &nbsp;&nbsp;&nbsp; $" + String.format("%.2f", totalBasePendiente) + "</div>",
+                "<div style='color: #cca95a; font-weight: bold; margin-top: 10px; font-size: 24px;'>PENDIENTE: &nbsp;&nbsp;&nbsp; $" + String.format("%.2f", totalBasePendiente) + "</div>" + lineaPropina
+            );
+        }
+
+        ultimoTicketHtml = htmlConPropina;
+        jLInsumos.setText(htmlConPropina);
+    }
+
+    private double redondearMoneda(double valor) {
+        return Math.round(valor * 100.0) / 100.0;
+    }
+
     private int obtenerIdOrdenPendiente(int numMesa) {
         String sql = "SELECT o.id_orden FROM ordenes o " +
              "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregado' AND o.estado_pago IN ('Pendiente', 'Parcial') " +
@@ -704,10 +791,15 @@ public class PSCobOrden extends javax.swing.JFrame {
         jLNAtendio = new javax.swing.JLabel();
         jLTFacturacion = new javax.swing.JLabel();
         jBCobrar = new javax.swing.JButton();
+        jBPropina10 = new javax.swing.JButton();
+        jBPropina15 = new javax.swing.JButton();
+        jBPropina20 = new javax.swing.JButton();
+        jBQuitarPropina = new javax.swing.JButton();
         jCBMetodoPago = new javax.swing.JComboBox<>();
         jBTicket = new javax.swing.JButton();
         jLTTotal = new javax.swing.JLabel();
         jLTotalCobrar = new javax.swing.JLabel();
+        jLPropinaResumen = new javax.swing.JLabel();
         jBRegresar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -843,6 +935,10 @@ public class PSCobOrden extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jBCobrar;
+    private javax.swing.JButton jBPropina10;
+    private javax.swing.JButton jBPropina15;
+    private javax.swing.JButton jBPropina20;
+    private javax.swing.JButton jBQuitarPropina;
     private javax.swing.JButton jBRegresar;
     private javax.swing.JButton jBTicket;
     private javax.swing.JComboBox<String> jCBMetodoPago;
@@ -851,6 +947,7 @@ public class PSCobOrden extends javax.swing.JFrame {
     private javax.swing.JLabel jLInsumos;
     private javax.swing.JLabel jLMetodoPago;
     private javax.swing.JLabel jLNAtendio;
+    private javax.swing.JLabel jLPropinaResumen;
     private javax.swing.JLabel jLNVentana;
     private javax.swing.JLabel jLTFacturacion;
     private javax.swing.JLabel jLTTotal;

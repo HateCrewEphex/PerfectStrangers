@@ -4,6 +4,7 @@
  */
 package com.mycompany.perfectstrangers;
 
+import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,16 +33,18 @@ public class PSTOrden extends javax.swing.JFrame {
         String nombre;
         double precio;
         boolean esCombo;
+        byte[] imagenBytes;
         JCheckBox checkBox;
         JSpinner spinnerCantidad;
         javax.swing.JTextField notaEspecial;
         JPanel panel;
         
-        public ProductoItem(int id, String nombre, double precio, boolean esCombo) {
+        public ProductoItem(int id, String nombre, double precio, boolean esCombo, byte[] imagenBytes) {
             this.id = id;
             this.nombre = nombre;
             this.precio = precio;
             this.esCombo = esCombo;
+            this.imagenBytes = imagenBytes;
             
             // Creamos una "Tarjeta" simulando el botón de cuadrito de la imagen
             panel = new JPanel(new java.awt.BorderLayout(5, 5));
@@ -51,12 +54,26 @@ public class PSTOrden extends javax.swing.JFrame {
                 javax.swing.BorderFactory.createEmptyBorder(15, 10, 15, 10)
             ));
             // Limitamos y definimos altura de tarjetas en el grid
-            panel.setPreferredSize(new java.awt.Dimension(200, 180));
+            panel.setPreferredSize(new java.awt.Dimension(230, 235));
             
             // Simular icono o texto principal (Nombre y precio centrado)
             String htmlText = "<html><center><br/><b>" + nombre + "</b><br/><br/><font color='#cca95a'>$" + String.format("%.2f", precio) + "</font></center></html>";
             
             checkBox = new JCheckBox(htmlText);
+
+            if (imagenBytes != null && imagenBytes.length > 0) {
+                try {
+                    java.awt.Image img = javax.imageio.ImageIO.read(new ByteArrayInputStream(imagenBytes));
+                    if (img != null) {
+                        java.awt.Image escalada = img.getScaledInstance(110, 110, java.awt.Image.SCALE_SMOOTH);
+                        checkBox.setIcon(new javax.swing.ImageIcon(escalada));
+                        checkBox.setText("<html><center><b>" + nombre + "</b><br/><font color='#cca95a'>$" + String.format("%.2f", precio) + "</font></center></html>");
+                    }
+                } catch (Exception e) {
+                    logger.log(java.util.logging.Level.WARNING, "No se pudo cargar la imagen del producto", e);
+                }
+            }
+
             checkBox.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
             checkBox.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
             checkBox.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -66,6 +83,9 @@ public class PSTOrden extends javax.swing.JFrame {
             // No se usa un icono específico para deshabilitado, el estilo visual es suficiente.
             checkBox.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 15));
             checkBox.setFocusPainted(false);
+
+            boolean disponibleParaOrden = esCombo || evaluarDisponibilidadParaOrden(id);
+            checkBox.setEnabled(disponibleParaOrden);
             
             // Spinner para la cantidad, sutil abajo
             spinnerCantidad = new JSpinner(new javax.swing.SpinnerNumberModel(1, 1, 100, 1));
@@ -127,6 +147,16 @@ public class PSTOrden extends javax.swing.JFrame {
             southWrap.add(pNota, java.awt.BorderLayout.CENTER);
 
             panel.add(southWrap, java.awt.BorderLayout.SOUTH);
+
+            if (!checkBox.isEnabled()) {
+                panel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                    javax.swing.BorderFactory.createLineBorder(new java.awt.Color(100, 0, 0), 2),
+                    javax.swing.BorderFactory.createEmptyBorder(15, 10, 15, 10)
+                ));
+                panel.setBackground(new java.awt.Color(20, 20, 22));
+                checkBox.setBackground(new java.awt.Color(20, 20, 22));
+                checkBox.setForeground(new java.awt.Color(160, 160, 160));
+            }
         }
     }
 
@@ -175,6 +205,7 @@ public class PSTOrden extends javax.swing.JFrame {
         jBCombos = new javax.swing.JButton();
         jBPlatillos = new javax.swing.JButton();
         jBBebidas = new javax.swing.JButton();
+        jBComplementos = new javax.swing.JButton();
         jPOrden = new javax.swing.JPanel();
         jLOrden = new javax.swing.JLabel();
         jBRegistrar = new javax.swing.JButton();
@@ -215,6 +246,8 @@ public class PSTOrden extends javax.swing.JFrame {
 
         jBBebidas.setText("Bebidas");
         jBBebidas.addActionListener(this::jBBebidasActionPerformed);
+
+        jBComplementos.setText("Complementos");
 
         jPOrden.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -675,16 +708,16 @@ public class PSTOrden extends javax.swing.JFrame {
             
             if ("Platillos".equals(categoria)) {
                 System.out.println("DEBUG: Buscando 'Platillo'");
-                productos = ProductoDAO.obtenerProductosPorCategoria("Platillo");
+                productos = ProductoDAO.obtenerProductosPorCategoriaSinFiltroDisponibilidad("Platillo");
             } else if ("Bebidas".equals(categoria)) {
                 System.out.println("DEBUG: Buscando 'Bebidas'");
-                productos = ProductoDAO.obtenerProductosPorCategoria("Bebidas");
+                productos = ProductoDAO.obtenerProductosPorCategoriaSinFiltroDisponibilidad("Bebidas");
             } else if ("Combos".equals(categoria)) {
                 System.out.println("DEBUG: Buscando 'Combo'");
-                productos = ProductoDAO.obtenerProductosPorCategoria("Combo");
+                productos = ProductoDAO.obtenerProductosPorCategoriaSinFiltroDisponibilidad("Combo");
             } else if ("Complementos".equals(categoria)) {
                 System.out.println("DEBUG: Buscando 'Complementos'");
-                productos = ProductoDAO.obtenerProductosPorCategoria("Complementos");
+                productos = ProductoDAO.obtenerProductosPorCategoriaSinFiltroDisponibilidad("Complementos");
             } else {
                 System.out.println("DEBUG: Categoría desconocida, usando fallback");
                 productos = new ArrayList<>();
@@ -698,7 +731,8 @@ public class PSTOrden extends javax.swing.JFrame {
                     producto.getIdProducto(),
                     producto.getNombre(),
                     producto.getPrecio(),
-                    esCombo
+                    esCombo,
+                    producto.getImagen()
                 );
                 tempList.add(item);
                 jPCont.add(item.panel);
@@ -707,10 +741,10 @@ public class PSTOrden extends javax.swing.JFrame {
             System.err.println("ERROR base de datos: " + ex.getMessage());
             System.err.println("SQL State: " + ex.getSQLState());
             System.err.println("Error Code: " + ex.getErrorCode());
-            ex.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Error al cargar productos", ex);
             // Llenado falso para que puedas ver el diseño aunque la base de datos falte o falle
             for (int i = 1; i <= 6; i++) {
-                ProductoItem item = new ProductoItem(i, categoria + " " + i, 50.0 + (i * 10.5), esCombo);
+                ProductoItem item = new ProductoItem(i, categoria + " " + i, 50.0 + (i * 10.5), esCombo, null);
                 tempList.add(item);
                 jPCont.add(item.panel);
             }
@@ -730,6 +764,15 @@ public class PSTOrden extends javax.swing.JFrame {
 
         jPCont.revalidate();
         jPCont.repaint();
+    }
+
+    private boolean evaluarDisponibilidadParaOrden(int idProducto) {
+        try {
+            return ServicioInventario.puedePrepararse(idProducto, 1);
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.WARNING, "No se pudo evaluar disponibilidad del producto " + idProducto, ex);
+            return true;
+        }
     }
 
     private void agregarAOrden() {
@@ -792,9 +835,10 @@ public class PSTOrden extends javax.swing.JFrame {
 
         try {
             int idOrden;
-            List<Orden> abiertasMesa = ServicioOrden.obtenerOrdenesMesa(numMesa);
-            if (!abiertasMesa.isEmpty()) {
-                idOrden = abiertasMesa.get(0).getIdOrden();
+            Orden ordenActiva = ServicioOrden.obtenerOrdenActivaDeMesa(numMesa);
+            boolean esOrdenExistente = ordenActiva != null;
+            if (esOrdenExistente) {
+                idOrden = ordenActiva.getIdOrden();
             } else {
                 idOrden = ServicioOrden.crearOrden(idEmpleado, numMesa).getIdOrden();
             }
@@ -856,14 +900,54 @@ public class PSTOrden extends javax.swing.JFrame {
                 ServicioOrden.agregarProductoAOrden(idOrden, idItem, cantidad, precio, notas, idPromocionAplicada);
             }
 
+            if (esOrdenExistente) {
+                List<CocinaTicketTemporalService.TicketItem> ticketItems = new ArrayList<>();
+                for (int i = 0; i < modeloOrden.getRowCount(); i++) {
+                    int idItem = (int) modeloOrden.getValueAt(i, 0);
+                    String nombre = String.valueOf(modeloOrden.getValueAt(i, 1));
+
+                    int cantidad = 1;
+                    Object cantObj = modeloOrden.getValueAt(i, 2);
+                    if (cantObj instanceof Integer) {
+                        cantidad = (Integer) cantObj;
+                    } else if (cantObj instanceof String) {
+                        try { cantidad = Integer.parseInt((String) cantObj); } catch (Exception e) { }
+                    }
+
+                    double precio = 0.0;
+                    Object precioObj = modeloOrden.getValueAt(i, 3);
+                    if (precioObj instanceof Number) {
+                        precio = ((Number) precioObj).doubleValue();
+                    } else if (precioObj != null) {
+                        try { precio = Double.parseDouble(precioObj.toString()); } catch (Exception e) { }
+                    }
+
+                    String notas = "";
+                    Object notasObj = modeloOrden.getValueAt(i, 5);
+                    if (notasObj != null) {
+                        notas = notasObj.toString();
+                    }
+
+                    if (i == 0 && promoSugeridaElegida != null) {
+                        notas += (notas.isEmpty() ? "" : " | ") + "✓ Promo General: " + promoSugeridaElegida.getNombrePromo();
+                    }
+
+                    ticketItems.add(new CocinaTicketTemporalService.TicketItem(idItem, nombre, cantidad, precio, notas));
+                }
+                CocinaTicketTemporalService.registrarTicket(idOrden, numMesa, ticketItems);
+            }
+
             if (promoSugeridaElegida != null) {
                 javax.swing.JOptionPane.showMessageDialog(this, 
                     "Promoción " + promoSugeridaElegida.getNombrePromo() + " aplicada a la orden.");
             }
 
-            javax.swing.JOptionPane.showMessageDialog(this, abiertasMesa.isEmpty()
-                ? "¡Orden " + idOrden + " registrada con éxito para la " + mesaStr + " y enviada a preparación!"
-                : "¡Se agregaron productos a la cuenta abierta de la " + mesaStr + " y se enviaron a preparación!");
+            // 🔊 Reproducir alerta para cocina cada vez que la orden se confirma
+            SoundService.reproducirSonido("Smoke On The Water alert.mp3");
+
+            javax.swing.JOptionPane.showMessageDialog(this, esOrdenExistente
+                ? "¡Se agregaron productos a la cuenta abierta de la " + mesaStr + " y se enviaron a preparación!"
+                : "¡Orden " + idOrden + " registrada con éxito para la " + mesaStr + " y enviada a preparación!");
             modeloOrden.setRowCount(0);
         } catch (SQLException ex) {
             javax.swing.JOptionPane.showMessageDialog(this, "Error al guardar en BD: " + ex.getMessage());

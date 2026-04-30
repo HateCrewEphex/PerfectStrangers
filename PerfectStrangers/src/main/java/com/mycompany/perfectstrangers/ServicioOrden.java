@@ -179,6 +179,38 @@ public class ServicioOrden {
     public static List<Orden> obtenerOrdenesMesa(int mesa) throws SQLException {
         return OrdenDAO.obtenerOrdenesPorMesa(mesa);
     }
+
+    /**
+     * Obtiene la cuenta abierta activa de una mesa, si ya fue entregada pero sigue pendiente de pago.
+     */
+    public static Orden obtenerCuentaAbiertaDeMesa(int mesa) throws SQLException {
+        List<Orden> ordenes = OrdenDAO.obtenerOrdenesPorMesa(mesa);
+        for (Orden orden : ordenes) {
+            if (orden.estaEntregada() && !"Pagado".equalsIgnoreCase(orden.getEstadoPago())) {
+                return orden;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Obtiene la orden activa (no pagada) de una mesa, o nulo si no hay.
+     * Prioritiza órdenes pendientes o en preparación.
+     */
+    public static Orden obtenerOrdenActivaDeMesa(int mesa) throws SQLException {
+        List<Orden> ordenes = OrdenDAO.obtenerOrdenesPorMesa(mesa); // This already gets non-paid orders
+        if (ordenes.isEmpty()) {
+            return null;
+        }
+        // Prioritize orders that are not yet delivered
+        for (Orden orden : ordenes) {
+            if (!orden.estaEntregada()) {
+                return orden;
+            }
+        }
+        // If all are delivered, return the first one (most recent) which is the "open account"
+        return ordenes.get(0);
+    }
     
     /**
      * Obtiene todas las órdenes en preparación

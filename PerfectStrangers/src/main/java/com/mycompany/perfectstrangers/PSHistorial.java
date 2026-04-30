@@ -598,9 +598,15 @@ public class PSHistorial extends javax.swing.JFrame {
                 default -> throw new IllegalStateException("Tipo de reporte no valido");
             };
 
+            String prefijo = switch (tipo) {
+                case GENERAL -> "reporte_general_";
+                case RESUMEN_CATEGORIAS -> "reporte_categorias_";
+                case DETALLE_PRODUCTOS -> "reporte_productos_";
+            };
+
             JFileChooser chooser = new JFileChooser();
             chooser.setDialogTitle("Guardar reporte PDF");
-            chooser.setSelectedFile(new java.io.File("reporte_ventas_" + System.currentTimeMillis() + ".pdf"));
+            chooser.setSelectedFile(new java.io.File(prefijo + System.currentTimeMillis() + ".pdf"));
             int result = chooser.showSaveDialog(this);
             if (result != JFileChooser.APPROVE_OPTION) {
                 return;

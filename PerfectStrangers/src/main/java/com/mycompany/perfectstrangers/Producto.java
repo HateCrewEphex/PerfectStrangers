@@ -6,18 +6,18 @@ public class Producto {
     private String descripcion;
     private double precio;
     private String categoria; // Platillo, Bebidas, Complementos
-    private String rutaImagen;
+    private byte[] imagen;
     private boolean disponible;
 
     public Producto() {
     }
 
-    public Producto(String nombre, String descripcion, double precio, String categoria, String rutaImagen) {
+    public Producto(String nombre, String descripcion, double precio, String categoria, byte[] imagen) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
         this.categoria = categoria;
-        this.rutaImagen = rutaImagen;
+        this.imagen = imagen;
         this.disponible = true;
     }
 
@@ -61,12 +61,20 @@ public class Producto {
         this.categoria = categoria;
     }
 
+    public byte[] getImagen() {
+        return imagen;
+    }
+
+    public void setImagen(byte[] imagen) {
+        this.imagen = imagen;
+    }
+
     public String getRutaImagen() {
-        return rutaImagen;
+        return null;
     }
 
     public void setRutaImagen(String rutaImagen) {
-        this.rutaImagen = rutaImagen;
+        this.imagen = null;
     }
 
     public boolean isDisponible() {
