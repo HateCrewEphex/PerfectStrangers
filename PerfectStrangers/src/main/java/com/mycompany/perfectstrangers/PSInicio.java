@@ -145,7 +145,7 @@ public class PSInicio extends javax.swing.JFrame {
             private java.awt.Image bgImage;
             {
                 try {
-                    java.net.URL url = getClass().getResource("/com/mycompany/perfectstrangers/logo500x500.png");
+                    java.net.URL url = getClass().getResource("/com/mycompany/perfectstrangers/Logo nuevo.png");
                     if (url != null) { bgImage = new javax.swing.ImageIcon(url).getImage(); }
                 } catch (Exception e) {}
             }
