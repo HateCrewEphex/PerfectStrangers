@@ -85,7 +85,11 @@ public class DialogoSeleccionarPromocion extends JDialog {
     private String formatearPromo(Promocion promo) {
         String tipo = promo.getTipoDescuento();
         double valor = promo.getValorDescuento();
-        String descuento = tipo.equals("Porcentaje") ? valor + "%" : "$" + valor;
+        if (tipo != null && (tipo.equalsIgnoreCase("2x1") || tipo.equalsIgnoreCase("2*1"))) {
+            return promo.getNombrePromo() + " (2x1)";
+        }
+
+        String descuento = tipo != null && tipo.equalsIgnoreCase("Porcentaje") ? valor + "%" : "$" + valor;
         return promo.getNombrePromo() + " (" + descuento + ")";
     }
     

@@ -67,6 +67,31 @@ public class ServicioPromocion {
         
         return mejorPromo;
     }
+
+    /**
+     * Obtiene la mejor promoción (mayor descuento real) para un producto y monto dado.
+     * Útil cuando el tipo de descuento afecta el cálculo final.
+     */
+    public static Promocion obtenerMejorPromo(int idProducto, double monto) throws SQLException {
+        List<Promocion> promos = obtenerPromosPorProducto(idProducto);
+
+        if (promos.isEmpty()) {
+            return null;
+        }
+
+        Promocion mejorPromo = null;
+        double mejorDescuento = -1;
+
+        for (Promocion promo : promos) {
+            double descuento = promo.calcularDescuento(monto);
+            if (descuento > mejorDescuento) {
+                mejorPromo = promo;
+                mejorDescuento = descuento;
+            }
+        }
+
+        return mejorPromo;
+    }
     
     /**
      * Valida si una promoción puede aplicarse ahora

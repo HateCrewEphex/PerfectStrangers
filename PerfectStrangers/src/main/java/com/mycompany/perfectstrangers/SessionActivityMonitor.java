@@ -20,7 +20,7 @@ import javax.swing.JFrame;
 public class SessionActivityMonitor {
     
     private static final long INACTIVITY_TIME_MS = 5 * 60 * 1000; // 5 minutos
-    private static final String ALERT_SOUND = "PerfectStrangers alert.mp3";
+    private static final String ALERT_SOUND = "PerfectStrangers-alert.wav";
     
     private JFrame frame;
     private Timer inactivityTimer;

@@ -11,7 +11,7 @@ import java.util.TimerTask;
  */
 public class InventarioAlertService {
     
-    private static final String STOCK_ALERT_SOUND = "child in time alert.mp3";
+    private static final String STOCK_ALERT_SOUND = "Child-in-time-alert.wav";
     private static final long CHECK_INTERVAL_MS = 30 * 1000; // Verificar cada 30 segundos
     
     private Map<Integer, InsumoState> insumoStates = new HashMap<>();

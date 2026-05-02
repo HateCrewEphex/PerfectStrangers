@@ -420,7 +420,9 @@ public class PSConOrder extends javax.swing.JFrame {
             } else {
                 ServicioOrden.entregarOrden(o.idOrden);
             }
-            cargarOrdenes(); 
+            // Alarma cuando el cocinero marca el ticket como preparado
+            SoundService.reproducirSonido("space-truckin-alert.wav");
+            cargarOrdenes();
         } catch (SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al entregar orden", ex);
         }

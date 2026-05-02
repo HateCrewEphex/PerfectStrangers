@@ -394,7 +394,7 @@ public class PSCobOrden extends javax.swing.JFrame {
              "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregado' AND o.estado_pago IN ('Pendiente', 'Parcial')";
 
         // Consulta para obtener todas las órdenes entregadas que sigan pendientes o parciales en esa mesa
-        String sql = "SELECT o.id_orden, o.mesa, e.nombre AS nomEmp, p.nombre AS nomProd, p.precio AS costoP, d.cantidad AS cant, d.notas_especiales AS nota " +
+        String sql = "SELECT o.id_orden, o.mesa, e.nombre AS nomEmp, p.nombre AS nomProd, p.precio AS precioBase, d.precio_unitario AS costoP, d.cantidad AS cant, d.notas_especiales AS nota " +
                  "FROM ordenes o " +
                  "INNER JOIN empleados e ON o.id_empleado = e.id_empleado " +
                  "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
@@ -434,6 +434,7 @@ public class PSCobOrden extends javax.swing.JFrame {
                         existeOrden = true;
                         String nombreItem = rs.getString("nomProd") != null ? rs.getString("nomProd") : "Desconocido";
                         double valor = rs.getDouble("costoP");
+                        double valorBase = rs.getDouble("precioBase");
                         int cant = rs.getInt("cant");
                         String nota = rs.getString("nota");
                         double subtotalLinea = (valor * cant);
@@ -446,9 +447,15 @@ public class PSCobOrden extends javax.swing.JFrame {
                         html.append("<span style='color: #cca95a; font-weight: bold;'>").append(cant).append("x</span> &nbsp;");
                         html.append("<span style='color: #FFFFFF;'>").append(nombreItem).append("</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
                         // Precios
-                        html.append("<span style='color: #999999;'>$").append(String.format("%.2f", valor)).append(" c/u.</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
+                        html.append("<span style='color: #999999;'>$").append(String.format("%.2f", valorBase)).append(" c/u.</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
                         html.append("<span style='color: #FFFFFF; float: right;'>$").append(String.format("%.2f", subtotalLinea)).append("</span>");
                         html.append("</div>");
+                        if (esLinea2x1(nota) && valorBase > valor) {
+                            double descuentoLinea = Math.max(valorBase - valor, 0.0) * cant;
+                            html.append("<div style='margin: -4px 0 8px 24px; font-size: 16px; color: #00ff3c; font-style: italic;'>Descuento 2x1: -$")
+                                .append(String.format("%.2f", descuentoLinea))
+                                .append("</div>");
+                        }
                         if (nota != null && !nota.trim().isEmpty()) {
                             html.append("<div style='margin: -4px 0 8px 24px; font-size: 16px; color: #cca95a; font-style: italic;'>Nota: ").append(nota).append("</div>");
                         }
@@ -485,6 +492,14 @@ public class PSCobOrden extends javax.swing.JFrame {
         } catch (SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al cargar datos para cobrar", ex);
         }
+    }
+
+    private boolean esLinea2x1(String nota) {
+        if (nota == null) {
+            return false;
+        }
+        String texto = nota.toLowerCase();
+        return texto.contains("promo 2x1") || texto.contains("promo 2*1");
     }
 
     private void cobrarOrden() {

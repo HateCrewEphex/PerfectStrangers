@@ -23,7 +23,13 @@ public class ServicioPrecio {
         double descuentoTotal = 0;
         
         for (DetalleOrden detalle : detalles) {
-            double descuentoItem = calcularDescuentoProducto(detalle.getIdProducto(), detalle.getPrecioUnitario() * detalle.getCantidad());
+            if (esLinea2x1Representada(detalle)) {
+                continue;
+            }
+            double descuentoItem = calcularDescuentoProducto(
+                detalle.getIdProducto(),
+                detalle.getPrecioUnitario() * detalle.getCantidad()
+            );
             descuentoTotal += descuentoItem;
         }
         
@@ -34,22 +40,32 @@ public class ServicioPrecio {
      * Calcula descuentos para un producto específico
      */
     public static double calcularDescuentoProducto(int idProducto, double monto) throws SQLException {
-        List<Promocion> promos = PromocionDAO.obtenerPromcionesActivasPorProducto(idProducto);
-        double descuentoTotal = 0;
-        
+        List<Promocion> promos = ServicioPromocion.obtenerPromosPorProducto(idProducto);
+        double mejorDescuento = 0;
+
         for (Promocion promo : promos) {
             double descuento = promo.calcularDescuento(monto);
-            descuentoTotal += descuento;
+            if (descuento > mejorDescuento) {
+                mejorDescuento = descuento;
+            }
         }
         
-        return descuentoTotal;
+        return Math.max(0, Math.min(monto, mejorDescuento));
     }
-    
+
+    private static boolean esLinea2x1Representada(DetalleOrden detalle) {
+        if (detalle == null || detalle.getNotasEspeciales() == null) {
+            return false;
+        }
+        String notas = detalle.getNotasEspeciales().toLowerCase();
+        return notas.contains("promo 2x1") || notas.contains("promo 2*1");
+    }
+
     /**
      * Obtiene promociones activas para un producto
      */
     public static List<Promocion> obtenerPromociones(int idProducto) throws SQLException {
-        return PromocionDAO.obtenerPromcionesActivasPorProducto(idProducto);
+        return ServicioPromocion.obtenerPromosPorProducto(idProducto);
     }
     
     /**

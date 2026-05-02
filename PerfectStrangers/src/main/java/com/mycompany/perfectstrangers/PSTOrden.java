@@ -7,7 +7,9 @@ package com.mycompany.perfectstrangers;
 import java.io.ByteArrayInputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -782,15 +784,30 @@ public class PSTOrden extends javax.swing.JFrame {
             if (item.checkBox.isSelected()) {
                 int cantidad = (int) item.spinnerCantidad.getValue();
                 String notas = item.notaEspecial != null ? item.notaEspecial.getText().trim() : "";
-                
+
                 // AUTO-APLICAR PROMOCIONES ESPECÍFICAS DE PRODUCTO
                 Integer idPromocionAplicada = null;
                 try {
-                    Promocion promoAuto = ServicioPromocion.obtenerMejorPromo(item.id);
+                    double montoLinea = item.precio * cantidad;
+                    Promocion promoAuto = ServicioPromocion.obtenerMejorPromo(item.id, montoLinea);
                     if (promoAuto != null) {
                         idPromocionAplicada = promoAuto.getIdPromocion();
                         notas += (notas.isEmpty() ? "" : " | ") + "✓ Promo: " + promoAuto.getNombrePromo();
                         promosAplicadas.append("- ").append(item.nombre).append(": ").append(promoAuto.getNombrePromo()).append("\n");
+
+                        if (esPromo2x1(promoAuto)) {
+                            String notas2x1 = notas + " | Promo 2x1";
+                            for (int unidad = 0; unidad < cantidad; unidad++) {
+                                modeloOrden.addRow(new Object[]{ item.id, item.nombre, 1, item.precio, item.esCombo, notas2x1 + " | 1ra unidad", "❌", idPromocionAplicada });
+                                modeloOrden.addRow(new Object[]{ item.id, item.nombre, 1, 0.0, item.esCombo, notas2x1 + " | 2da unidad", "❌", idPromocionAplicada });
+                            }
+                            item.checkBox.setSelected(false);
+                            item.spinnerCantidad.setValue(1);
+                            if (item.notaEspecial != null) {
+                                item.notaEspecial.setText("");
+                            }
+                            continue;
+                        }
                     }
                 } catch (SQLException ex) {
                     System.err.println("Error al detectar promos: " + ex.getMessage());
@@ -812,11 +829,64 @@ public class PSTOrden extends javax.swing.JFrame {
         }
     }
 
+    private boolean esPromo2x1(Promocion promo) {
+        if (promo == null || promo.getTipoDescuento() == null) {
+            return false;
+        }
+        String tipo = promo.getTipoDescuento().trim();
+        return "2x1".equalsIgnoreCase(tipo) || "2*1".equalsIgnoreCase(tipo);
+    }
+
     private void borrarSeleccionados() {
         int[] seleccionados = tablaOrden.getSelectedRows();
         for (int i = seleccionados.length - 1; i >= 0; i--) {
             modeloOrden.removeRow(seleccionados[i]);
         }
+    }
+
+    private DialogoSeleccionarPlatillosPromo.ItemPlatilloPromo crearItemPlatilloParaPromoGeneral(int fila) {
+        int idProducto = 0;
+        Object idObj = modeloOrden.getValueAt(fila, 0);
+        if (idObj instanceof Integer) {
+            idProducto = (Integer) idObj;
+        } else if (idObj != null) {
+            try { idProducto = Integer.parseInt(idObj.toString()); } catch (Exception ex) { }
+        }
+
+        Object nombreObj = modeloOrden.getValueAt(fila, 1);
+        Object cantidadObj = modeloOrden.getValueAt(fila, 2);
+        Object precioObj = modeloOrden.getValueAt(fila, 3);
+
+        String nombre = nombreObj != null ? String.valueOf(nombreObj) : "Desconocido";
+        int cantidad = 1;
+        if (cantidadObj instanceof Integer) {
+            cantidad = (Integer) cantidadObj;
+        } else if (cantidadObj instanceof String) {
+            try { cantidad = Integer.parseInt((String) cantidadObj); } catch (Exception ex) { }
+        }
+
+        double precio = 0.0;
+        if (precioObj instanceof Number) {
+            precio = ((Number) precioObj).doubleValue();
+        } else if (precioObj != null) {
+            try { precio = Double.parseDouble(precioObj.toString()); } catch (Exception ex) { }
+        }
+
+        String categoria = obtenerCategoriaProducto(idProducto);
+        String etiqueta = cantidad + "x " + nombre + " - $" + String.format("%.2f", precio * cantidad);
+        return new DialogoSeleccionarPlatillosPromo.ItemPlatilloPromo(fila, etiqueta, categoria);
+    }
+
+    private String obtenerCategoriaProducto(int idProducto) {
+        try {
+            Producto producto = ProductoDAO.obtenerProductoById(idProducto);
+            if (producto != null && producto.getCategoria() != null && !producto.getCategoria().trim().isEmpty()) {
+                return producto.getCategoria();
+            }
+        } catch (SQLException ex) {
+            logger.log(java.util.logging.Level.WARNING, "No se pudo obtener la categoría del producto " + idProducto, ex);
+        }
+        return "Sin categoría";
     }
 
     private void registrarOrden() {
@@ -851,12 +921,31 @@ public class PSTOrden extends javax.swing.JFrame {
             }
 
             Promocion promoSugeridaElegida = null;
+            Set<Integer> filasPromoGeneral = new HashSet<>();
             if (!promosGenericas.isEmpty()) {
                 DialogoSeleccionarPromocion dialogo = new DialogoSeleccionarPromocion(this, 
                     new java.util.ArrayList<>(promosGenericas));
                 dialogo.setVisible(true);
                 if (dialogo.fueConfirmado() && dialogo.getPromoSeleccionada() != null) {
                     promoSugeridaElegida = dialogo.getPromoSeleccionada();
+
+                    List<DialogoSeleccionarPlatillosPromo.ItemPlatilloPromo> platillosOrden = new ArrayList<>();
+                    for (int i = 0; i < modeloOrden.getRowCount(); i++) {
+                        platillosOrden.add(crearItemPlatilloParaPromoGeneral(i));
+                    }
+
+                    DialogoSeleccionarPlatillosPromo dialogoPlatillos = new DialogoSeleccionarPlatillosPromo(
+                        this,
+                        promoSugeridaElegida,
+                        platillosOrden
+                    );
+                    dialogoPlatillos.setVisible(true);
+
+                    if (dialogoPlatillos.fueConfirmado()) {
+                        filasPromoGeneral.addAll(dialogoPlatillos.getIndicesSeleccionados());
+                    } else {
+                        promoSugeridaElegida = null;
+                    }
                 }
             }
 
@@ -893,8 +982,15 @@ public class PSTOrden extends javax.swing.JFrame {
                     }
                 } catch (Exception e) { }
 
-                if (i == 0 && promoSugeridaElegida != null) {
+                if (promoSugeridaElegida != null && filasPromoGeneral.contains(i)) {
+                    double montoLinea = precio * cantidad;
+                    double descuentoPromoGeneral = promoSugeridaElegida.calcularDescuento(montoLinea);
+                    double montoNeto = Math.max(0, montoLinea - descuentoPromoGeneral);
+                    precio = cantidad > 0 ? (montoNeto / cantidad) : precio;
                     notas += (notas.isEmpty() ? "" : " | ") + "✓ Promo General: " + promoSugeridaElegida.getNombrePromo();
+                    if (idPromocionAplicada == null) {
+                        idPromocionAplicada = promoSugeridaElegida.getIdPromocion();
+                    }
                 }
 
                 ServicioOrden.agregarProductoAOrden(idOrden, idItem, cantidad, precio, notas, idPromocionAplicada);
@@ -928,7 +1024,11 @@ public class PSTOrden extends javax.swing.JFrame {
                         notas = notasObj.toString();
                     }
 
-                    if (i == 0 && promoSugeridaElegida != null) {
+                    if (promoSugeridaElegida != null && filasPromoGeneral.contains(i)) {
+                        double montoLinea = precio * cantidad;
+                        double descuentoPromoGeneral = promoSugeridaElegida.calcularDescuento(montoLinea);
+                        double montoNeto = Math.max(0, montoLinea - descuentoPromoGeneral);
+                        precio = cantidad > 0 ? (montoNeto / cantidad) : precio;
                         notas += (notas.isEmpty() ? "" : " | ") + "✓ Promo General: " + promoSugeridaElegida.getNombrePromo();
                     }
 
@@ -943,7 +1043,7 @@ public class PSTOrden extends javax.swing.JFrame {
             }
 
             // 🔊 Reproducir alerta para cocina cada vez que la orden se confirma
-            SoundService.reproducirSonido("Smoke On The Water alert.mp3");
+            SoundService.reproducirSonido("Smoke-On-The-Water-alert.wav");
 
             javax.swing.JOptionPane.showMessageDialog(this, esOrdenExistente
                 ? "¡Se agregaron productos a la cuenta abierta de la " + mesaStr + " y se enviaron a preparación!"

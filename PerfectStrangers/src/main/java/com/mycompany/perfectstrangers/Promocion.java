@@ -1,8 +1,8 @@
 package com.mycompany.perfectstrangers;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.DayOfWeek;
 
 public class Promocion {
     private int idPromocion;
@@ -121,13 +121,16 @@ public class Promocion {
 
     public double calcularDescuento(double monto) {
         if (!esValidaAhora()) return 0;
-        
-        return switch (tipoDescuento) {
-            case "Porcentaje" -> monto * (valorDescuento / 100);
-            case "Fijo" -> valorDescuento;
-            case "2x1" -> monto / 2; // El segundo item cuesta la mitad
+
+        String tipo = tipoDescuento == null ? "" : tipoDescuento.trim();
+        double descuento = switch (tipo.toLowerCase()) {
+            case "porcentaje" -> monto * (valorDescuento / 100.0);
+            case "fijo" -> valorDescuento;
+            case "2x1", "2*1" -> monto / 2.0;
             default -> 0;
         };
+
+        return Math.max(0, Math.min(monto, descuento));
     }
 
     @Override

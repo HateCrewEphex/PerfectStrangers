@@ -12,9 +12,10 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
- * Servicio para reproducir archivos de audio (MP3 o WAV)
+ * Servicio para reproducir archivos de audio WAV
  * Maneja la reproducción de alertas del sistema
  */
 public class SoundService {
@@ -23,22 +24,15 @@ public class SoundService {
     
     /**
      * Reproduce un archivo de audio
-     * @param nombreArchivo nombre del archivo (ej: "PerfectStrangers alert.mp3")
+     * @param nombreArchivo nombre del archivo (ej: "PerfectStrangers-alert.wav")
      */
     public static void reproducirSonido(String nombreArchivo) {
-        // Ejecutar en hilo separado para no bloquear UI
         audioThread = new Thread(() -> {
             try {
-                // Intenta reproducir como WAV/AIFF primero
                 reproducirWAV(nombreArchivo);
-            } catch (Exception e1) {
-                try {
-                    // Si falla, intenta reproducir como MP3 usando proceso externo
-                    reproducirMP3Externo(nombreArchivo);
-                } catch (Exception e2) {
-                    System.err.println("Error reproduciendo sonido: " + nombreArchivo);
-                    e2.printStackTrace();
-                }
+            } catch (Exception e) {
+                System.err.println("Error reproduciendo sonido: " + nombreArchivo);
+                System.err.println(e.getMessage());
             }
         });
         
@@ -47,68 +41,76 @@ public class SoundService {
     }
     
     /**
-     * Reproduce un archivo WAV/AIFF desde los recursos
+     * Reproduce un archivo WAV desde el classpath o el sistema de archivos.
      */
     private static void reproducirWAV(String nombreArchivo) throws Exception {
-        String rutaArchivo = obtenerRutaArchivo(nombreArchivo);
-        
-        if (rutaArchivo == null) {
-            throw new FileNotFoundException("Archivo de audio no encontrado: " + nombreArchivo);
-        }
-        
-        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(rutaArchivo));
-        AudioFormat format = audioInputStream.getFormat();
-        
-        DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
-        SourceDataLine audioLine = (SourceDataLine) AudioSystem.getLine(info);
-        
-        audioLine.open(format);
-        audioLine.start();
-        
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        
-        while ((bytesRead = audioInputStream.read(buffer, 0, buffer.length)) != -1) {
-            audioLine.write(buffer, 0, bytesRead);
-        }
-        
-        audioLine.drain();
-        audioLine.close();
-        audioInputStream.close();
-    }
-    
-    /**
-     * Reproduce un archivo MP3 usando proceso externo
-     * Busca el archivo en los recursos del JAR
-     */
-    private static void reproducirMP3Externo(String nombreArchivo) throws Exception {
-        String rutaArchivo = obtenerRutaArchivo(nombreArchivo);
-        
-        if (rutaArchivo == null) {
-            throw new FileNotFoundException("Archivo de audio no encontrado: " + nombreArchivo);
-        }
-        
-        try {
-            if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                String script = "$player = New-Object -ComObject WMPlayer.OCX; "
-                    + "$media = $player.newMedia($args[0]); "
-                    + "$player.currentPlaylist.clear(); "
-                    + "$null = $player.currentPlaylist.appendItem($media); "
-                    + "$player.controls.play(); "
-                    + "while ($player.playState -ne 1 -and $player.playState -ne 8) { Start-Sleep -Milliseconds 200 }";
-                ProcessBuilder pb = new ProcessBuilder(
-                    "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script, rutaArchivo
-                );
-                pb.start().waitFor();
+        try (AudioInputStream audioInputStream = abrirAudioInputStream(nombreArchivo)) {
+            AudioFormat formatoBase = audioInputStream.getFormat();
+            AudioFormat formatoReproduccion = obtenerFormatoReproduccion(formatoBase);
+            if (formatoReproduccion.matches(formatoBase)) {
+                reproducirStream(audioInputStream, formatoReproduccion);
             } else {
-                // En Linux/Mac, usar ffplay o similar
-                ProcessBuilder pb = new ProcessBuilder("ffplay", "-nodisp", "-autoexit", rutaArchivo);
-                pb.start().waitFor();
+                try (AudioInputStream audioStream = AudioSystem.getAudioInputStream(formatoReproduccion, audioInputStream)) {
+                    reproducirStream(audioStream, formatoReproduccion);
+                }
             }
-        } catch (Exception e) {
-            System.err.println("No se pudo reproducir MP3: " + e.getMessage());
-            throw e;
         }
+    }
+
+    private static void reproducirStream(AudioInputStream audioStream, AudioFormat formatoReproduccion) throws Exception {
+        DataLine.Info info = new DataLine.Info(SourceDataLine.class, formatoReproduccion);
+        SourceDataLine audioLine = (SourceDataLine) AudioSystem.getLine(info);
+
+        try {
+            audioLine.open(formatoReproduccion);
+            audioLine.start();
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = audioStream.read(buffer, 0, buffer.length)) != -1 && !Thread.currentThread().isInterrupted()) {
+                audioLine.write(buffer, 0, bytesRead);
+            }
+
+            audioLine.drain();
+        } finally {
+            audioLine.stop();
+            audioLine.close();
+        }
+    }
+
+    private static AudioInputStream abrirAudioInputStream(String nombreArchivo) throws Exception {
+        URL resourceUrl = SoundService.class.getResource("/audio/" + nombreArchivo);
+        if (resourceUrl != null) {
+            return AudioSystem.getAudioInputStream(resourceUrl);
+        }
+
+        String rutaArchivo = obtenerRutaArchivo(nombreArchivo);
+        if (rutaArchivo == null) {
+            throw new FileNotFoundException("Archivo de audio no encontrado: " + nombreArchivo);
+        }
+
+        try {
+            return AudioSystem.getAudioInputStream(new File(rutaArchivo));
+        } catch (UnsupportedAudioFileException ex) {
+            throw new IllegalArgumentException("Formato de audio no soportado: " + nombreArchivo, ex);
+        }
+    }
+
+    private static AudioFormat obtenerFormatoReproduccion(AudioFormat formatoBase) {
+        if (AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, formatoBase))) {
+            return formatoBase;
+        }
+
+        return new AudioFormat(
+            AudioFormat.Encoding.PCM_SIGNED,
+            formatoBase.getSampleRate(),
+            16,
+            formatoBase.getChannels(),
+            formatoBase.getChannels() * 2,
+            formatoBase.getSampleRate(),
+            false
+        );
     }
     
     /**
@@ -122,7 +124,7 @@ public class SoundService {
     
     /**
      * Obtiene la ruta del archivo de audio
-     * Busca en: 1) Carpeta de recursos /audio/, 2) Carpeta del paquete, 3) Sistema de archivos
+     * Busca en: 1) Carpeta del paquete, 2) Sistema de archivos compilado
      */
     private static String obtenerRutaArchivo(String nombreArchivo) {
         // 0. Carpeta del proyecto durante desarrollo
@@ -131,53 +133,51 @@ public class SoundService {
             if (Files.exists(pathDesarrollo)) {
                 return pathDesarrollo.toAbsolutePath().toString();
             }
-        } catch (Exception e) {}
+        } catch (RuntimeException e) {
+            return null;
+        }
 
-        // 1. Intenta buscar en /audio/ (JAR o classpath)
-        try {
-            URL url = SoundService.class.getResource("/audio/" + nombreArchivo);
-            if (url != null) {
-                return URLDecoder.decode(url.getPath(), "UTF-8");
-            }
-        } catch (Exception e) {}
-        
-        // 2. Intenta buscar en la carpeta del paquete (misma carpeta que los .java)
-        try {
-            URL url = SoundService.class.getResource(nombreArchivo);
-            if (url != null) {
+        // 1. Intenta buscar en la carpeta del paquete (misma carpeta que los .java)
+        URL url = SoundService.class.getResource(nombreArchivo);
+        if (url != null) {
+            try {
                 String path = URLDecoder.decode(url.getPath(), "UTF-8");
                 // En Windows, remover el primer "/" si es así (ej: /C:/ruta/...)
                 if (path.startsWith("/") && path.length() > 2 && path.charAt(2) == ':') {
                     path = path.substring(1);
                 }
                 return path;
+            } catch (java.io.UnsupportedEncodingException e) {
+                return null;
             }
-        } catch (Exception e) {}
+        }
         
-        // 3. Intenta buscar en el sistema de archivos directo
+        // 2. Intenta buscar en el sistema de archivos directo
         // (para cuando se ejecuta desde el IDE durante desarrollo)
+        String classPath = SoundService.class.getProtectionDomain()
+            .getCodeSource().getLocation().getPath();
         try {
-            String classPath = SoundService.class.getProtectionDomain()
-                .getCodeSource().getLocation().getPath();
             classPath = URLDecoder.decode(classPath, "UTF-8");
-            
-            // En Windows, remover el primer "/"
-            if (classPath.startsWith("/") && classPath.length() > 2 && classPath.charAt(2) == ':') {
-                classPath = classPath.substring(1);
-            }
-            
-            // Si es un archivo classes, buscar en src/main/java
-            String basePath = classPath;
-            if (basePath.contains("target/classes")) {
-                basePath = basePath.replace("target/classes", 
-                    "src/main/java/com/mycompany/perfectstrangers");
-            }
-            
-            File audioFile = new File(basePath, nombreArchivo);
-            if (audioFile.exists()) {
-                return audioFile.getAbsolutePath();
-            }
-        } catch (Exception e) {}
+        } catch (java.io.UnsupportedEncodingException e) {
+            return null;
+        }
+
+        // En Windows, remover el primer "/"
+        if (classPath.startsWith("/") && classPath.length() > 2 && classPath.charAt(2) == ':') {
+            classPath = classPath.substring(1);
+        }
+
+        // Si es un archivo classes, buscar en src/main/java
+        String basePath = classPath;
+        if (basePath.contains("target/classes")) {
+            basePath = basePath.replace("target/classes", 
+                "src/main/java/com/mycompany/perfectstrangers");
+        }
+
+        File audioFile = new File(basePath, nombreArchivo);
+        if (audioFile.exists()) {
+            return audioFile.getAbsolutePath();
+        }
         
         return null;
     }
