@@ -62,7 +62,7 @@ public class OrdenDAO {
                      "FROM ordenes o " +
                      "JOIN empleados e ON o.id_empleado = e.id_empleado " +
                      "LEFT JOIN empleados c ON o.id_cocinero = c.id_empleado " +
-                     "WHERE o.mesa = ? AND o.estado_pago != 'Pagado' " +
+                     "WHERE o.mesa = ? AND o.estado_pago != 'Pagado' AND TRIM(UPPER(o.estado_preparacion)) != 'CANCELADO' " +
                      "ORDER BY o.fecha_hora DESC";
         
         List<Orden> ordenes = new ArrayList<>();
@@ -123,7 +123,7 @@ public class OrdenDAO {
                      "FROM ordenes o " +
                      "JOIN empleados e ON o.id_empleado = e.id_empleado " +
                      "LEFT JOIN empleados c ON o.id_cocinero = c.id_empleado " +
-                     "WHERE o.id_cocinero = ? AND o.estado_preparacion != 'Entregado' " +
+                     "WHERE o.id_cocinero = ? AND TRIM(UPPER(o.estado_preparacion)) NOT IN ('ENTREGADO', 'CANCELADO') " +
                      "ORDER BY o.fecha_hora ASC";
         
         List<Orden> ordenes = new ArrayList<>();

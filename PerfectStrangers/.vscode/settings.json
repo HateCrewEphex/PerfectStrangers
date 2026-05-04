@@ -1,5 +1,15 @@
 {
     "chat.tools.terminal.autoApprove": {
-        "mvn -q -DskipTests compile": true
+        "mvn -q -DskipTests compile": true,
+        "mvn clean": true,
+        "/^powershell -Command \"\\(Get-Content 'src\\\\main\\\\java\\\\com\\\\mycompany\\\\perfectstrangers\\\\PSRendimiento\\.java' \\| Measure-Object -Line\\)\\.Lines\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^powershell -Command \"Remove-Item 'src\\\\main\\\\java\\\\com\\\\mycompany\\\\perfectstrangers\\\\PSRendimiento\\.java' -Force\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "mvn compile": true
     }
 }

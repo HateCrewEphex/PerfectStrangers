@@ -386,8 +386,18 @@ public class PSMenu extends javax.swing.JFrame {
             @Override
             public void mousePressed(java.awt.event.MouseEvent e) {
                 if (javax.swing.SwingUtilities.isLeftMouseButton(e)) {
-                    javax.swing.MenuSelectionManager.defaultManager().clearSelectedPath();
-                    abrirVentanaConPermiso("ver_reportes", new PSHistorial());
+                    // Mostrar un menú con opciones
+                    javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
+                    
+                    javax.swing.JMenuItem itemHistorial = new javax.swing.JMenuItem("📋 Historial de Ventas");
+                    itemHistorial.addActionListener(evt -> abrirVentanaConPermiso("ver_reportes", new PSHistorial()));
+                    menu.add(itemHistorial);
+                    
+                    javax.swing.JMenuItem itemRendimiento = new javax.swing.JMenuItem("📊 Rendimiento de Personal");
+                    itemRendimiento.addActionListener(evt -> abrirVentanaConPermiso("ver_reportes", new PSRendimiento()));
+                    menu.add(itemRendimiento);
+                    
+                    menu.show(jMenu1, 0, jMenu1.getHeight());
                 }
             }
         };
@@ -444,11 +454,13 @@ public class PSMenu extends javax.swing.JFrame {
         jMOTomar.setVisible(ServicioSesion.tienePermiso("crear_orden"));
         jMOConsultar.setVisible(ServicioSesion.tienePermiso("ver_ordenes"));
         jMOCobrar.setVisible(ServicioSesion.tienePermiso("cobrar"));
-        jMOrdenes.setVisible(jMOTomar.isVisible() || jMOConsultar.isVisible() || jMOCobrar.isVisible());
+        jMOCancelar.setVisible(ServicioSesion.tienePermiso("ver_ordenes"));
+        jMOrdenes.setVisible(jMOTomar.isVisible() || jMOConsultar.isVisible() || jMOCobrar.isVisible() || jMOCancelar.isVisible());
 
         jMOTomar.addActionListener(evt -> abrirVentanaConPermiso("crear_orden", new PSTOrden()));
         jMOConsultar.addActionListener(evt -> abrirVentanaConPermiso("ver_ordenes", new PSConOrder()));
         jMOCobrar.addActionListener(evt -> abrirVentanaConPermiso("cobrar", new PSCobOrden()));
+        jMOCancelar.addActionListener(evt -> abrirVentanaConPermiso("ver_ordenes", new PSCancelarOrden()));
     }
 
     private boolean isAperturaEnProgreso = false;
@@ -578,6 +590,7 @@ public class PSMenu extends javax.swing.JFrame {
         jMOTomar = new javax.swing.JMenuItem();
         jMOConsultar = new javax.swing.JMenuItem();
         jMOCobrar = new javax.swing.JMenuItem();
+        jMOCancelar = new javax.swing.JMenuItem();
         JInventario = new javax.swing.JMenu();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -676,12 +689,15 @@ public class PSMenu extends javax.swing.JFrame {
         jMOCobrar.setText("Cobrar");
         jMOrdenes.add(jMOCobrar);
 
+        jMOCancelar.setText("Cancelar");
+        jMOrdenes.add(jMOCancelar);
+
         jMenuSup.add(jMOrdenes);
 
         JInventario.setText("Inventario");
         jMenuSup.add(JInventario);
 
-        jMenu1.setText("Historial");
+        jMenu1.setText("📊 Reportes");
         jMenuSup.add(jMenu1);
 
         jMenu2.setText("Salir");
@@ -792,6 +808,7 @@ public class PSMenu extends javax.swing.JFrame {
     private javax.swing.JLabel jLTiempo;
     private javax.swing.JLabel jLUsuario;
     private javax.swing.JMenuItem jMOCobrar;
+    private javax.swing.JMenuItem jMOCancelar;
     private javax.swing.JMenuItem jMOConsultar;
     private javax.swing.JMenuItem jMOTomar;
     private javax.swing.JMenu jMOrdenes;
