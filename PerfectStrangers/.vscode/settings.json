@@ -10,6 +10,9 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "mvn compile": true
+        "mvn compile": true,
+        "jar": true,
+        "jpackage": true,
+        "mvn -DskipTests package": true
     }
 }

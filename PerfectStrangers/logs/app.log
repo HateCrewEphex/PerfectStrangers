@@ -1,0 +1,526 @@
+may 06, 2026 2:14:02 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+May 06, 2026 2:22:20 AM com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+May 06, 2026 2:22:20 AM com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+May 06, 2026 2:22:25 AM com.mycompany.perfectstrangers.AppLogger logException
+GRAVE: Excepción no capturada
+java.lang.NoClassDefFoundError: javax/naming/NamingException
+	at com.mysql.cj.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:168)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$new$1(PSInicio.java:40)
+	at java.desktop/javax.swing.JTextField.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.JTextField.postActionEvent(Unknown Source)
+	at java.desktop/javax.swing.JTextField$NotifyAction.actionPerformed(Unknown Source)
+	at java.desktop/javax.swing.SwingUtilities.notifyAction(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processKeyBinding(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processKeyBindings(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processKeyEvent(Unknown Source)
+	at java.desktop/java.awt.Component.processEvent(Unknown Source)
+	at java.desktop/java.awt.Container.processEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.KeyboardFocusManager.redispatchEvent(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchKeyEvent(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.preDispatchKeyEvent(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.typeAheadAssertions(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.run(Unknown Source)
+Caused by: java.lang.ClassNotFoundException: javax.naming.NamingException
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	... 37 more
+
+May 06, 2026 2:22:25 AM com.mycompany.perfectstrangers.AppLogger logException
+GRAVE: Excepción no capturada
+java.lang.NoClassDefFoundError: javax/naming/NamingException
+	at com.mysql.cj.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:168)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$new$1(PSInicio.java:40)
+	at java.desktop/javax.swing.JTextField.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.JTextField.postActionEvent(Unknown Source)
+	at java.desktop/javax.swing.JTextField$NotifyAction.actionPerformed(Unknown Source)
+	at java.desktop/javax.swing.SwingUtilities.notifyAction(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processKeyBinding(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processKeyBindings(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processKeyEvent(Unknown Source)
+	at java.desktop/java.awt.Component.processEvent(Unknown Source)
+	at java.desktop/java.awt.Container.processEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.KeyboardFocusManager.redispatchEvent(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchKeyEvent(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.preDispatchKeyEvent(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.typeAheadAssertions(Unknown Source)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.run(Unknown Source)
+Caused by: java.lang.ClassNotFoundException: javax.naming.NamingException
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	... 37 more
+
+May 06, 2026 2:22:55 AM com.mycompany.perfectstrangers.AppLogger logException
+GRAVE: Excepción no capturada
+java.lang.NoClassDefFoundError: javax/naming/NamingException
+	at com.mysql.cj.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:168)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$new$0(PSInicio.java:37)
+	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.setPressed(Unknown Source)
+	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(Unknown Source)
+	at java.desktop/java.awt.Component.processMouseEvent(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.Component.processEvent(Unknown Source)
+	at java.desktop/java.awt.Container.processEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.run(Unknown Source)
+Caused by: java.lang.ClassNotFoundException: javax.naming.NamingException
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	... 34 more
+
+May 06, 2026 2:22:55 AM com.mycompany.perfectstrangers.AppLogger logException
+GRAVE: Excepción no capturada
+java.lang.NoClassDefFoundError: javax/naming/NamingException
+	at com.mysql.cj.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:168)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$new$0(PSInicio.java:37)
+	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.setPressed(Unknown Source)
+	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(Unknown Source)
+	at java.desktop/java.awt.Component.processMouseEvent(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.Component.processEvent(Unknown Source)
+	at java.desktop/java.awt.Container.processEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.run(Unknown Source)
+Caused by: java.lang.ClassNotFoundException: javax.naming.NamingException
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	... 34 more
+
+May 06, 2026 2:26:30 AM com.mycompany.perfectstrangers.AppLogger logException
+GRAVE: Excepción no capturada
+java.lang.NoClassDefFoundError: javax/naming/NamingException
+	at com.mysql.cj.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:168)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$new$0(PSInicio.java:37)
+	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.setPressed(Unknown Source)
+	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(Unknown Source)
+	at java.desktop/java.awt.Component.processMouseEvent(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.Component.processEvent(Unknown Source)
+	at java.desktop/java.awt.Container.processEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.run(Unknown Source)
+Caused by: java.lang.ClassNotFoundException: javax.naming.NamingException
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	... 34 more
+
+May 06, 2026 2:26:30 AM com.mycompany.perfectstrangers.AppLogger logException
+GRAVE: Excepción no capturada
+java.lang.NoClassDefFoundError: javax/naming/NamingException
+	at com.mysql.cj.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:168)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at java.sql/java.sql.DriverManager.getConnection(Unknown Source)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$new$0(PSInicio.java:37)
+	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(Unknown Source)
+	at java.desktop/javax.swing.DefaultButtonModel.setPressed(Unknown Source)
+	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(Unknown Source)
+	at java.desktop/java.awt.Component.processMouseEvent(Unknown Source)
+	at java.desktop/javax.swing.JComponent.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.Component.processEvent(Unknown Source)
+	at java.desktop/java.awt.Container.processEvent(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Unknown Source)
+	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.Component.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(Unknown Source)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(Unknown Source)
+	at java.desktop/java.awt.EventDispatchThread.run(Unknown Source)
+Caused by: java.lang.ClassNotFoundException: javax.naming.NamingException
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	... 34 more
+
+May 06, 2026 2:28:45 AM com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+May 06, 2026 2:28:45 AM com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 2:51:45 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 2:51:45 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 2:52:14 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 2:52:14 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 2:55:00 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 2:55:00 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 3:02:14 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 06, 2026 3:02:14 A.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 4:46:32 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 4:46:32 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 4:46:36 P.M. com.mycompany.perfectstrangers.PSInicio autenticarUsuario
+GRAVE: Error al validar credenciales
+java.sql.SQLException: No suitable driver found for jdbc:mysql://localhost:3306/db_perfectstrangers?useSSL=false&serverTimezone=UTC
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:199)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$1(PSInicio.java:40)
+	at java.desktop/javax.swing.JTextField.fireActionPerformed(JTextField.java:525)
+	at java.desktop/javax.swing.JTextField.postActionEvent(JTextField.java:740)
+	at java.desktop/javax.swing.JTextField$NotifyAction.actionPerformed(JTextField.java:856)
+	at java.desktop/javax.swing.SwingUtilities.notifyAction(SwingUtilities.java:1804)
+	at java.desktop/javax.swing.JComponent.processKeyBinding(JComponent.java:2962)
+	at java.desktop/javax.swing.JComponent.processKeyBindings(JComponent.java:3010)
+	at java.desktop/javax.swing.JComponent.processKeyEvent(JComponent.java:2924)
+	at java.desktop/java.awt.Component.processEvent(Component.java:6353)
+	at java.desktop/java.awt.Container.processEvent(Container.java:2260)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4958)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.KeyboardFocusManager.redispatchEvent(KeyboardFocusManager.java:1829)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchKeyEvent(DefaultKeyboardFocusManager.java:874)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.preDispatchKeyEvent(DefaultKeyboardFocusManager.java:1136)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.typeAheadAssertions(DefaultKeyboardFocusManager.java:1011)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchEvent(DefaultKeyboardFocusManager.java:839)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4839)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2671)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:725)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:702)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+
+may 08, 2026 4:46:41 P.M. com.mycompany.perfectstrangers.PSInicio autenticarUsuario
+GRAVE: Error al validar credenciales
+java.sql.SQLException: No suitable driver found for jdbc:mysql://localhost:3306/db_perfectstrangers?useSSL=false&serverTimezone=UTC
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:199)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$1(PSInicio.java:40)
+	at java.desktop/javax.swing.JTextField.fireActionPerformed(JTextField.java:525)
+	at java.desktop/javax.swing.JTextField.postActionEvent(JTextField.java:740)
+	at java.desktop/javax.swing.JTextField$NotifyAction.actionPerformed(JTextField.java:856)
+	at java.desktop/javax.swing.SwingUtilities.notifyAction(SwingUtilities.java:1804)
+	at java.desktop/javax.swing.JComponent.processKeyBinding(JComponent.java:2962)
+	at java.desktop/javax.swing.JComponent.processKeyBindings(JComponent.java:3010)
+	at java.desktop/javax.swing.JComponent.processKeyEvent(JComponent.java:2924)
+	at java.desktop/java.awt.Component.processEvent(Component.java:6353)
+	at java.desktop/java.awt.Container.processEvent(Container.java:2260)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4958)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.KeyboardFocusManager.redispatchEvent(KeyboardFocusManager.java:1829)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchKeyEvent(DefaultKeyboardFocusManager.java:874)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.preDispatchKeyEvent(DefaultKeyboardFocusManager.java:1136)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.typeAheadAssertions(DefaultKeyboardFocusManager.java:1011)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchEvent(DefaultKeyboardFocusManager.java:839)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4839)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2671)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:725)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:702)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+
+may 08, 2026 4:46:42 P.M. com.mycompany.perfectstrangers.PSInicio autenticarUsuario
+GRAVE: Error al validar credenciales
+java.sql.SQLException: No suitable driver found for jdbc:mysql://localhost:3306/db_perfectstrangers?useSSL=false&serverTimezone=UTC
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:199)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$0(PSInicio.java:37)
+	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(AbstractButton.java:1972)
+	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(AbstractButton.java:2314)
+	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(DefaultButtonModel.java:407)
+	at java.desktop/javax.swing.DefaultButtonModel.setPressed(DefaultButtonModel.java:262)
+	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(BasicButtonListener.java:279)
+	at java.desktop/java.awt.Component.processMouseEvent(Component.java:6576)
+	at java.desktop/javax.swing.JComponent.processMouseEvent(JComponent.java:3404)
+	at java.desktop/java.awt.Component.processEvent(Component.java:6341)
+	at java.desktop/java.awt.Container.processEvent(Container.java:2260)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4958)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Container.java:4917)
+	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Container.java:4560)
+	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Container.java:4501)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2304)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2671)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:725)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:702)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+
+may 08, 2026 4:46:42 P.M. com.mycompany.perfectstrangers.PSInicio autenticarUsuario
+GRAVE: Error al validar credenciales
+java.sql.SQLException: No suitable driver found for jdbc:mysql://localhost:3306/db_perfectstrangers?useSSL=false&serverTimezone=UTC
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:199)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$0(PSInicio.java:37)
+	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(AbstractButton.java:1972)
+	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(AbstractButton.java:2314)
+	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(DefaultButtonModel.java:407)
+	at java.desktop/javax.swing.DefaultButtonModel.setPressed(DefaultButtonModel.java:262)
+	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(BasicButtonListener.java:279)
+	at java.desktop/java.awt.Component.processMouseEvent(Component.java:6576)
+	at java.desktop/javax.swing.JComponent.processMouseEvent(JComponent.java:3404)
+	at java.desktop/java.awt.Component.processEvent(Component.java:6341)
+	at java.desktop/java.awt.Container.processEvent(Container.java:2260)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4958)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Container.java:4917)
+	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Container.java:4560)
+	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Container.java:4501)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2304)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2671)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:725)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:702)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+
+may 08, 2026 4:47:12 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 4:47:12 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 4:47:26 P.M. com.mycompany.perfectstrangers.PSInicio autenticarUsuario
+GRAVE: Error al validar credenciales
+java.sql.SQLException: No suitable driver found for jdbc:mysql://localhost:3306/db_perfectstrangers?useSSL=false&serverTimezone=UTC
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:199)
+	at com.mycompany.perfectstrangers.DBConnection.getConnection(DBConnection.java:17)
+	at com.mycompany.perfectstrangers.EmpleadoDAO.obtenerEmpleadoPorUsuario(EmpleadoDAO.java:45)
+	at com.mycompany.perfectstrangers.ServicioSesion.autenticar(ServicioSesion.java:20)
+	at com.mycompany.perfectstrangers.PSInicio.autenticarUsuario(PSInicio.java:368)
+	at com.mycompany.perfectstrangers.PSInicio.lambda$1(PSInicio.java:40)
+	at java.desktop/javax.swing.JTextField.fireActionPerformed(JTextField.java:525)
+	at java.desktop/javax.swing.JTextField.postActionEvent(JTextField.java:740)
+	at java.desktop/javax.swing.JTextField$NotifyAction.actionPerformed(JTextField.java:856)
+	at java.desktop/javax.swing.SwingUtilities.notifyAction(SwingUtilities.java:1804)
+	at java.desktop/javax.swing.JComponent.processKeyBinding(JComponent.java:2962)
+	at java.desktop/javax.swing.JComponent.processKeyBindings(JComponent.java:3010)
+	at java.desktop/javax.swing.JComponent.processKeyEvent(JComponent.java:2924)
+	at java.desktop/java.awt.Component.processEvent(Component.java:6353)
+	at java.desktop/java.awt.Container.processEvent(Container.java:2260)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4958)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.KeyboardFocusManager.redispatchEvent(KeyboardFocusManager.java:1829)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchKeyEvent(DefaultKeyboardFocusManager.java:874)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.preDispatchKeyEvent(DefaultKeyboardFocusManager.java:1136)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.typeAheadAssertions(DefaultKeyboardFocusManager.java:1011)
+	at java.desktop/java.awt.DefaultKeyboardFocusManager.dispatchEvent(DefaultKeyboardFocusManager.java:839)
+	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:4839)
+	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2318)
+	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2671)
+	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4790)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:725)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:702)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+
+may 08, 2026 4:49:24 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 4:49:24 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:06:26 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:06:26 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:11:01 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:11:01 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:15:36 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:15:36 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:18:03 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:18:03 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:20:19 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:20:19 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:25:41 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:25:41 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:30:20 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:30:20 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:32:31 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:32:31 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:34:40 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado
+may 08, 2026 5:34:40 P.M. com.mycompany.perfectstrangers.AppLogger init
+INFORMACIÓN: Logger inicializado

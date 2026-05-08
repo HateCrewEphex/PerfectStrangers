@@ -389,6 +389,19 @@ public class PSInicio extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        // Inicializar logger de aplicación y manejador global de excepciones
+        AppLogger.init();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            AppLogger.logException(throwable);
+            try {
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    javax.swing.JOptionPane.showMessageDialog(null,
+                        "Se produjo un error inesperado. Revisa logs/app.log para más detalles.",
+                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                });
+            } catch (Exception ignore) {}
+        });
+
         try {
             javax.swing.UIManager.put("Button.arc", 20);
             javax.swing.UIManager.put("Component.arc", 20);
@@ -397,8 +410,9 @@ public class PSInicio extends javax.swing.JFrame {
             javax.swing.UIManager.put("ScrollBar.arc", 20);
             com.formdev.flatlaf.themes.FlatMacDarkLaf.setup();
         } catch (Exception ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            AppLogger.getLogger().log(java.util.logging.Level.SEVERE, null, ex);
         }
+
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new PSInicio().setVisible(true));
     }

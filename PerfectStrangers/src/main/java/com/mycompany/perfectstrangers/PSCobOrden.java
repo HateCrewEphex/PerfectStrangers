@@ -10,6 +10,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -26,13 +30,14 @@ import javax.swing.SwingWorker;
 public class PSCobOrden extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(PSCobOrden.class.getName());
-    private static final double[] PROPINAS_DISPONIBLES = {0.10, 0.15, 0.20};
     private double totalActual = 0.0;
     private double totalBasePendiente = 0.0;
     private double propinaActualPorcentaje = 0.0;
     private double propinaActualMonto = 0.0;
     private String ultimoTicketHtml = "";
     private String ultimoTicketHtmlBase = "";
+    private String ultimoTicketTexto = "";
+    private String ultimoTicketTextoBase = "";
     private String ultimoMetodoPago = "Efectivo";
 
     /**
@@ -327,7 +332,7 @@ public class PSCobOrden extends javax.swing.JFrame {
 
         jComboBox1.addActionListener(evt -> cargarOrdenCobrar());
         jBCobrar.addActionListener(evt -> cobrarOrden());
-        jBTicket.addActionListener(evt -> mostrarTicket(false));
+        jBTicket.addActionListener(evt -> imprimirTicketActual(false));
         jBPropina10.addActionListener(evt -> aplicarPropina(0.10));
         jBPropina15.addActionListener(evt -> aplicarPropina(0.15));
         jBPropina20.addActionListener(evt -> aplicarPropina(0.20));
@@ -348,6 +353,8 @@ public class PSCobOrden extends javax.swing.JFrame {
         propinaActualMonto = 0.0;
         ultimoTicketHtml = "";
         ultimoTicketHtmlBase = "";
+        ultimoTicketTexto = "";
+        ultimoTicketTextoBase = "";
     }
 
     private String obtenerMetodoPagoSeleccionado() {
@@ -379,6 +386,31 @@ public class PSCobOrden extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, scroll, pagado ? "Ticket final" : "Vista previa de ticket", JOptionPane.PLAIN_MESSAGE);
     }
 
+    private boolean imprimirTicketActual(boolean pagado) {
+        if (jComboBox1.getSelectedIndex() <= 0) {
+            JOptionPane.showMessageDialog(this, "Selecciona una mesa primero.");
+            return false;
+        }
+
+        if (ultimoTicketTexto == null || ultimoTicketTexto.isBlank()) {
+            JOptionPane.showMessageDialog(this, "No hay ticket disponible para imprimir en esta mesa.");
+            return false;
+        }
+
+        String ticketTexto = ultimoTicketTexto;
+
+        try {
+            TicketImpresionService.imprimirTexto(ticketTexto);
+            JOptionPane.showMessageDialog(this,
+                pagado ? "Ticket final enviado a la impresora." : "Ticket enviado a la impresora.");
+            return true;
+        } catch (java.awt.print.PrinterException ex) {
+            logger.log(java.util.logging.Level.WARNING, "No se pudo imprimir el ticket", ex);
+            mostrarTicket(pagado);
+            return false;
+        }
+    }
+
     private void cargarOrdenCobrar() {
         limpiarPantalla();
         if (jComboBox1.getSelectedIndex() <= 0) return;
@@ -394,7 +426,7 @@ public class PSCobOrden extends javax.swing.JFrame {
              "WHERE o.mesa = ? AND o.estado_preparacion = 'Entregado' AND o.estado_pago IN ('Pendiente', 'Parcial')";
 
         // Consulta para obtener todas las órdenes entregadas que sigan pendientes o parciales en esa mesa
-        String sql = "SELECT o.id_orden, o.mesa, e.nombre AS nomEmp, p.nombre AS nomProd, p.precio AS precioBase, d.precio_unitario AS costoP, d.cantidad AS cant, d.notas_especiales AS nota " +
+        String sql = "SELECT o.id_orden, o.mesa, o.fecha_hora AS fechaOrden, e.nombre AS nomEmp, p.nombre AS nomProd, p.precio AS precioBase, d.precio_unitario AS costoP, d.cantidad AS cant, d.notas_especiales AS nota " +
                  "FROM ordenes o " +
                  "INNER JOIN empleados e ON o.id_empleado = e.id_empleado " +
                  "INNER JOIN detalle_orden d ON o.id_orden = d.id_orden " +
@@ -408,78 +440,75 @@ public class PSCobOrden extends javax.swing.JFrame {
              
             pstResumen.setInt(1, numMesa);
             try (ResultSet rsResumen = pstResumen.executeQuery()) {
-                double totalBruto = 0.0;
-                double totalPagado = 0.0;
                 double totalPendiente = 0.0;
                 if (rsResumen.next()) {
-                    totalBruto = rsResumen.getDouble("total_bruto");
-                    totalPagado = rsResumen.getDouble("total_pagado");
                     totalPendiente = rsResumen.getDouble("total_pendiente");
                 }
 
                 pst.setInt(1, numMesa);
                 try (ResultSet rs = pst.executeQuery()) {
-                    StringBuilder html = new StringBuilder("<html><div style='padding:15px; font-family: \"Segoe UI\", sans-serif; width: 100%; color: #F0F0F0;'>");
-                
-                    // Cabecera Interna de la tabla simulada
-                    html.append("<div style='border-bottom: 2px solid #555555; padding-bottom: 10px; margin-bottom: 15px; font-size: 22px; color: #cca95a;'>");
-                    html.append("Mesa ").append(numMesa);
-                    html.append("</div>");
+                    List<String> lineasTicket = new ArrayList<>();
+                    lineasTicket.add("TITLE|Perfect Stranger");
+                    lineasTicket.add("SUBTITLE|Ticket de Consumo");
+                    lineasTicket.add("DATA|Fecha:|");
+                    lineasTicket.add("DATA|Mesa:|");
+                    lineasTicket.add("DATA|Atendido:|");
+                    lineasTicket.add("SEP");
                 
                     double total = 0.0;
                     boolean existeOrden = false;
                     String empleado = "-";
+                    java.sql.Timestamp fechaOrden = null;
 
                     while (rs.next()) {
                         existeOrden = true;
                         String nombreItem = rs.getString("nomProd") != null ? rs.getString("nomProd") : "Desconocido";
                         double valor = rs.getDouble("costoP");
-                        double valorBase = rs.getDouble("precioBase");
                         int cant = rs.getInt("cant");
                         String nota = rs.getString("nota");
+                        if (fechaOrden == null) {
+                            fechaOrden = rs.getTimestamp("fechaOrden");
+                        }
                         double subtotalLinea = (valor * cant);
                         total += subtotalLinea;
                         empleado = rs.getString("nomEmp") != null ? rs.getString("nomEmp") : "Desconocido";
 
-                        // Fila de item estilo recibo alineado
-                        html.append("<div style='border-bottom: 1px solid #3a3a3a; padding-bottom: 8px; margin-bottom: 8px; font-size: 20px; display: flex; justify-content: space-between;'>");
-                        // Cantidad y Nombre
-                        html.append("<span style='color: #cca95a; font-weight: bold;'>").append(cant).append("x</span> &nbsp;");
-                        html.append("<span style='color: #FFFFFF;'>").append(nombreItem).append("</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
-                        // Precios
-                        html.append("<span style='color: #999999;'>$").append(String.format("%.2f", valorBase)).append(" c/u.</span> &nbsp;&nbsp;--&nbsp;&nbsp; ");
-                        html.append("<span style='color: #FFFFFF; float: right;'>$").append(String.format("%.2f", subtotalLinea)).append("</span>");
-                        html.append("</div>");
-                        if (esLinea2x1(nota) && valorBase > valor) {
-                            double descuentoLinea = Math.max(valorBase - valor, 0.0) * cant;
-                            html.append("<div style='margin: -4px 0 8px 24px; font-size: 16px; color: #00ff3c; font-style: italic;'>Descuento 2x1: -$")
-                                .append(String.format("%.2f", descuentoLinea))
-                                .append("</div>");
+                        String nombreConNota = nombreItem;
+                        if (nota != null && !nota.isBlank()) {
+                            nombreConNota += " (" + truncarTexto(nota.trim(), 18) + ")";
                         }
-                        if (nota != null && !nota.trim().isEmpty()) {
-                            html.append("<div style='margin: -4px 0 8px 24px; font-size: 16px; color: #cca95a; font-style: italic;'>Nota: ").append(nota).append("</div>");
-                        }
+
+                        lineasTicket.add("ITEM|" + cant + "x " + nombreConNota + "|" + String.format("$%.2f", subtotalLinea));
                     }
                     
                     if (existeOrden) {
-                        double descuentoGlobal = Math.max(total - totalBruto, 0.0);
-
-                        html.append("<div style='text-align: right; margin-top: 25px; font-size: 20px; border-top: 2px solid #555555; padding-top: 10px;'>");
-                        html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Subtotal: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", total)).append("</span></div>");
-                        if (descuentoGlobal > 0) {
-                            html.append("<div style='margin-bottom: 4px; color: #00ff3c;'>Descuento Promos: &nbsp;&nbsp;&nbsp; <span style='color: #00ff3c'>-$").append(String.format("%.2f", descuentoGlobal)).append("</span></div>");
+                        // Usar la fecha/hora del momento de impresión para el ticket
+                        String fechaTexto = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date());
+                        double subtotalTicket = total;
+                        double totalTicket = redondearMoneda(subtotalTicket + propinaActualMonto);
+                        for (int i = 0; i < lineasTicket.size(); i++) {
+                            if ("DATA|Fecha:|".equals(lineasTicket.get(i))) {
+                                lineasTicket.set(i, "DATA|Fecha:|" + fechaTexto);
+                            } else if ("DATA|Mesa:|".equals(lineasTicket.get(i))) {
+                                lineasTicket.set(i, "DATA|Mesa:|" + numMesa);
+                            } else if ("DATA|Atendido:|".equals(lineasTicket.get(i))) {
+                                lineasTicket.set(i, "DATA|Atendido:|" + truncarTexto(empleado, 22));
+                            }
                         }
-                        html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Total cuenta: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", totalBruto)).append("</span></div>");
-                        html.append("<div style='margin-bottom: 4px; color: #aaaaaa;'>Abonado: &nbsp;&nbsp;&nbsp; <span style='color: #FFFFFF'>$").append(String.format("%.2f", totalPagado)).append("</span></div>");
-                        html.append("<div style='color: #cca95a; font-weight: bold; margin-top: 10px; font-size: 24px;'>PENDIENTE: &nbsp;&nbsp;&nbsp; $").append(String.format("%.2f", totalPendiente)).append("</div>");
-                        html.append("</div>");
+                        lineasTicket.add("SEP");
+                        lineasTicket.add("TOTAL|Subtotal:|" + String.format("$%.2f", subtotalTicket));
+                        lineasTicket.add("TOTAL|Propina:|" + String.format("$%.2f", propinaActualMonto));
+                        lineasTicket.add("TOTAL|TOTAL:|" + String.format("$%.2f", totalTicket));
+                        lineasTicket.add("");
+                        lineasTicket.add("FOOTER|Gracias por su preferencia!");
+
+                        ultimoTicketTextoBase = String.join("\n", lineasTicket);
+                        ultimoTicketHtmlBase = construirVistaTicketHtml(lineasTicket);
                     }
 
-                    html.append("</div></html>");
-
                     if (existeOrden) {
-                        totalBasePendiente = totalPendiente;
-                        ultimoTicketHtmlBase = html.toString();
+                        totalBasePendiente = total;
+                        ultimoTicketTexto = ultimoTicketTextoBase;
                         jLNAtendio.setText(empleado);
                         actualizarVistaPropina();
                     } else {
@@ -492,14 +521,6 @@ public class PSCobOrden extends javax.swing.JFrame {
         } catch (SQLException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al cargar datos para cobrar", ex);
         }
-    }
-
-    private boolean esLinea2x1(String nota) {
-        if (nota == null) {
-            return false;
-        }
-        String texto = nota.toLowerCase();
-        return texto.contains("promo 2x1") || texto.contains("promo 2*1");
     }
 
     private void cobrarOrden() {
@@ -652,23 +673,26 @@ public class PSCobOrden extends javax.swing.JFrame {
         jLTotalCobrar.setText("$" + String.format("%.2f", totalActual));
         jLPropinaResumen.setText(String.format("Propina: %.0f%% = $%.2f", propinaActualPorcentaje * 100.0, propinaActualMonto));
 
-        if (ultimoTicketHtmlBase == null || ultimoTicketHtmlBase.isBlank()) {
+        if (ultimoTicketTextoBase == null || ultimoTicketTextoBase.isBlank()) {
             ultimoTicketHtml = "";
+            ultimoTicketTexto = "";
             jLInsumos.setText("");
             return;
         }
 
-        String htmlConPropina = ultimoTicketHtmlBase;
-        if (propinaActualMonto > 0.0) {
-            String lineaPropina = "<div style='margin-bottom: 4px; color: #00ff3c;'>Propina (" + String.format("%.0f", propinaActualPorcentaje * 100.0) + "%): &nbsp;&nbsp;&nbsp; <span style='color: #00ff3c'>+$" + String.format("%.2f", propinaActualMonto) + "</span></div>";
-            htmlConPropina = htmlConPropina.replace(
-                "<div style='color: #cca95a; font-weight: bold; margin-top: 10px; font-size: 24px;'>PENDIENTE: &nbsp;&nbsp;&nbsp; $" + String.format("%.2f", totalBasePendiente) + "</div>",
-                "<div style='color: #cca95a; font-weight: bold; margin-top: 10px; font-size: 24px;'>PENDIENTE: &nbsp;&nbsp;&nbsp; $" + String.format("%.2f", totalBasePendiente) + "</div>" + lineaPropina
-            );
-        }
+        String textoConPropina = ultimoTicketTextoBase;
 
-        ultimoTicketHtml = htmlConPropina;
-        jLInsumos.setText(htmlConPropina);
+        String propinaBaseTexto = "TOTAL|Propina:|" + String.format("$%.2f", 0.0);
+        String totalBaseTexto = "TOTAL|TOTAL:|" + String.format("$%.2f", totalBasePendiente);
+        String propinaNuevaTexto = "TOTAL|Propina:|" + String.format("$%.2f", propinaActualMonto);
+        String totalNuevoTexto = "TOTAL|TOTAL:|" + String.format("$%.2f", totalActual);
+
+        textoConPropina = textoConPropina.replace(propinaBaseTexto, propinaNuevaTexto);
+        textoConPropina = textoConPropina.replace(totalBaseTexto, totalNuevoTexto);
+
+        ultimoTicketHtml = construirVistaTicketHtml(java.util.Arrays.asList(textoConPropina.split("\\n")));
+        ultimoTicketTexto = textoConPropina;
+        jLInsumos.setText(ultimoTicketHtml);
     }
 
     private double redondearMoneda(double valor) {
@@ -765,8 +789,9 @@ public class PSCobOrden extends javax.swing.JFrame {
                 boolean pagoCompleto = saldoRestante <= 0.0 && montoAbonado >= totalActual;
                 ultimoMetodoPago = metodoPago;
                 if (pagoCompleto) {
-                    JOptionPane.showMessageDialog(this, "La mesa quedó liquidada con " + metodoPago + ". Ticket completo generado como muestra.");
-                    mostrarTicket(true);
+                    if (!imprimirTicketActual(true)) {
+                        JOptionPane.showMessageDialog(this, "La mesa quedó liquidada con " + metodoPago + ". No se pudo enviar a la impresora, se mostró una vista previa.");
+                    }
                     cargarOrdenCobrar();
                 } else {
                     cargarOrdenCobrar();
@@ -787,6 +812,134 @@ public class PSCobOrden extends javax.swing.JFrame {
         } catch (NumberFormatException ex) {
             return 1;
         }
+    }
+
+    private String formatearMontoLinea(double valor) {
+        String monto = "$" + String.format("%.2f", Math.abs(valor));
+        return valor < 0.0 ? "-" + monto : monto;
+    }
+
+    private String separadorTicket() {
+        return "--------------------------------";
+    }
+
+    private String truncarTexto(String texto, int maximo) {
+        if (texto == null) {
+            return "";
+        }
+        String limpio = texto.trim();
+        if (limpio.length() <= maximo) {
+            return limpio;
+        }
+        if (maximo <= 3) {
+            return limpio.substring(0, Math.max(0, maximo));
+        }
+        return limpio.substring(0, maximo - 3).trim() + "...";
+    }
+
+    private String abreviarProducto(String texto, int maximo) {
+        return truncarTexto(texto, maximo);
+    }
+
+    private String centrarTicket(String texto) {
+        String limpio = texto == null ? "" : texto.trim();
+        int ancho = 32;
+        if (limpio.length() >= ancho) {
+            return limpio;
+        }
+        int espacioIzquierdo = (ancho - limpio.length()) / 2;
+        StringBuilder sb = new StringBuilder(ancho);
+        for (int i = 0; i < espacioIzquierdo; i++) {
+            sb.append(' ');
+        }
+        sb.append(limpio);
+        return sb.toString();
+    }
+
+    private String formatearLineaTicket(String izquierda, String derecha, int anchoTotal) {
+        String izq = izquierda == null ? "" : izquierda.trim();
+        String der = derecha == null ? "" : derecha.trim();
+        int espaciosDisponibles = anchoTotal - izq.length() - der.length();
+        if (espaciosDisponibles < 1) {
+            izq = truncarTexto(izq, Math.max(1, anchoTotal - der.length() - 1));
+            espaciosDisponibles = anchoTotal - izq.length() - der.length();
+        }
+        StringBuilder sb = new StringBuilder(anchoTotal);
+        sb.append(izq);
+        for (int i = 0; i < espaciosDisponibles; i++) {
+            sb.append(' ');
+        }
+        sb.append(der);
+        return sb.toString();
+    }
+
+    private String construirVistaTicketHtml(List<String> lineasTicket) {
+        // Mantener texto claro para buena legibilidad en la UI oscura
+        StringBuilder html = new StringBuilder("<html><div style='padding:18px; font-family:Segoe UI,sans-serif; width:100%; color:#F0F0F0; background-color:transparent;'>");
+        for (String linea : lineasTicket) {
+            if (linea == null || linea.isBlank()) {
+                html.append("<div style='height:10px;'></div>");
+                continue;
+            }
+
+            if (linea.startsWith("TITLE|")) {
+                html.append("<div style='text-align:center; font-size:24px; font-weight:bold; color:#cca95a; margin-bottom:4px;'>")
+                    .append(escapeHtml(linea.substring(6).trim()))
+                    .append("</div>");
+            } else if (linea.startsWith("SUBTITLE|")) {
+                html.append("<div style='text-align:center; font-size:18px; font-weight:bold; color:#cca95a; margin-bottom:12px;'>")
+                    .append(escapeHtml(linea.substring(9).trim()))
+                    .append("</div>");
+            } else if (linea.equals("SEP")) {
+                html.append("<div style='border-top:2px solid #555555; margin:10px 0 12px 0;'></div>");
+            } else if (linea.startsWith("ITEM|")) {
+                String[] partes = linea.split("\\|", 3);
+                String izquierda = partes.length > 1 ? partes[1] : "";
+                String derecha = partes.length > 2 ? partes[2] : "";
+                html.append("<div style='display:flex; justify-content:space-between; font-size:18px; margin-bottom:4px; font-family:monospace; color:#F0F0F0;'>")
+                    .append("<span>").append(escapeHtml(izquierda)).append("</span>")
+                    .append("<span>").append(escapeHtml(derecha)).append("</span>")
+                    .append("</div>");
+            } else if (linea.startsWith("DATA|")) {
+                String[] partes = linea.split("\\|", 3);
+                String etiqueta = partes.length > 1 ? partes[1] : "";
+                String valor = partes.length > 2 ? partes[2] : "";
+                html.append("<div style='display:flex; justify-content:space-between; font-size:16px; margin-bottom:4px; font-family:monospace; color:#F0F0F0;'>")
+                    .append("<span>").append(escapeHtml(etiqueta)).append("</span>")
+                    .append("<span>").append(escapeHtml(valor)).append("</span>")
+                    .append("</div>");
+            } else if (linea.startsWith("TOTAL|")) {
+                String[] partes = linea.split("\\|", 3);
+                String etiqueta = partes.length > 1 ? partes[1] : "";
+                String valor = partes.length > 2 ? partes[2] : "";
+                html.append("<div style='display:flex; justify-content:space-between; font-size:17px; font-weight:bold; margin-bottom:4px; font-family:monospace; color:#cca95a;'>")
+                    .append("<span>").append(escapeHtml(etiqueta)).append("</span>")
+                    .append("<span>").append(escapeHtml(valor)).append("</span>")
+                    .append("</div>");
+            } else if (linea.startsWith("FOOTER|")) {
+                html.append("<div style='text-align:center; font-size:16px; margin-top:16px; font-family:monospace;'>")
+                    .append(escapeHtml(linea.substring(7).trim()))
+                    .append("</div>");
+            } else {
+                html.append("<div style='font-family:monospace; font-size:16px;'>")
+                    .append(escapeHtml(linea))
+                    .append("</div>");
+            }
+        }
+        html.append("</div></html>");
+        return html.toString();
+    }
+
+    private String escapeHtml(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        return texto
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
     }
 
     /**

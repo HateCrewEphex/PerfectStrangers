@@ -47,10 +47,12 @@ public class PSMenu extends javax.swing.JFrame {
         configurarNavegacionMenu();
         configurarFondo();
         configurarSesionDatos();
-        cargarAlertasInventario();
         
-        // Inicializar servicios de alertas
-        inicializarServiciosDeAlertas();
+        // Ejecutar carga de alertas y servicios en hilos de fondo para no bloquear EDT
+        new Thread(() -> {
+            cargarAlertasInventario();
+            inicializarServiciosDeAlertas();
+        }, "AlertasInventarioThread").start();
     }
 
     private void configurarSesionDatos() {
@@ -495,7 +497,11 @@ public class PSMenu extends javax.swing.JFrame {
 
         // Solo los gerentes o quienes tengan el permiso pueden ver las alertas
         if (!ServicioSesion.tienePermiso("gestionar_inventario")) {
-            alertasEditorPane.setText("<html><body><div style='text-align:center; padding-top: 50px; color: #666;'>Acceso restringido.</div></body></html>");
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                if (alertasEditorPane != null) {
+                    alertasEditorPane.setText("<html><body><div style='text-align:center; padding-top: 50px; color: #666;'>Acceso restringido.</div></body></html>");
+                }
+            });
             return;
         }
 
@@ -558,8 +564,15 @@ public class PSMenu extends javax.swing.JFrame {
         }
 
         html.append("</body></html>");
-        alertasEditorPane.setText(html.toString());
-        alertasEditorPane.setCaretPosition(0); // Para que el scroll inicie arriba
+        
+        // Actualizar UI en el EDT
+        final String htmlContent = html.toString();
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (alertasEditorPane != null) {
+                alertasEditorPane.setText(htmlContent);
+                alertasEditorPane.setCaretPosition(0);
+            }
+        });
     }
 
     /**

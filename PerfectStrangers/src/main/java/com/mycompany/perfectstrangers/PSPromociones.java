@@ -5,11 +5,12 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.util.List;
-import java.util.Date;
-import java.text.SimpleDateFormat;
 import java.awt.GridLayout;
+import java.awt.Insets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -22,6 +23,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
+
 import com.toedter.calendar.JDateChooser;
 
 public class PSPromociones extends JFrame {

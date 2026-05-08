@@ -11,7 +11,19 @@ package com.mycompany.perfectstrangers;
 public class PerfectStrangers {
 
     public static void main(String[] args) {
-        
+        // Inicializar logger global y manejador de excepciones para capturar errores en ejecución
+        AppLogger.init();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            AppLogger.logException(throwable);
+            try {
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    javax.swing.JOptionPane.showMessageDialog(null,
+                        "Se produjo un error inesperado. Revisa logs/app.log para más detalles.",
+                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                });
+            } catch (Exception ignore) {}
+        });
+
         try {
             // Configuraciones estéticas de FlatLaf (bordes redondeados, estilo oscuro moderno)
             javax.swing.UIManager.put("Button.arc", 20); // Botones muy redondeados
@@ -20,11 +32,11 @@ public class PerfectStrangers {
             javax.swing.UIManager.put("TextComponent.arc", 20); // Inputs de texto
             javax.swing.UIManager.put("ScrollBar.arc", 20);
             javax.swing.UIManager.put("Table.alternateRowColor", new java.awt.Color(40, 40, 40)); 
-            
+
             // Iniciar el tema oscuro estilo Mac/Windows 11
             com.formdev.flatlaf.themes.FlatMacDarkLaf.setup();
         } catch( Exception ex ) {
-            System.err.println( "No se pudo inicializar FlatLaf" );
+            AppLogger.getLogger().severe("No se pudo inicializar FlatLaf: " + ex.getMessage());
         }
 
         java.awt.EventQueue.invokeLater(() -> new PSInicio().setVisible(true)); 

@@ -14,6 +14,11 @@ public final class DBConnection {
     }
 
     public static Connection getConnection() throws SQLException {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            throw new SQLException("No se pudo cargar el driver JDBC de MySQL.", ex);
+        }
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }
